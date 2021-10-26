@@ -1,0 +1,21 @@
+{
+  "name": "js-edit",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "@codemirror/basic-setup": "^0.19.0",
+    "@codemirror/lang-javascript": "^0.19.2",
+    "primeicons": "^4.1.0",
+    "primevue": "^3.8.0",
+    "vite-plugin-pwa": "^0.11.3",
+    "vue": "^3.2.16"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.9.3",
+    "vite": "^2.6.4"
+  }
+}
