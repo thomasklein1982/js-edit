@@ -16,6 +16,8 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 import Toast from "primevue/toast";
 import ConfirmPopup from 'primevue/confirmpopup';
+import Splitter from "primevue/splitter";
+import SplitterPanel from 'primevue/splitterpanel'
 
 import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css';
@@ -60,4 +62,6 @@ app.component('Tree',Tree);
 app.component('Badge',Badge);
 app.component('ConfirmPopup',ConfirmPopup);
 app.component('Toast',Toast);
+app.component('Splitter',Splitter);
+app.component('SplitterPanel',SplitterPanel);
 app.mount('#app');
