@@ -5,42 +5,50 @@
 </template>
 
 <script>
+import { upload } from '../lib/helper';
 export default {
   data(){
     return {
       items: [
         {
-          label: 'Projekt',
+          label: 'Neu',
           icon: 'pi pi-fw pi-file',
-          items: [
-            {
-              label: 'Neu',
-              icon: 'pi pi-file',
-              command: (ev)=>{
-                
-              }
-            },
-            {
-              label: 'Hochladen',
-              icon: 'pi pi-upload',
-              command: (ev)=>{
-                this.$emit('upload');
-              }
-            },
-            {
-              label: 'Herunterladen',
-              icon: 'pi pi-download',
-              command: (ev)=>{
-                this.$emit('download');
-              }
+          command: (ev)=>{
+            let a=confirm("Willst du wirklich ein komplett neues Programm erstellen? Alle Eingaben gehen verloren.");
+            if(a){
+              this.$emit("new");
             }
-          ]
+          }
         },
         {
-          label: 'Ausführen',
-          icon: 'pi pi-play',
+          label: 'Exportieren',
+          icon: 'pi pi-sign-out',
+          command: async (ev)=>{
+            this.$emit("export");
+          }
+        },
+        {
+          label: 'Importieren',
+          icon: 'pi pi-sign-in',
+          command: async (ev)=>{
+            this.$emit("import");
+          }
+        },
+        {
+          label: 'Hochladen',
+          icon: 'pi pi-upload',
+          command: async (ev)=>{
+            let f=await upload();
+            if(f){
+              this.$emit("upload",f);
+            }
+          }
+        },
+        {
+          label: 'Herunterladen',
+          icon: 'pi pi-download',
           command: (ev)=>{
-            this.$emit('run');
+            this.$emit('download');
           }
         },
         {

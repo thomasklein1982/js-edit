@@ -1,12 +1,13 @@
 <template>
   <div id="root">
     <div id="editor" ref="editor"></div>
-    <div v-if="clazz && clazz.errors" id="errors">
-      <table>
+    <div v-if="errors" id="errors">
+      <!-- <table>
         <tr v-for="(e,i) in clazz.errors" :key="'error'+i">
           <td>{{e.line.number}}:{{e.col}}:</td><td>{{e.message}} </td>
         </tr>
-      </table>
+      </table> -->
+      {{errors}}
     </div>
   </div>
   
@@ -17,29 +18,12 @@
   import { javascript, snippets } from "@codemirror/lang-javascript";
   import {keymap} from "@codemirror/view"
   import {indentWithTab} from "@codemirror/commands"
-  import  * as autocomplete  from "@codemirror/autocomplete";
   import { indentUnit } from "@codemirror/language";
-
-  while(snippets.length>0){
-    snippets.pop();
-  }
-  snippets.push(autocomplete.snippetCompletion("function onStart() {\n\t${}\n}", {
-    label: "function onStart",
-    info: "Die Funktion onStart wird aufgerufen, wenn die App startet.",
-    type: "function"
-  }),);
-
-  snippets.push(autocomplete.snippetCompletion("function onNextFrame() {\n\t${}\n}", {
-    label: "function onNextFrame",
-    info: "Die Funktion onNextFrame wird etwa 60 mal pro Sekunde aufgerufen.",
-    type: "function"
-  }),);
-
-  snippets.push(autocomplete.snippetCompletion("function onAction(element) {\n\t${}\n}", {
-    label: "function onAction",
-    info: "Die Funktion onAction wird aufgerufen, wenn ein Button geklickt oder mit einem anderen UI-Element interagiert wird.",
-    type: "function"
-  }),);
+  import * as acorn from "acorn";
+  import { loadLocally, saveLocally } from "../lib/helper";
+  import { prepareSnippets } from "../lib/snippets";
+  
+  prepareSnippets(snippets);
 
   export default {
     props: {
@@ -48,15 +32,23 @@
     data(){
       return {
         src: '',
-        editor: null
+        size: 0,
+        editor: null,
+        errors: null
       };
     },
-    mounted(){
+    async mounted(){
       let changed=false;
       let timer;
+      let saved=await loadLocally("js-edit-current");
+      if(saved){
+        this.$root.sourceCode=saved;
+      }else{
+        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
+      }
       let editor=new EditorView({
         state: EditorState.create({
-          doc: 'setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n\tdrawCircle(50,50,10)\n}',
+          doc: "",
           extensions: [
             basicSetup,
             EditorView.lineWrapping,
@@ -66,6 +58,9 @@
             EditorView.updateListener.of((v) => {
               if(!changed){
                 changed=v.docChanged;
+              }
+              if(changed){
+                this.size=v.state.doc.length;
               }
               if(timer) clearTimeout(timer);
               timer = setTimeout(() => {
@@ -80,12 +75,46 @@
         parent: this.$refs.editor
       });
       this.editor=editor;
+      this.editor.dispatch({
+        changes: {from: 0, to: 0, insert: this.$root.sourceCode}
+      });
     },
     methods: {
+      reset: function(){
+        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
+        this.editor.dispatch({
+          changes: {from: 0, to: this.size, insert: this.$root.sourceCode}
+        });
+      },
+      check(){
+        let src=this.$root.sourceCode;
+        let p=new Promise((resolve,reject)=>{
+          try{
+            let ast=acorn.parse(src, {ecmaVersion: 2020});
+            resolve(false);
+          }catch(e){
+            resolve(e);
+          }
+        }).then((errors)=>{
+          if(errors){
+            let t="Zeile "+errors.loc.line+": ";
+            if(errors.message.startsWith("Unexpected token")){
+              t+="Unerwartetes Zeichen";
+            }else{
+              t+=errors.message;
+            }
+            this.errors=t;
+          }else{
+            this.errors=null;
+          }
+        });
+      },
       update(viewUpdate){
         var state=viewUpdate.state;
         var src=state.doc.toString();
         this.$root.sourceCode=src;
+        saveLocally("js-edit-current",src);
+        this.check();
       }
     }
   }

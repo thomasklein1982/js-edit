@@ -1,6 +1,6 @@
 <template>
   <div style="width: 100%; height: 100%; overflow: hidden" :style="{display: 'flex', flexDirection: 'column'}">
-    <editor-menubar/>
+    <editor-menubar @new="$refs.editor.reset()"/>
     <div :style="{display: 'flex', flexDirection: 'row', flex: 1}">
       <code-mirror ref="editor"/>
       <control-area/>

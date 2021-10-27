@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      includeAssets: ['favicon.svg','favicon.ico','robots.txt','apple-touch-icon.png'],
+      includeAssets: ['favicon.ico','robots.txt','apple-touch-icon.png','icon.png','icon512.png'],
       manifest: {
         name: 'JSEdit',
         short_name: "JSEdit",
