@@ -33,9 +33,10 @@ window.appJScode=text;
 
 const updateSW=registerSW({
   onNeedRefresh(){
-    let a=confirm("Updaten?");
+    let a=confirm("Eine neue Version ist verfügbar. Willst du aktualisieren (empfohlen!)?");
     if(a){
       updateSW();
+      alert("Klicke, um diese Seite nach dem Update neu zu laden. Wenn wieder ein Update kommt, warte ein wenig, bis das Update fertig ist, bevor du klickst.");
       window.location.reload();
     }
   },
@@ -64,4 +65,13 @@ app.component('ConfirmPopup',ConfirmPopup);
 app.component('Toast',Toast);
 app.component('Splitter',Splitter);
 app.component('SplitterPanel',SplitterPanel);
-app.mount('#app');
+window.app=app.mount('#app');
+
+window.onmessage=function(message){
+  message=message.data;
+  let app=window.app;
+  if(message.type==="error"){
+    message=message.data;
+    app.$refs.editor.$refs.editor.setRuntimeError(message.completeMessage);
+  }
+}

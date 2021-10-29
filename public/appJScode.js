@@ -47,11 +47,23 @@ window.appJScode=function(){
           }
         }
         if(eventName==='down' && window.onMouseDown){
-          window.onMouseDown();
+          try{
+            window.onMouseDown();
+          }catch(e){
+            $App.handleException(e);
+          }
         }else if(eventName==='up' && window.onMouseUp){
-          window.onMouseUp();
+          try{
+            window.onMouseUp();
+          }catch(e){
+            $App.handleException(e);
+          }
         }else if(eventName==='move' && window.onMouseMove){
-          window.onMouseMove();
+          try{
+            window.onMouseMove();
+          }catch(e){
+            $App.handleException(e);
+          }
         }
       }
     },
@@ -60,6 +72,48 @@ window.appJScode=function(){
     canvas: null,
     showConsoleOnStart: true
   };
+  
+  window.onerror=function(message, source, lineno, colno, error){
+    $App.handleError({
+      message: message,
+      line: lineno,
+      col: colno,
+      completeMessage: "Fehler in Zeile "+lineno+", Position "+colno+": "+message
+    });
+    
+  };
+  
+  $App.handleError=function(errorData){
+    if(window.parent!==window){
+      window.parent.postMessage({type: "error", data: errorData});
+    }else{
+      alert(errorData.completeMessage);
+    }
+  }
+  
+  $App.handleException=function(e){
+    var m=e.message;
+    var line=-1;
+    var col=-1;
+    if(e.stack){
+      var stack=e.stack;
+      var pos=stack.lastIndexOf("(");
+      var pos2=stack.lastIndexOf(")");
+      if(pos>0 && pos2>0){
+        var zeile=stack.substring(pos+1,pos2);
+        //TODO: Verweise auf appJS herausnehmen??
+      }
+    }else{
+      stack="Fehler an unbekannter Stelle. Verwende einen anderen Browser.";
+    }
+    
+    $App.handleError({
+      message: m,
+      line: line,
+      col: col,
+      completeMessage: stack
+    });
+  }
   
   $App.createElement=function(tagname){
     let el=document.createElement(tagname);
@@ -131,7 +185,11 @@ window.appJScode=function(){
     }else if(tagname==="button"){
       el.addEventListener("click",function(){
         if(window.onAction){
-          window.onAction(this);
+          try{
+            window.onAction(this);
+          }catch(e){
+            $App.handleException(e);
+          }
         }
       });
       el.appJSData.label="";
@@ -243,7 +301,11 @@ window.appJScode=function(){
       }
       this.onResize();
       if(window.onStart){
-        await window.onStart();
+        try{
+          await window.onStart();
+        }catch(e){
+          $App.handleException(e);
+        }
       }
       this.addMouseStateHandler(this.canvas.el);
       this.animationFrame=async ()=>{
@@ -252,7 +314,7 @@ window.appJScode=function(){
           try{
             await window.onNextFrame();
           }catch(e){
-            console.error(e);
+            $App.handleException(e);
           }
         }
         requestAnimationFrame(this.animationFrame);
@@ -341,12 +403,20 @@ window.appJScode=function(){
             button=null;
           }
           if(window.onGamepadDown){
-            window.onGamepadDown(button);
+            try{
+              window.onGamepadDown(button);
+            }catch(e){
+              $App.handleException(e);
+            }
           }
         }
       }
       if(window.onKeyDown){
-        window.onKeyDown(k);
+        try{
+          window.onKeyDown(k);
+        }catch(e){
+          $App.handleException(e);
+        }
       }
     }
   };
@@ -365,12 +435,20 @@ window.appJScode=function(){
           button=null;
         }
         if(window.onGamepadUp){
-          window.onGamepadUp(button);
+          try{
+            window.onGamepadUp(button);
+          }catch(e){
+            $App.handleException(e);
+          }
         }
       }
     }
     if(window.onKeyUp){
-      window.onKeyUp(k);
+      try{
+        window.onKeyUp(k);
+      }catch(e){
+        $App.handleException(e);
+      }
     }
   };
   
@@ -1389,9 +1467,17 @@ window.appJScode=function(){
           v=button.pressed;
         }
         if(v && !buttonState.down && window.onGamepadDown){
-          window.onGamepadDown(a);
+          try{
+            window.onGamepadDown(a);
+          }catch(e){
+            $App.handleException(e);
+          }
         }else if(!v && buttonState.down && window.onGamepadUp){
-          window.onGamepadUp(a);
+          try{
+            window.onGamepadUp(a);
+          }catch(e){
+            $App.handleException(e);
+          }
         }
         buttonState.down=v;
       }
@@ -1405,9 +1491,17 @@ window.appJScode=function(){
           v=axis>0.2;
         }
         if(v && !buttonState.down && window.onGamepadDown){
-          window.onGamepadDown(a);
+          try{
+            window.onGamepadDown(a);
+          }catch(e){
+            $App.handleException(e);
+          }
         }else if(!v && buttonState.down && window.onGamepadUp){
-          window.onGamepadUp(a);
+          try{
+            window.onGamepadUp(a);
+          }catch(e){
+            $App.handleException(e);
+          }
         }
         buttonState.down=v;
       }
@@ -1439,7 +1533,11 @@ window.appJScode=function(){
           this.button.down=true;
           this.button.el.style.opacity="0.5";
           if(window.onGamepadDown){
-            window.onGamepadDown(this.button.name);
+            try{
+              window.onGamepadDown(this.button.name);
+            }catch(e){
+              $App.handleException(e);
+            }
           }
         };
         b.onmouseup=function(ev){
@@ -1448,7 +1546,11 @@ window.appJScode=function(){
           this.button.down=false;
           this.button.el.style.opacity="1";
           if(window.onGamepadUp){
-            window.onGamepadUp(this.button.name);
+            try{
+              window.onGamepadUp(this.button.name);
+            }catch(e){
+              $App.handleException(e);
+            }
           }
         };
         b.addEventListener("touchstart",b.onmousedown);
@@ -1465,7 +1567,11 @@ window.appJScode=function(){
             this.button.down=false;
             this.button.el.style.opacity="1";
             if(window.onGamepadUp){
-              window.onGamepadUp(this.button.name);
+              try{
+                window.onGamepadUp(this.button.name);
+              }catch(e){
+                $App.handleException(e);
+              }
             }
           }
         };
@@ -1489,11 +1595,19 @@ window.appJScode=function(){
       }
       this.joystick=new $App.$JoyStick(div,function(){
         if(window.onGamepadDown){
-          window.onGamepadDown(null);
+          try{
+            window.onGamepadDown(null);
+          }catch(e){
+            $App.handleException(e);
+          }
         }
       }, function(){
         if(window.onGamepadUp){
-          window.onGamepadUp(null);
+          try{
+            window.onGamepadUp(null);
+          }catch(e){
+            $App.handleException(e);
+          }
         }
       });
       this.joystick.element=div;
@@ -1671,23 +1785,23 @@ window.appJScode=function(){
     this.objects=[];
     this.eventHandlers=[];
     this.element.style="overflow-x: hidden; overflow-y: auto;tab-size: 2; padding: 0.5em;background-color: white;position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 100";
-    this.element.innerHTML=`<h1>Willkommen bei AppJS</h1>
-    <p>Version `+$App.version+`</p>
-    <p>Mit AppJS kannst du deine eigenen Apps in der Sprache JavaScript programmieren. AppJS stellt dir einige zusätzliche Befehle zur Verfügung, die dir das Leben etwas einfacher machen.</p>
-    <p><a href="https://thomaskl.uber.space/Webapps/AppJS/help.html" target="_blank">Link zu dieser Hilfe</a></p>
-    <h2>Grundaufbau einer App</h2>
-    <details><summary>Eine App mit AppJS sollte folgendermaßen aussehen:</summary>
-    <p><code><pre>&lt;script src="https://thomaskl.uber.space/Webapps/AppJS/app.js"&gt;&lt;/script&gt;
-  &lt;script&gt;
-  
-  setupApp("Name meiner App", "😀", 100, 100, "blue");
-  
-  function onStart(){
-    drawCircle(50,50,10);
-  }
-  
-  &lt;/script&gt;</pre></code></p>
-    </details>`;
+    this.element.innerHTML="<h1>Willkommen bei AppJS</h1>"
+    +"\n<p>Version "+$App.version+"</p>"
+    +"\n<p>Mit AppJS kannst du deine eigenen Apps in der Sprache JavaScript programmieren. AppJS stellt dir einige zusätzliche Befehle zur Verfügung, die dir das Leben etwas einfacher machen.</p>"
+    +"\n<p><a href=\"https://thomaskl.uber.space/Webapps/AppJS/help.html\" target=\"_blank\">Link zu dieser Hilfe</a></p>"
+    +"\n<h2>Grundaufbau einer App</h2>"
+    +"\n<details><summary>Eine App mit AppJS sollte folgendermaßen aussehen:</summary>"
+    +"\n<p><code><pre>&lt;script src=\"https://thomaskl.uber.space/Webapps/AppJS/app.js\"&gt;&lt;/script&gt;"
+  +"\n&lt;script&gt;"
+  +"\n"
+  +"\nsetupApp(\"Name meiner App\", \"😀\", 100, 100, \"blue\");"
+  +"\n"
+  +"\nfunction onStart(){"
+  +"\n  drawCircle(50,50,10);"
+  +"\n}"
+  +"\n"
+  +"\n&lt;/script&gt;</pre></code></p>"
+    +"\n</details>";
     let closeButton=document.createElement("button");
     closeButton.innerHTML="&times;"
     closeButton.style="font-size: 150%; position: fixed; right: 0.5rem; top: 0.5rem; border-radius: 2px";
@@ -1705,7 +1819,22 @@ window.appJScode=function(){
   }
   
   $App.Help.prototype={
+    getInfos: function(){
+      return JSON.stringify({
+        functions: this.functions,
+        objects: this.objects,
+        eventHandlers: this.eventHandlers
+      });
+    },
     addFunction: function(funcInfo){
+      // name: name,
+      // args: args,
+      // info: info,
+      // details: details,
+      // isNative: isNative
+      funcInfo.getAutocompleteSnippet=function(){
+  
+      }
       this.functions.push(funcInfo);
     },
     addObject: function(name,info,members,details){
@@ -2171,8 +2300,25 @@ window.appJScode=function(){
       $App.canvas.addElement(b,cx,cy,width,height);
       return b;
     },
-    input: function (placeholdertext,cx,cy,width,height){
+    input: function (type,placeholdertext,cx,cy,width,height){
+      //Legacy: wenn die ersten beiden argumente strings sind, passiert nichts, ansonsten wird type auf "text" gesetzt
+      if(type!==undefined && type.split && placeholdertext!==undefined && placeholdertext.split){
+      }else{
+        return this.input("text",type,placeholdertext,cx,cy,width,height);
+      }
       var b=$App.createElement("input");
+      b.type=type;
+      Object.defineProperty(b,"value",{
+        get: function(){
+          var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
+          var v=valueProp.get.call(b);
+          if(b.type==="number"||b.type==="range"){
+            return v*1;
+          }else{
+            return v;
+          }
+        }
+      })
       b.placeholder=placeholdertext;
       $App.canvas.addElement(b,cx,cy,width,height);
       return b;
@@ -2199,7 +2345,7 @@ window.appJScode=function(){
     }
   },'Erlaubt das Hinzufügen und Manipulieren der grafischen Benutzeroberfläche (UI).',[
     {name: 'button(text,cx,cy,width,height)', info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert den Button zurück.'},
-    {name: 'input(placeholdertext,cx,cy,width,height)', info: 'Erzeugt ein neues Eingabefeld mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Eingabefeld zurück.'},
+    {name: 'input(type,placeholdertext,cx,cy,width,height)', info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst außerdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Höhe <code>height</code> festlegen. Liefert das Eingabefeld zurück.'},
     {name: 'textarea(placeholdertext,cx,cy,width,height)', info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert die TextArea zurück.'},
     {name: 'select(options,cx,cy,width,height)', info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Select-Element zurück.'},
     {name: 'label(text,cx,cy,width,height)', info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Label zurück.'}
@@ -2237,6 +2383,7 @@ window.appJScode=function(){
       $App.systemVariables[a]=true;
     }
   })();
-
+  
+  
 
 }

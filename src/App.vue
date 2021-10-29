@@ -1,5 +1,5 @@
 <template>
-  <Editor/>
+  <Editor ref="editor"/>
 </template>
 
 <script>

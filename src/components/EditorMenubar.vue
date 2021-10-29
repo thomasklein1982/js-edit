@@ -11,6 +11,13 @@ export default {
     return {
       items: [
         {
+          label: 'Ausführen',
+          icon: 'pi pi-fw pi-play',
+          command: (ev)=>{
+            this.$emit("play");
+          }
+        },
+        {
           label: 'Neu',
           icon: 'pi pi-fw pi-file',
           command: (ev)=>{
@@ -27,30 +34,23 @@ export default {
             this.$emit("export");
           }
         },
-        {
-          label: 'Importieren',
-          icon: 'pi pi-sign-in',
-          command: async (ev)=>{
-            this.$emit("import");
-          }
-        },
-        {
-          label: 'Hochladen',
-          icon: 'pi pi-upload',
-          command: async (ev)=>{
-            let f=await upload();
-            if(f){
-              this.$emit("upload",f);
-            }
-          }
-        },
-        {
-          label: 'Herunterladen',
-          icon: 'pi pi-download',
-          command: (ev)=>{
-            this.$emit('download');
-          }
-        },
+        // {
+        //   label: 'Hochladen',
+        //   icon: 'pi pi-upload',
+        //   command: async (ev)=>{
+        //     let f=await upload();
+        //     if(f){
+        //       this.$emit("upload",f);
+        //     }
+        //   }
+        // },
+        // {
+        //   label: 'Herunterladen',
+        //   icon: 'pi pi-download',
+        //   command: (ev)=>{
+        //     this.$emit('download');
+        //   }
+        // },
         {
           label: 'Einstellungen',
           icon: 'pi pi-cog',

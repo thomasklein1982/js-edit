@@ -1,13 +1,9 @@
 <template>
   <div id="root">
     <div id="editor" ref="editor"></div>
-    <div v-if="errors" id="errors">
-      <!-- <table>
-        <tr v-for="(e,i) in clazz.errors" :key="'error'+i">
-          <td>{{e.line.number}}:{{e.col}}:</td><td>{{e.message}} </td>
-        </tr>
-      </table> -->
-      {{errors}}
+    <div v-if="errors || runtimeError" id="errors">
+      <div v-if="errors"><span style="color: red" class="pi pi-exclamation-circle"></span>{{errors}}</div> 
+      <div v-if="runtimeError" @click="runtimeError=null"><span style="color: red" class="pi pi-exclamation-circle"></span>{{runtimeError}}</div>
     </div>
   </div>
   
@@ -34,7 +30,8 @@
         src: '',
         size: 0,
         editor: null,
-        errors: null
+        errors: null,
+        runtimeError: null
       };
     },
     async mounted(){
@@ -81,10 +78,14 @@
     },
     methods: {
       reset: function(){
+        this.runtimeError=null;
         this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
         this.editor.dispatch({
           changes: {from: 0, to: this.size, insert: this.$root.sourceCode}
         });
+      },
+      setRuntimeError: function(error){
+        this.runtimeError=error;
       },
       check(){
         let src=this.$root.sourceCode;
@@ -99,7 +100,12 @@
           if(errors){
             let t="Zeile "+errors.loc.line+": ";
             if(errors.message.startsWith("Unexpected token")){
-              t+="Unerwartetes Zeichen";
+              if(errors.pos>=this.$root.sourceCode.length){
+                t+="Unerwartes Ende des Codes. Fehlt eine '}'?"
+              }else{
+                t+="Unerwartetes Zeichen";
+              }
+              
             }else{
               t+=errors.message;
             }

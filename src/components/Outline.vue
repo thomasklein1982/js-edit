@@ -1,7 +1,7 @@
 <template>
   <div style="overflow: auto" class="outline">
     Outline
-    <p v-for="i in 20" :key="i">{{i}}</p>
+    <em>Hieran wird noch gearbeitet :)</em>
   </div>
 </template>
 
