@@ -18,6 +18,7 @@ import Toast from "primevue/toast";
 import ConfirmPopup from 'primevue/confirmpopup';
 import Splitter from "primevue/splitter";
 import SplitterPanel from 'primevue/splitterpanel'
+import Slider from "primevue/slider";
 
 import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css';
@@ -36,8 +37,8 @@ const updateSW=registerSW({
     let a=confirm("Eine neue Version ist verfügbar. Willst du aktualisieren (empfohlen!)?");
     if(a){
       updateSW();
-      alert("Klicke, um diese Seite nach dem Update neu zu laden. Wenn wieder ein Update kommt, warte ein wenig, bis das Update fertig ist, bevor du klickst.");
-      window.location.reload();
+      alert("Update im Gange.");
+      location.reload();
     }
   },
   onOfflineReady(){
@@ -65,6 +66,7 @@ app.component('ConfirmPopup',ConfirmPopup);
 app.component('Toast',Toast);
 app.component('Splitter',Splitter);
 app.component('SplitterPanel',SplitterPanel);
+app.component('Slider',Slider);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){

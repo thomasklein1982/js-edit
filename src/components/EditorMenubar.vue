@@ -55,7 +55,14 @@ export default {
           label: 'Einstellungen',
           icon: 'pi pi-cog',
           command: (ev)=>{
-            
+            this.$emit("settings");
+          }
+        },
+        {
+          label: 'Neu laden',
+          icon: 'pi pi-refresh',
+          command: (ev)=>{
+            location.reload();
           }
         }
       ]

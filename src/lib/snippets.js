@@ -81,6 +81,41 @@ export function prepareSnippets(snippets){
   }
 
   
+  snippets.push(autocomplete.snippetCompletion("Math", {
+    label: "Math",
+    info: "Enthält eine Vielzahl mathematischer Funktionen und Konstanten.",
+    type: "object"
+  }));
+
+  snippets.push(autocomplete.snippetCompletion("Math.round(${x})", {
+    label: "Math.round",
+    info: "Rundet die Zahl auf Ganze.",
+    type: "function"
+  }));
+
+  snippets.push(autocomplete.snippetCompletion("Math.floor(${x})", {
+    label: "Math.floor",
+    info: "Rundet die Zahl auf Ganze ab.",
+    type: "function"
+  }));
+
+  snippets.push(autocomplete.snippetCompletion("Math.ceil(${x})", {
+    label: "Math.ceil",
+    info: "Rundet die Zahl auf Ganze auf.",
+    type: "function"
+  }));
+
+  snippets.push(autocomplete.snippetCompletion("Math.sin(${x})", {
+    label: "Math.sin",
+    info: "Berechnet den Sinus der Zahl im Bogenmaß.",
+    type: "function"
+  }));
+
+  snippets.push(autocomplete.snippetCompletion("Math.cos(${x})", {
+    label: "Math.cos",
+    info: "Berechnet den Kosinus der Zahl im Bogenmaß.",
+    type: "function"
+  }));
 
   snippets.push(autocomplete.snippetCompletion("Math.sqrt(${x})", {
     label: "Math.sqrt",

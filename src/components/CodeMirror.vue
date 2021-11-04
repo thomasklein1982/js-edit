@@ -1,6 +1,6 @@
 <template>
   <div id="root">
-    <div id="editor" ref="editor"></div>
+    <div id="editor" ref="editor" :style="{fontSize: (0.55*fontSize+5)+'px'}"></div>
     <div v-if="errors || runtimeError" id="errors">
       <div v-if="errors"><span style="color: red" class="pi pi-exclamation-circle"></span>{{errors}}</div> 
       <div v-if="runtimeError" @click="runtimeError=null"><span style="color: red" class="pi pi-exclamation-circle"></span>{{runtimeError}}</div>
@@ -23,11 +23,12 @@
 
   export default {
     props: {
-      project: Object
+      project: Object,
     },
     data(){
       return {
         src: '',
+        fontSize: 20,
         size: 0,
         editor: null,
         errors: null,
@@ -43,6 +44,7 @@
       }else{
         this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
       }
+
       let editor=new EditorView({
         state: EditorState.create({
           doc: "",
@@ -76,7 +78,19 @@
         changes: {from: 0, to: 0, insert: this.$root.sourceCode}
       });
     },
+    computed: {
+      realFontsize(){
+        console.log("real font")
+        let fs=this.fontSize;
+        fs=Math.round(0.55*fs)+5;
+        return fs;
+      }
+    },
     methods: {
+      setFontSize(fs){
+        this.fontSize=fs;
+        
+      },
       reset: function(){
         this.runtimeError=null;
         this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
