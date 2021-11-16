@@ -3,7 +3,7 @@ window.appJScode=function(){
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
   window.$App={
-    version: 5,
+    version: 6,
     setupData: null,
     assets: [],
     body: {
@@ -87,7 +87,7 @@ window.appJScode=function(){
     if(window.parent!==window){
       window.parent.postMessage({type: "error", data: errorData});
     }else{
-      alert(errorData.completeMessage);
+      console.log(errorData.completeMessage);
     }
   }
   
@@ -645,6 +645,11 @@ window.appJScode=function(){
       x: 0,
       y: 0
     };
+    this.state={
+      color: "black",
+      lineWidth: 0.5,
+      fontSize: 5
+    };
     this.reset();
   };
   
@@ -659,11 +664,11 @@ window.appJScode=function(){
       this.clear(true);
       this.lastPoint.x=0;
       this.lastPoint.y=0;
-      this.color="#000";
       this.setStroke(new $App.BasicStroke());
-      this.setLinewidth(0.5);
+      this.setLinewidth(this.state.lineWidth,true);
       this.ctx.setTransform(1,0,0,1,0,0);
-      this.setFontsize(5);
+      this.setFontsize(this.state.fontSize,true);
+      this.setColor(this.state.color,true);
     },
     rotate: function(theta,x,y){
       theta*=Math.PI/180;
@@ -768,6 +773,7 @@ window.appJScode=function(){
         this.addCommand("setColor",[c]);
       }
       this.color=c;
+      this.state.color=c;
       this.ctx.strokeStyle=c;
       this.ctx.fillStyle=this.ctx.strokeStyle;
     },
@@ -775,6 +781,7 @@ window.appJScode=function(){
       if(!dontAdd){
         this.addCommand("setFontsize",[size]);
       }
+      this.state.fontSize=size;
       this.ctx.font=this.getHeight(size,true)+"px monospace";
     },
     getPixelFontsize: function(){
@@ -785,11 +792,10 @@ window.appJScode=function(){
         lw=this.getHeight(lw,true);
         this.addCommand("setLinewidth",[lw]);
       }
-      this.$stroke.$width=lw;
-      this.ctx.lineWidth=this.$stroke.$width;
+      this.state.lineWidth=lw;
+      this.ctx.lineWidth=lw;
     },
     setStroke: function(s){
-      this.$stroke=s;
       this.ctx.lineWidth=s.$width;
       var a=["butt","round","square"];
       this.ctx.lineCap=a[s.$cap];
@@ -802,6 +808,9 @@ window.appJScode=function(){
     },
     clear: function(withoutCommands){
       this.el.width=this.el.width;
+      this.setLinewidth(this.state.lineWidth,true);
+      this.setFontsize(this.state.fontSize,true);
+      this.setColor(this.state.color,true);
       if(!withoutCommands){
         this.commands=[];
       }
@@ -2386,5 +2395,4 @@ window.appJScode=function(){
   })();
   
   
-
 }
