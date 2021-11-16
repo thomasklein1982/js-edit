@@ -1,9 +1,8 @@
 window.appJScode=function(){
-
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
   window.$App={
-    version: 6,
+    version: 7,
     setupData: null,
     assets: [],
     body: {
@@ -661,6 +660,9 @@ window.appJScode=function(){
       this.ctx.restore();
     },
     reset: function(){
+      this.state.color="black";
+      this.state.lineWidth=0.5;
+      this.state.fontSize=5;
       this.clear(true);
       this.lastPoint.x=0;
       this.lastPoint.y=0;
@@ -2394,5 +2396,5 @@ window.appJScode=function(){
     }
   })();
   
-  
+   
 }

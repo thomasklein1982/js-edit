@@ -20,7 +20,7 @@ export default {
   computed: {
     code: function(){
       let c=this.$root.sourceCode;
-      c='\<script src="https://thomaskl.uber.space/Webapps/AppJS/app.js"\>\</script\>\n\<script\>\n'+c+'\n\</script\>';
+      c='\<script src="https://thomaskl.uber.space/Webapps/AppJS/app.js"\>\</script\>\n\<script\>\nconsole.hide()\n\n'+c+'\n\</script\>';
       return c;
     }
   },
