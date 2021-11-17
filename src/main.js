@@ -37,8 +37,6 @@ const updateSW=registerSW({
     let a=confirm("Eine neue Version ist verfügbar. Willst du aktualisieren (empfohlen!)?");
     if(a){
       updateSW();
-      alert("Update im Gange.");
-      location.reload();
     }
   },
   onOfflineReady(){
