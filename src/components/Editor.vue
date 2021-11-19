@@ -8,6 +8,7 @@
     <editor-menubar 
       @play="runApp()" 
       @export="exportApp()"
+      @prettify="prettifyCode()"
       @settings="$refs.settingsDialog.setVisible(true)" 
       @new="$refs.editor.reset()"
     />
@@ -46,6 +47,9 @@ export default {
     runApp(){
       this.$refs.editor.setRuntimeError();
       this.$refs.controlArea.play()
+    },
+    prettifyCode(){
+      this.$refs.editor.prettifyCode();
     }
   },
   components: {

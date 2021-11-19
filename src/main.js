@@ -44,8 +44,6 @@ const updateSW=registerSW({
   }
 });
 
-//window.store={sourceCode: ''};
-
 let app=createApp(App);
 app.use(PrimeVue.default);
 app.use(ConfirmationService);

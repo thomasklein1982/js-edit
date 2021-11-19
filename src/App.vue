@@ -10,7 +10,7 @@ export default{
   data(){
     return {
       sourceCode: '',
-      version: "6"
+      version: "9"
     };
   },
   components: {

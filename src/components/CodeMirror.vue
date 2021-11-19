@@ -18,7 +18,7 @@
   import * as acorn from "acorn";
   import { loadLocally, saveLocally } from "../lib/helper";
   import { prepareSnippets } from "../lib/snippets";
-  
+
   prepareSnippets(snippets);
 
   export default {
@@ -80,13 +80,25 @@
     },
     computed: {
       realFontsize(){
-        console.log("real font")
         let fs=this.fontSize;
         fs=Math.round(0.55*fs)+5;
         return fs;
       }
     },
     methods: {
+      prettifyCode(){
+        var code=this.$root.sourceCode;
+        code=js_beautify(code,{
+          "indent_size": 2,
+          "preserve_newlines": false,
+          "space_in_paren": true,
+          "space_in_empty_paren": true
+        });
+        this.$root.sourceCode=code;
+        this.editor.dispatch({
+          changes: {from: 0, to: this.size, insert: code}
+        });
+      },
       setFontSize(fs){
         this.fontSize=fs;
         

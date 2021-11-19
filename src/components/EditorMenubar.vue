@@ -18,6 +18,13 @@ export default {
           }
         },
         {
+          label: 'Formatieren',
+          icon: 'pi pi-fw pi-align-left',
+          command: (ev)=>{
+            this.$emit("prettify");
+          }
+        },
+        {
           label: 'Neu',
           icon: 'pi pi-fw pi-file',
           command: (ev)=>{
