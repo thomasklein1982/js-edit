@@ -13,9 +13,11 @@
   import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
   import { javascript, snippets } from "@codemirror/lang-javascript";
   import {keymap} from "@codemirror/view"
+  import {EditorSelection} from "@codemirror/state"
   import {indentWithTab} from "@codemirror/commands"
   import { indentUnit } from "@codemirror/language";
   import * as acorn from "acorn";
+  import {parse} from '../lib/parse'
   import { loadLocally, saveLocally } from "../lib/helper";
   import { prepareSnippets } from "../lib/snippets";
 
@@ -29,6 +31,8 @@
       return {
         src: '',
         fontSize: 20,
+        state: null,
+        view: null,
         size: 0,
         editor: null,
         errors: null,
@@ -113,8 +117,18 @@
       setRuntimeError: function(error){
         this.runtimeError=error;
       },
-      check(){
+      setCursor: function(position){
+        this.editor.focus();
+        this.editor.dispatch({
+          selection: new EditorSelection([EditorSelection.cursor(position)], 0),
+          scrollIntoView: true
+        });
+      },
+      async check(){
         let src=this.$root.sourceCode;
+        let infos=await parse(src,this.state.tree);
+        this.$emit("parse",infos);
+        console.log(infos);
         let p=new Promise((resolve,reject)=>{
           try{
             let ast=acorn.parse(src, {ecmaVersion: 2020});
@@ -142,8 +156,9 @@
         });
       },
       update(viewUpdate){
-        var state=viewUpdate.state;
-        var src=state.doc.toString();
+        this.state=viewUpdate.state;
+        this.view=viewUpdate.view;
+        var src=this.state.doc.toString();
         this.$root.sourceCode=src;
         saveLocally("js-edit-current",src);
         this.check();

@@ -14,10 +14,16 @@
     />
     <Splitter :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
-        <code-mirror ref="editor"/>
+        <code-mirror 
+          ref="editor"
+          @parse="updateOutline"
+        />
       </SplitterPanel>
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">  
-        <control-area ref="controlArea"/>
+        <control-area
+          @outlineclick="outlineClick" 
+          ref="controlArea"
+        />
       </SplitterPanel>
     </Splitter>
   </div>
@@ -37,6 +43,14 @@ export default {
     };
   },
   methods: {
+    outlineClick(info){
+      if('from' in info){
+        this.$refs.editor.setCursor(info.from);
+      }
+    },
+    updateOutline(infos){
+      this.$refs.controlArea.updateOutline(infos.outline);
+    },
     setFontSize(fs){
       console.log("setFontsize");
       this.$refs.editor.setFontSize(fs);

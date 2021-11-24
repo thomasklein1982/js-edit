@@ -1,8 +1,9 @@
 window.appJScode=function(){
+
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 window.$App={
-  version: 8,
+  version: 9,
   setupData: null,
   assets: [],
   body: {
@@ -690,9 +691,6 @@ $App.Canvas.prototype={
     this.ctx.restore();
   },
   reset: function(){
-    this.state.color="black";
-    this.state.lineWidth=0.5;
-    this.state.fontSize=5;
     this.clear(true);
     this.lastPoint.x=0;
     this.lastPoint.y=0;
@@ -810,10 +808,10 @@ $App.Canvas.prototype={
     this.ctx.fillStyle=this.ctx.strokeStyle;
   },
   setFontsize: function(size,dontAdd){
+    this.state.fontSize=size;
     if(!dontAdd){
       this.addCommand("setFontsize",[size]);
     }
-    this.state.fontSize=size;
     this.ctx.font=this.getHeight(size,true)+"px monospace";
   },
   getPixelFontsize: function(){
@@ -821,14 +819,13 @@ $App.Canvas.prototype={
   },
   setLinewidth: function(lw,dontAdd){
     if(!dontAdd){
-      lw=this.getHeight(lw,true);
       this.addCommand("setLinewidth",[lw]);
     }
     this.state.lineWidth=lw;
+    lw=this.getHeight(lw,true);
     this.ctx.lineWidth=lw;
   },
   setStroke: function(s){
-    this.ctx.lineWidth=s.$width;
     var a=["butt","round","square"];
     this.ctx.lineCap=a[s.$cap];
     a=["miter","round","bevel"];
@@ -862,12 +859,12 @@ $App.Canvas.prototype={
   },
   drawLine: function(x1,y1,x2,y2,dontAdd){
     if(!dontAdd){
-      x1=this.getX(x1);
-      y1=this.getY(y1);
-      x2=this.getX(x2);
-      y2=this.getY(y2);
       this.addCommand("drawLine",[x1,y1,x2,y2]);
     }
+    x1=this.getX(x1);
+    y1=this.getY(y1);
+    x2=this.getX(x2);
+    y2=this.getY(y2);
     this.ctx.beginPath();
     this.ctx.moveTo(x1,y1);
     this.ctx.lineTo(x2,y2);
@@ -875,10 +872,10 @@ $App.Canvas.prototype={
   },
   beginPath: function(x,y,dontAdd){
     if(!dontAdd){
-      x=this.getX(x);
-      y=this.getY(y);
       this.addCommand("beginPath",[x,y]);
     }
+    x=this.getX(x);
+    y=this.getY(y);
     this.lastPoint.x=x;
     this.lastPoint.y=y;
     this.ctx.beginPath();
@@ -886,30 +883,30 @@ $App.Canvas.prototype={
   },
   jump: function(dx,dy,dontAdd){
     if(!dontAdd){
-      dx=this.getWidth(dx);
-      dy=this.getHeight(dy);
       this.addCommand("jump",[dx,dy]);
     }
+    dx=this.getWidth(dx);
+    dy=this.getHeight(dy);
     this.lastPoint.x+=dx;
     this.lastPoint.y-=dy;
     this.ctx.moveTo(this.lastPoint.x,this.lastPoint.y);
   },
   jumpTo: function(x,y,dontAdd){
     if(!dontAdd){
-      x=this.getX(x);
-      y=this.getY(y);
       this.addCommand("jumpTo",[x,y]);
     }
+    x=this.getX(x);
+    y=this.getY(y);
     this.lastPoint.x=x;
     this.lastPoint.y=y;
     this.ctx.moveTo(this.lastPoint.x,this.lastPoint.y);
   },
   rect: function(w,h,dontAdd){
     if(!dontAdd){
-      w=this.getWidth(w);
-      h=this.getHeight(h);
       this.addCommand("rect",[w,h]);
     }
+    w=this.getWidth(w);
+    h=this.getHeight(h);
     let x=this.lastPoint.x;
     let y=this.lastPoint.y;
     this.ctx.moveTo(x-w/2,y-h/2);
@@ -920,7 +917,6 @@ $App.Canvas.prototype={
   },
   circle: function(r,start,stop,dontAdd){
     if(!dontAdd){
-      r=this.getWidth(r);
       if(start===undefined){
         start=0;
       }
@@ -929,6 +925,7 @@ $App.Canvas.prototype={
       }
       this.addCommand("circle",[r,start,stop]);
     }
+    r=this.getWidth(r);
     let cx=this.lastPoint.x;
     let cy=this.lastPoint.y;
     let counterclockwise=start<=stop;
@@ -937,10 +934,10 @@ $App.Canvas.prototype={
   },
   line: function(dx,dy,dontAdd){
     if(!dontAdd){
-      dx=this.getWidth(dx);
-      dy=this.getHeight(dy);
       this.addCommand("line",[dx,dy]);
     }
+    dx=this.getWidth(dx);
+    dy=this.getHeight(dy);
     this.lastPoint.x+=dx;
     this.lastPoint.y-=dy;
     this.ctx.lineTo(this.lastPoint.x,this.lastPoint.y);
@@ -972,10 +969,10 @@ $App.Canvas.prototype={
   write: function(text,x,y,align,dontAdd){
     if(!dontAdd){
       align=this.$getAlignment(align);
-      x=this.getX(x);
-      y=this.getY(y);
       this.addCommand("write",[text,x,y,align]);
     }
+    x=this.getX(x);
+    y=this.getY(y);
     if(text.split){
       var lines=text.split("\n");
     }else{
@@ -1071,13 +1068,13 @@ $App.Canvas.prototype={
   },
   drawImage: function(image,cx,cy,w,h,angle,dontAdd){
     if(!dontAdd){
-      cx=this.getX(cx);
-      cy=this.getY(cy);
-      w=this.getWidth(w);
-      h=this.getHeight(h);
       angle*=Math.PI/180;
       this.addCommand('drawImage',[image,cx,cy,w,h,angle]);
     }
+    cx=this.getX(cx);
+    cy=this.getY(cy);
+    w=this.getWidth(w);
+    h=this.getHeight(h);
     this.ctx.translate(cx,cy);
     this.ctx.rotate(-angle);
     image=$App.getAsset(image);
@@ -1090,12 +1087,12 @@ $App.Canvas.prototype={
   },
   paintRect: function(x,y,w,h,fill,dontAdd){
     if(!dontAdd){
-      x=this.getX(x);
-      y=this.getY(y);
-      w=this.getWidth(w);
-      h=this.getHeight(h);
       this.addCommand("paintRect",[x,y,w,h,fill]);
     }
+    x=this.getX(x);
+    y=this.getY(y);
+    w=this.getWidth(w);
+    h=this.getHeight(h);
     if(fill){
       this.ctx.fillRect(x-w/2,y-h/2,w,h);
     }else{
@@ -1104,11 +1101,11 @@ $App.Canvas.prototype={
   },
   paintCircle: function(cx,cy,r,fill,dontAdd){
     if(!dontAdd){
-      cx=this.getX(cx);
-      cy=this.getY(cy);
-      r=this.getWidth(r);
       this.addCommand("paintCircle",[cx,cy,r,fill]);
     }
+    cx=this.getX(cx);
+    cy=this.getY(cy);
+    r=this.getWidth(r);
     this.ctx.beginPath();
     this.ctx.arc(cx,cy,r,0,2*Math.PI);
     if(fill){
@@ -1226,12 +1223,12 @@ $App.Canvas.prototype={
   },
   paintOval: function(x,y,w,h,fill,dontAdd){
     if(!dontAdd){
-      x=this.getX(x);
-      y=this.getY(y);
-      w=this.getWidth(w);
-      h=this.getHeight(h);
       this.addCommand("paintOval",[x,y,w,h,fill]);  
     }
+    x=this.getX(x);
+    y=this.getY(y);
+    w=this.getWidth(w);
+    h=this.getHeight(h);
     this.$createOval(x,y,w,h);
     this.ctx.closePath();
     if(fill){
@@ -2053,6 +2050,7 @@ $App.addEventHandler("onMouseMove",[],'Wird ausgeführt, wenn der Benutzer die M
 $App.addEventHandler("onMouseUp",[],'Wird ausgeführt, wenn der Benutzer die Maustaste loslässt oder die Berührung des Touchscreens mit dem Finger beendet.','');
 $App.addEventHandler("onGamepadDown",[{name: 'button', info: 'Der Name des Buttons, der gedrückt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer einen Teil des Gamepads berührt oder die zugeordnete Taste auf der Tastatur drückt.','');
 $App.addEventHandler("onGamepadUp",[{name: 'button', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer die Berührung des Gamepads beendet oder aufhört, die zugeordnete Taste auf der Tastatur zu drücken.','');
+$App.addEventHandler("onTimeout",[{name: 'name', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgeführt, wenn ein Timer abläuft. Du kannst mit time.start einen Timer starten.','');
 
 $App.addFunction(function setupApp(title,favicon,width,height,backgroundColor){
   $App.setupApp(title,favicon,width,height,backgroundColor);
@@ -2198,7 +2196,7 @@ $App.addObject("mouse",false,{
   inCircle(cx,cy,r){
     let x=this.x;
     let y=this.y;
-    return ((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r);
+    return ((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r*r);
   }
 },'Liefert dir Informationen über den Mauszeiger / den Finger (bei Touchscreens).',[{name: 'x', info: 'Die aktuelle x-Koordinate der Maus.'},{name: 'y', info: 'Die aktuelle y-Koordinate der Maus.'},{name: 'down', info: 'Ist gerade die Maustaste gedrückt / berührt der Finger gerade den Bildschirm?'}, {name: 'inRect(cx,cy,width,height)', info: 'Prüft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und Höhe height befindet.'}, {name: 'inCircle(cx,cy,r)', info: 'Prüft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'}]);
 
@@ -2224,7 +2222,66 @@ $App.addObject("time",false,{
   get year(){
     return (new Date()).getUTCFullYear();
   },
-},'Liefert dir Informationen über die Zeit.',[{name: 'now', info: 'Die aktuelle Zeit in Millisekunden seit dem 1.1.1970.'},{name: 'sec', info: 'Die Sekundenzahl der aktuellen Uhrzeit.'},{name: 'min', info: 'Die Minutenzahl der aktuellen Uhrzeit.'},{name: 'h', info: 'Die Stundenzahl der aktuellen Uhrzeit.'},{name: 'day', info: 'Der aktuelle Tag im Monat.'},{name: 'month', info: 'Der aktuelle Monat (1-12).'},{name: 'year', info: 'Die aktuelle Jahreszahl.'}]);
+  start(millis,name){
+    if(!$App.timer){
+      $App.timer=[];
+    }
+    if(name){
+      name=name.toLowerCase();
+      for(let i=0;i<$App.timer.length;i++){
+        let t=$App.timer[i];
+        if(t.name===name){
+          console.log("Es gibt bereits einen Timer mit dem Namen '"+name+"'.");
+          return;
+        }
+      }
+    }
+    
+    let id=setTimeout(()=>{
+      if(window.onTimeout){
+        for(let i=0;i<$App.timer.length;i++){
+          let t=$App.timer[i];
+          if(t.name===name){
+            $App.timer.splice(i,1);
+            break;
+          }
+        }
+        window.onTimeout(name);
+      }else{
+        console.log("Du hast einen Timer gestartet, aber es gibt keine 'onTimeout'-Funktion.");
+      }
+    },millis);
+    let timer={
+      name: name,
+      id: id
+    };
+    $App.timer.push(timer);
+  },
+  stop(name){
+    if(!$App.timer){
+      console.log("Es gibt keinen Timer, den du stoppen kannst.");
+      return;
+    }
+    if(name){
+      for(var i=0; i<$App.timer.length;i++){
+        let t=$App.timer[i];
+        if(t.name.toLowerCase===name){
+          $App.timer.splice(i,1);
+          clearTimeout(t.id);
+          return;
+        }
+      }
+      console.log("Es gibt keinen Timer mit dem Namen '"+name+"', den du stoppen könntest.");
+    }else{
+      /**Stoppe alle Timer */
+      for(var i=0; i<$App.timer.length;i++){
+        let t=$App.timer[i];
+        clearTimeout(t.id);
+      }
+      $App.timer=[];
+    }
+  }
+},'Liefert dir Informationen über die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',[{name: 'now', info: 'Die aktuelle Zeit in Millisekunden seit dem 1.1.1970.'},{name: 'sec', info: 'Die Sekundenzahl der aktuellen Uhrzeit.'},{name: 'min', info: 'Die Minutenzahl der aktuellen Uhrzeit.'},{name: 'h', info: 'Die Stundenzahl der aktuellen Uhrzeit.'},{name: 'day', info: 'Der aktuelle Tag im Monat.'},{name: 'month', info: 'Der aktuelle Monat (1-12).'},{name: 'year', info: 'Die aktuelle Jahreszahl.'}, {name: 'start(millis, name)', info: 'Startet einen Timer, der millis Millisekunden lang läuft. Wenn er abläuft löst er die Funktion <code>onTimeout</code> aus.'}, {name: 'stop(name)', info: 'Stoppt den Timer mit dem angegebenen Namen. Wenn du keinen Namen angibst, werden alle laufenden Timer gestoppt.'},{name: 'year', info: 'Die aktuelle Jahreszahl.'}]);
 
 $App.addObject('gamepad',false,{
   get left(){

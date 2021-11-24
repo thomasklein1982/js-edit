@@ -5,7 +5,11 @@
         <app-preview ref="preview"/>
       </SplitterPanel>
       <SplitterPanel style="overflow: hidden;" :style="{display: 'flex', flexDirection: 'column'}">
-        <Outline :style="{flex: 1}" ref="outline"/>
+        <Outline 
+          @click="outlineClick"
+          :style="{flex: 1}" 
+          ref="outline"
+        />
       </SplitterPanel>
     </Splitter>
   </div>
@@ -26,6 +30,12 @@ import Outline from './Outline.vue'
     methods: {
       play(){
         this.$refs.preview.reload();
+      },
+      outlineClick(item){
+        this.$emit('outlineclick',item);
+      },
+      updateOutline(outline){
+        this.$refs.outline.update(outline);
       }
     }
   }
