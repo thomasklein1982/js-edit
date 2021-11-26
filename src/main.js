@@ -6,6 +6,7 @@ import  Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import InputText from "primevue/inputtext";
 import InputNumber from "primevue/inputnumber";
+import InputSwitch from "primevue/inputswitch";
 import * as Dialog  from "primevue/dialog";
 import Menubar from 'primevue/menubar';
 import Sidebar from 'primevue/sidebar';
@@ -63,6 +64,7 @@ app.component('Toast',Toast);
 app.component('Splitter',Splitter);
 app.component('SplitterPanel',SplitterPanel);
 app.component('Slider',Slider);
+app.component('InputSwitch',InputSwitch);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){

@@ -7,6 +7,10 @@
         <h4>Schriftgröße</h4>
         <Slider @change="changeFontSize()" v-model="fontSize" />
       </p>
+      <p class="p-m-0">
+        <h4>Auto-Vervollständigung für globale Variablen</h4>
+        <InputSwitch @change="changeAutocompleteVariables" v-model="autocompleteVariables" />
+      </p>
       <template #footer>
         <Button label="OK" icon="pi pi-check" @click="setVisible(false)"/>
       </template>
@@ -18,7 +22,8 @@ export default {
   data(){
     return {
       show: false,
-      fontSize: 20
+      fontSize: 20,
+      autocompleteVariables: false
     };
   },
   computed: {
@@ -27,6 +32,9 @@ export default {
   methods: {
     changeFontSize(){
       this.$emit("fontsize",this.fontSize);
+    },
+    changeAutocompleteVariables(){
+      this.$emit("autocompletevariables",this.autocompleteVariables);
     },
     setVisible(v){
       this.show=v;

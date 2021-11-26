@@ -13,23 +13,28 @@
   import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
   import { javascript, snippets } from "@codemirror/lang-javascript";
   import {keymap} from "@codemirror/view"
-  import {EditorSelection} from "@codemirror/state"
+  import {EditorSelection,Compartment} from "@codemirror/state"
   import {indentWithTab} from "@codemirror/commands"
   import { indentUnit } from "@codemirror/language";
   import * as acorn from "acorn";
   import {parse} from '../lib/parse'
   import { loadLocally, saveLocally } from "../lib/helper";
-  import { prepareSnippets } from "../lib/snippets";
+  import { prepareSnippets,createParamsString } from "../lib/snippets";
+  import  * as autocomplete  from "@codemirror/autocomplete";
 
   prepareSnippets(snippets);
 
   export default {
     props: {
-      project: Object,
+      autocompleteVariables: {
+        type: Boolean,
+        default: true
+      }
     },
     data(){
       return {
         src: '',
+        language: null,
         fontSize: 20,
         state: null,
         view: null,
@@ -49,6 +54,8 @@
         this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
       }
 
+
+      this.language=new Compartment();
       let editor=new EditorView({
         state: EditorState.create({
           doc: "",
@@ -56,7 +63,7 @@
             basicSetup,
             EditorView.lineWrapping,
             indentUnit.of("  "),
-            javascript(),
+            this.language.of(javascript()),
             keymap.of([indentWithTab]),
             EditorView.updateListener.of((v) => {
               if(!changed){
@@ -90,6 +97,38 @@
       }
     },
     methods: {
+      updateAutocompletionSnippets(infos){
+        for(let i=0;i<snippets.length;i++){
+          let s=snippets[i];
+          if(s.isCustom){
+            snippets.pop();
+            i--;
+          }
+        }
+        for(let i=0;i<infos.outline.length;i++){
+          let f=infos.outline[i];
+          let s=autocomplete.snippetCompletion(f.name+createParamsString(f.params,true), {
+            label: f.name+"("+f.params.join(",")+")",
+            info: "Diese Funktion hast du definiert.",
+            type: "function"
+          });
+          s.isCustom=true;
+          snippets.push(s);
+        }
+        /**Variablen*/
+        for(let a in infos.variables){
+          let s=autocomplete.snippetCompletion(a, {
+            label: a,
+            info: "Eine Variable aus deinem Programm.",
+            type: "variable"
+          });
+          s.isCustom=true;
+          snippets.push(s);
+        }
+        this.editor.dispatch({
+          effects: this.language.reconfigure(javascript())
+        });
+      },
       prettifyCode(){
         var code=this.$root.sourceCode;
         code=js_beautify(code,{
@@ -126,9 +165,8 @@
       },
       async check(){
         let src=this.$root.sourceCode;
-        let infos=await parse(src,this.state.tree);
+        let infos=await parse(src,this.state.tree,{dontParseGlobalVariables: !this.autocompleteVariables});
         this.$emit("parse",infos);
-        console.log(infos);
         let p=new Promise((resolve,reject)=>{
           try{
             let ast=acorn.parse(src, {ecmaVersion: 2020});

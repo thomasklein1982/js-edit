@@ -3,6 +3,7 @@
   <settings-dialog 
     ref="settingsDialog"
     @fontsize="setFontSize"
+    @autocompletevariables="setAutocompleteVariables"
   />
   <div style="width: 100%; height: 100%; overflow: hidden" :style="{display: 'flex', flexDirection: 'column'}">
     <editor-menubar 
@@ -16,6 +17,7 @@
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
         <code-mirror 
           ref="editor"
+          :autocomplete-variables="autocompleteVariables"
           @parse="updateOutline"
         />
       </SplitterPanel>
@@ -33,13 +35,16 @@
 <script>
 import CodeMirror from "./CodeMirror.vue";
 import EditorMenubar from './EditorMenubar.vue';
+import  * as autocomplete  from "@codemirror/autocomplete";
+import { snippets } from "@codemirror/lang-javascript";
 import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";
 export default {
   data() {
     return {
-      fontSize: 20
+      fontSize: 20,
+      autocompleteVariables: false
     };
   },
   methods: {
@@ -50,6 +55,10 @@ export default {
     },
     updateOutline(infos){
       this.$refs.controlArea.updateOutline(infos.outline);
+      this.$refs.editor.updateAutocompletionSnippets(infos);
+    },
+    setAutocompleteVariables(v){
+      this.autocompleteVariables=v;
     },
     setFontSize(fs){
       console.log("setFontsize");

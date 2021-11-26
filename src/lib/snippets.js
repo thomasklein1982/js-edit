@@ -7,7 +7,7 @@ function replaceHTML(html){
   return t;
 }
 
-function createParamsString(params,useArgs){
+export function createParamsString(params,useArgs){
   let t=[];
   if(params){
     for(let i=0;i<params.length;i++){
@@ -129,7 +129,7 @@ export function prepareSnippets(snippets){
   }));
 
   
-  snippets.push(autocomplete.snippetCompletion("function ${name}(${params}) {\n\t${}\n}", {
+  snippets.push(autocomplete.snippetCompletion("function ${name}( ) {\n\t${}\n}", {
     label: "function",
     info: "Definiert eine neue Funktion.",
     type: "keyword"
