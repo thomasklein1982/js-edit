@@ -3,7 +3,7 @@ window.appJScode=function(){
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 window.$App={
-  version: 9,
+  version: 10,
   setupData: null,
   assets: [],
   body: {
@@ -678,7 +678,8 @@ $App.Canvas=function Canvas(parent,width,height){
   this.state={
     color: "black",
     lineWidth: 0.5,
-    fontSize: 5
+    fontSize: 5,
+    opacity: 1
   };
   this.reset();
 };
@@ -699,6 +700,7 @@ $App.Canvas.prototype={
     this.ctx.setTransform(1,0,0,1,0,0);
     this.setFontsize(this.state.fontSize,true);
     this.setColor(this.state.color,true);
+    this.setOpacity(this.state.opacity,true);
   },
   rotate: function(theta,x,y){
     theta*=Math.PI/180;
@@ -806,6 +808,13 @@ $App.Canvas.prototype={
     this.state.color=c;
     this.ctx.strokeStyle=c;
     this.ctx.fillStyle=this.ctx.strokeStyle;
+  },
+  setOpacity: function(v,dontAdd){
+    if(!dontAdd){
+      this.addCommand("setOpacity",[v]);
+    }
+    this.state.opacity=v;
+    this.ctx.globalAlpha=v;
   },
   setFontsize: function(size,dontAdd){
     this.state.fontSize=size;
@@ -1089,6 +1098,21 @@ $App.Canvas.prototype={
     if(!dontAdd){
       this.addCommand("paintRect",[x,y,w,h,fill]);
     }
+    var obj={
+      cx: x,
+      cy: y,
+      w: w,
+      h: h,
+      contains: function(x,y){
+        return (x>=this.cx-this.w/2 && x<=this.cx+this.w/2 && y>=this.cy-this.h/2 && y<=this.cy+this.h/2);
+      },
+      draw: function(){
+        $App.paintRect(this.cx,this.cy,this.w,this.h,false)
+      },
+      fill: function(){
+        $App.paintRect(this.cx,this.cy,this.w,this.h,true)
+      }
+    };
     x=this.getX(x);
     y=this.getY(y);
     w=this.getWidth(w);
@@ -1098,11 +1122,26 @@ $App.Canvas.prototype={
     }else{
       this.ctx.strokeRect(x-w/2,y-h/2,w,h);
     }
+    return obj;
   },
   paintCircle: function(cx,cy,r,fill,dontAdd){
     if(!dontAdd){
       this.addCommand("paintCircle",[cx,cy,r,fill]);
     }
+    var obj={
+      cx: cx,
+      cy: cy,
+      r: r,
+      contains: function(x,y){
+        return ((this.cx-x)*(this.cx-x)+(this.cy-y)*(this.cy-y)<=this.r*this.r);
+      },
+      draw: function(){
+        $App.canvas.paintCircle(this.cx,this.cy,this.r,false)
+      },
+      fill: function(){
+        $App.canvas.paintCircle(this.cx,this.cy,this.r,true)
+      }
+    };
     cx=this.getX(cx);
     cy=this.getY(cy);
     r=this.getWidth(r);
@@ -1113,6 +1152,7 @@ $App.Canvas.prototype={
     }else{
       this.ctx.stroke();
     }
+    return obj;
   },
   addCommand: function(cmd,args){
     args.push(true);
@@ -1780,7 +1820,16 @@ $App.Console.prototype={
           this.variablesDiv.appendChild(item.element);
         }
         newItems[a]=item;
-        item.element.innerHTML=""+a+": "+window[a];
+        let v;
+        let typ=(obj.constructor.name).toLowerCase();
+        if(typ.startsWith("html")){
+          v=obj.constructor.name;
+        }else if(typ==="file"){
+          v="File";
+        }else{
+          v=JSON.stringify(obj);
+        }
+        item.element.textContent=""+a+": "+v;
       }
     }
     for(let a in this.items){
@@ -2051,6 +2100,7 @@ $App.addEventHandler("onMouseUp",[],'Wird ausgeführt, wenn der Benutzer die Mau
 $App.addEventHandler("onGamepadDown",[{name: 'button', info: 'Der Name des Buttons, der gedrückt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer einen Teil des Gamepads berührt oder die zugeordnete Taste auf der Tastatur drückt.','');
 $App.addEventHandler("onGamepadUp",[{name: 'button', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer die Berührung des Gamepads beendet oder aufhört, die zugeordnete Taste auf der Tastatur zu drücken.','');
 $App.addEventHandler("onTimeout",[{name: 'name', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgeführt, wenn ein Timer abläuft. Du kannst mit time.start einen Timer starten.','');
+$App.addEventHandler("onAction",[{name: 'trigger', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgeführt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
 
 $App.addFunction(function setupApp(title,favicon,width,height,backgroundColor){
   $App.setupApp(title,favicon,width,height,backgroundColor);
@@ -2092,32 +2142,32 @@ $App.addFunction(function sound(asset){
 },'Spielt einen Sound ab. Dieser muss vorher mit loadAssets geladen werden.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', info: 'Optional: Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wo der Text erscheinen soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
 
 $App.addFunction(function drawLine(x1,y1,x2,y2){
-  $App.canvas.drawLine(x1,y1,x2,y2);
+  return $App.canvas.drawLine(x1,y1,x2,y2);
 },'Zeichnet eine gerade Linie von (x1|y1) bis (x2|y2)',
 [{name: 'x1', info: 'x-Koordinate des ersten Punkts.'}, {name: 'y1', info: 'y-Koordinate des ersten Punkts.'}, {name: 'x2', info: 'x-Koordinate des zweiten Punkts.'}, {name: 'y2', info: 'y-Koordinate des zweiten Punkts.'}],
 'Wenn du eine ganze Figur zeichnen willst, ist es oft besser, einen mittels <a href="#help-path">path</a> einen Pfad zu zeichnen.');
 
 $App.addFunction(function drawCircle(cx,cy,r){
-  $App.canvas.paintCircle(cx,cy,r,false);
-},'Zeichnet einen Kreis.',
+  return $App.canvas.paintCircle(cx,cy,r,false);
+},'Zeichnet einen Kreis und gibt diesen zurück',
 [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', info: 'Radius.'}],
 '');
 
 $App.addFunction(function fillCircle(cx,cy,r){
-  $App.canvas.paintCircle(cx,cy,r,true);
-},'Zeichnet einen ausgefüllten Kreis.',
+  return $App.canvas.paintCircle(cx,cy,r,true);
+},'Zeichnet einen ausgefüllten Kreis und gibt diesen zurück.',
 [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', info: 'Radius.'}],
 '');
 
 $App.addFunction(function drawRect(cx,cy,width,height){
-  $App.canvas.paintRect(cx,cy,width,height,false);
-},'Zeichnet ein Rechteck.',
+  return $App.canvas.paintRect(cx,cy,width,height,false);
+},'Zeichnet ein Rechteck und gibt dieses zurück.',
 [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', info: 'Breite.'}, {name: 'height', info: 'Höhe.'}],
 '');
 
 $App.addFunction(function fillRect(cx,cy,width,height){
-  $App.canvas.paintRect(cx,cy,width,height,true);
-},'Zeichnet ein ausgefülltes Rechteck.',
+  return $App.canvas.paintRect(cx,cy,width,height,true);
+},'Zeichnet ein ausgefülltes Rechteck und gibt dieses zurück.',
 [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', info: 'Breite.'}, {name: 'height', info: 'Höhe.'}],
 '');
 
@@ -2136,6 +2186,10 @@ $App.addFunction(function drawImage(image,cx,cy,width,height,rotation){
 $App.addFunction(function setColor(color){
   $App.canvas.setColor(color);
 },'Legt die Farbe für alle nachfolgenden Zeichnungen fest.',[{name: 'color', info: 'Farbe, die ab sofort zum Zeichnen und Füllen verwendet werden soll. Kann eine beliebige Bezeichnung für eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
+
+$App.addFunction(function setOpacity(value){
+  $App.canvas.setOpacity(value);
+},'Legt die Transparenz alle nachfolgenden Zeichnungen fest.',[{name: 'value', info: 'Wert zwischen 0 (komplett transparent) und 1 (komplett sichtbar).'}],'');
 
 $App.addFunction(function setFontsize(size){
   $App.canvas.setFontsize(size);
@@ -2415,8 +2469,36 @@ $App.addObject('ui',false,{
     }
     var b=$App.createElement("input");
     b.type=type;
+    if(b.type==="file"){
+      //b.name="files[]";
+      b.fr=new FileReader();
+      b.fr.onload=(ev)=>{
+        b.text=ev.target.result;
+        b.lines=b.text.split("\n");
+        b.files[0].lineCount=b.lines.length;
+      };
+      b.onchange=function(ev){
+        if(!this.files) return;
+        let f=this.files[0];
+        f.input=this;
+        f.currentLine=0;
+        this.fr.readAsText(f);
+        f.nextLine=function(){
+          let lines=this.input.lines;
+          if(!lines||lines.length===0){
+            return null;
+          }
+          return lines.splice(0,1)[0];
+        }
+        
+      };
+      
+    }
     Object.defineProperty(b,"value",{
       get: function(){
+        if(b.type==="file"){
+          return b.files[0];
+        }
         var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
         var v=valueProp.get.call(b);
         if(b.type==="number"||b.type==="range"){
@@ -2491,5 +2573,5 @@ $App.systemVariables={};
   }
 })();
 
-
+ 
 }
