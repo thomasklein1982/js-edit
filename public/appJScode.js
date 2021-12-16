@@ -1107,10 +1107,10 @@ $App.Canvas.prototype={
         return (x>=this.cx-this.w/2 && x<=this.cx+this.w/2 && y>=this.cy-this.h/2 && y<=this.cy+this.h/2);
       },
       draw: function(){
-        $App.paintRect(this.cx,this.cy,this.w,this.h,false)
+        $App.canvas.paintRect(this.cx,this.cy,this.w,this.h,false)
       },
       fill: function(){
-        $App.paintRect(this.cx,this.cy,this.w,this.h,true)
+        $App.canvas.paintRect(this.cx,this.cy,this.w,this.h,true)
       }
     };
     x=this.getX(x);
@@ -2573,5 +2573,5 @@ $App.systemVariables={};
   }
 })();
 
- 
+
 }

@@ -35,8 +35,8 @@
 <script>
 import CodeMirror from "./CodeMirror.vue";
 import EditorMenubar from './EditorMenubar.vue';
-import  * as autocomplete  from "@codemirror/autocomplete";
-import { snippets } from "@codemirror/lang-javascript";
+import  * as autocomplete  from "@codemirror/next/autocomplete";
+import { snippets } from "@codemirror/next/lang-javascript";
 import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";

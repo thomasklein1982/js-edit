@@ -19,10 +19,14 @@
   import * as acorn from "acorn";
   import {parse} from '../lib/parse'
   import { loadLocally, saveLocally } from "../lib/helper";
-  import { prepareSnippets,createParamsString } from "../lib/snippets";
+  import { createAutocompletion,createParamsString } from "../lib/snippets";
   import  * as autocomplete  from "@codemirror/autocomplete";
+  import {CompletionContext} from "@codemirror/autocomplete";
+  import {autocompletion} from "@codemirror/autocomplete";
+  
+  //prepareSnippets(snippets);
 
-  prepareSnippets(snippets);
+  const additionalCompletions=[];
 
   export default {
     props: {
@@ -54,8 +58,6 @@
         this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
       }
 
-
-      this.language=new Compartment();
       let editor=new EditorView({
         state: EditorState.create({
           doc: "",
@@ -63,7 +65,8 @@
             basicSetup,
             EditorView.lineWrapping,
             indentUnit.of("  "),
-            this.language.of(javascript()),
+            javascript(),
+            autocompletion({override: [createAutocompletion(additionalCompletions)]}),
             keymap.of([indentWithTab]),
             EditorView.updateListener.of((v) => {
               if(!changed){
@@ -98,13 +101,10 @@
     },
     methods: {
       updateAutocompletionSnippets(infos){
-        for(let i=0;i<snippets.length;i++){
-          let s=snippets[i];
-          if(s.isCustom){
-            snippets.pop();
-            i--;
-          }
+        while(additionalCompletions.length>0){
+          additionalCompletions.pop();
         }
+        
         for(let i=0;i<infos.outline.length;i++){
           let f=infos.outline[i];
           let s=autocomplete.snippetCompletion(f.name+createParamsString(f.params,true), {
@@ -112,8 +112,7 @@
             info: "Diese Funktion hast du definiert.",
             type: "function"
           });
-          s.isCustom=true;
-          snippets.push(s);
+          additionalCompletions.push(s);
         }
         /**Variablen*/
         for(let a in infos.variables){
@@ -122,12 +121,8 @@
             info: "Eine Variable aus deinem Programm.",
             type: "variable"
           });
-          s.isCustom=true;
-          snippets.push(s);
+          additionalCompletions.push(s);
         }
-        this.editor.dispatch({
-          effects: this.language.reconfigure(javascript())
-        });
       },
       prettifyCode(){
         var code=this.$root.sourceCode;

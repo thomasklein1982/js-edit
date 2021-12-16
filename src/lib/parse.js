@@ -38,7 +38,7 @@ export const parse=async function(src,tree,options){
     node=tree.topNode.firstChild;
     let variables={};
     if(!options.dontParseGlobalVariables && node){
-      getAllVariables(src,node,variables);
+      getAllVariables(src,node,variables,true);
     }
     infos.variables=variables;
     resolve(infos);
@@ -46,26 +46,24 @@ export const parse=async function(src,tree,options){
   return await p;
 }
 
-function getAllVariables(src,node,variables){
-  if(node.type.name==="ExpressionStatement"){
-    node=node.firstChild;
-    if(node && node.type.name==="AssignmentExpression"){
-      node=node.firstChild;
-      if(node && node.type.name==="VariableName"){
-        let v=src.substring(node.from,node.to);
-        variables[v]=true;
+function getAllVariables(src,node,variables,started){
+  console.log(src.substring(node.from,node.to));
+  if(!started && node.type.name.indexOf("Expression")>=0){
+    if(node.type.name==="ExpressionStatement"){
+      let n=node.firstChild;
+      if(n && n.type.name==="AssignmentExpression"){
+        n=n.firstChild;
+        if(n && n.type.name==="VariableName"){
+          let v=src.substring(n.from,n.to);
+          variables[v]=true;
+        }
       }
     }
-  }else{
-    while(node){
-      if(node.firstChild){
-        getAllVariables(src,node.firstChild,variables);
-      }
-      if(node.nextSibling){
-        getAllVariables(src,node.nextSibling,variables);
-      }
-      node=node.nextSibling;
-    };
+  }else if(node.type.name==="FunctionDeclaration"||node.type.name==="Block"){
+    getAllVariables(src,node.firstChild,variables);
   }
-  
+  if(node.nextSibling){
+    node=node.nextSibling;
+    getAllVariables(src,node,variables);
+  }
 }
