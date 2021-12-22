@@ -154,7 +154,11 @@
           this.setCursor(ov);
         }else{
           let line=this.state.doc.lineAt(nv)
-          this.setSelection(line.from,line.to+1);
+          try{
+            this.setSelection(line.from,line.to+1);
+          }catch(e){
+            this.setSelection(line.from,line.to);
+          }
         // currentLineHighlighter.update()
         }
       }

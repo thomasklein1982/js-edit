@@ -14,6 +14,8 @@ export const parse=async function(src,tree,options){
         let func=parseFunction(src,node, usedNames);
         infos.outline.push(func);
         code+=func.code+"\n";
+      }else{
+        code+=src.substring(node.from,node.to);
       }
       node=node.nextSibling;
     }
@@ -80,6 +82,10 @@ function parseCodeBlock(src,node){
     if(node.type.name.indexOf("Expression")<0 && node.firstChild){
       code+=parseSpecialStatement(src,node.firstChild);
     }else{
+      //console.log(node.name);
+      if(node.name==="ExpressionStatement" && node.firstChild && node.firstChild.name==="CallExpression"){
+        code+="await ";
+      }
       code+=src.substring(node.from,node.to);  
     }
     
