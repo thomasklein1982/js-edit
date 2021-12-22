@@ -1,5 +1,5 @@
 <template>
-  <Editor ref="editor"/>
+  <Editor :current-pos="currentPos" :paused="paused" :breakpoints="breakpoints" ref="editor"/>
 </template>
 
 <script>
@@ -8,8 +8,21 @@ export default{
   data(){
     return {
       sourceCode: '',
-      version: "16"
+      sourceCodeDebugging: '',
+      version: "16",
+      breakpoints: {},
+      paused: false,
+      currentPos: -1
     };
+  },
+  methods: {
+    toggleBreakpoint(pos,isOn){
+      if(this.breakpoints[pos]){
+        delete this.breakpoints[pos];
+      }else{
+        this.breakpoints[pos]=true;
+      }
+    }
   },
   components: {
     Editor

@@ -2,9 +2,54 @@ window.appJScode=function(){
 
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
+window.onmessage=function(message){
+  $App.debug.onMessage(message);
+};
+
 window.$App={
   version: 10,
   setupData: null,
+  debug: {
+    breakpoints: {},
+    breakpointCount: 0,
+    paused: false,
+    resolve: null,
+    line: async function(pos){
+      if(window===window.top) return;
+      if(this.paused || this.breakpoints[pos]){
+        this.paused=true;
+        var p=new Promise((resolve,reject)=>{
+          window.parent.postMessage({
+            type: "debug-pause",
+            pos: pos
+          });
+          this.resolve=resolve;
+        });
+        var q=await p;
+        return q;
+      }
+    },
+    setBreakpoints: function(bp){
+      this.breakpointCount=bp.length;
+      this.breakpoints={};
+      for(let i=0;i<bp.length;i++){
+        this.breakpoints[bp[i]]=true;
+      }
+      
+    },
+    onMessage: function(message){
+      var data=message.data;
+      if(data.type==="breakpoints"){
+        var bp=data.breakpoints;
+        this.setBreakpoints(bp);
+      }else if(data.type==="debug-resume"){
+        this.paused=false;
+        this.resolve();
+      }else if(data.type==="debug-step"){
+        this.resolve();
+      }
+    }
+  },
   assets: [],
   body: {
     element: null,
@@ -46,6 +91,7 @@ window.$App={
           return;
         }
       }
+      if($App.debug.paused) return;
       if(eventName==='down' && window.onMouseDown){
         try{
           window.onMouseDown();
@@ -310,7 +356,7 @@ $App.setup=async function(){
     this.addMouseStateHandler(this.canvas.el);
     this.animationFrame=async ()=>{
       this.gamepad.updatePhysicalGamepad();
-      if(window.onNextFrame){
+      if(window.onNextFrame && !$App.debug.paused){
         try{
           await window.onNextFrame();
         }catch(e){
@@ -403,6 +449,7 @@ window.onkeydown=function(ev){
           button=null;
         }
         if(window.onGamepadDown){
+          if($App.debug.paused) return;
           try{
             window.onGamepadDown(button);
           }catch(e){
@@ -411,6 +458,7 @@ window.onkeydown=function(ev){
         }
       }
     }
+    if($App.debug.paused) return;
     if(window.onKeyDown){
       try{
         window.onKeyDown(k);
@@ -435,6 +483,7 @@ window.onkeyup=function(ev){
         button=null;
       }
       if(window.onGamepadUp){
+        if($App.debug.paused) return;
         try{
           window.onGamepadUp(button);
         }catch(e){
@@ -443,6 +492,7 @@ window.onkeyup=function(ev){
       }
     }
   }
+  if($App.debug.paused) return;
   if(window.onKeyUp){
     try{
       window.onKeyUp(k);
@@ -1542,13 +1592,13 @@ $App.Gamepad.prototype={
       }else{
         v=button.pressed;
       }
-      if(v && !buttonState.down && window.onGamepadDown){
+      if(!$App.debug.paused && v && !buttonState.down && window.onGamepadDown){
         try{
           window.onGamepadDown(a);
         }catch(e){
           $App.handleException(e);
         }
-      }else if(!v && buttonState.down && window.onGamepadUp){
+      }else if(!$App.debug.paused && !v && buttonState.down && window.onGamepadUp){
         try{
           window.onGamepadUp(a);
         }catch(e){
@@ -1566,13 +1616,13 @@ $App.Gamepad.prototype={
       }else{
         v=axis>0.2;
       }
-      if(v && !buttonState.down && window.onGamepadDown){
+      if(!$App.debug.paused && v && !buttonState.down && window.onGamepadDown){
         try{
           window.onGamepadDown(a);
         }catch(e){
           $App.handleException(e);
         }
-      }else if(!v && buttonState.down && window.onGamepadUp){
+      }else if(!$App.debug.paused && !v && buttonState.down && window.onGamepadUp){
         try{
           window.onGamepadUp(a);
         }catch(e){
@@ -1608,7 +1658,7 @@ $App.Gamepad.prototype={
         $App.mouse.down=true;
         this.button.down=true;
         this.button.el.style.opacity="0.5";
-        if(window.onGamepadDown){
+        if(!$App.debug.paused && window.onGamepadDown){
           try{
             window.onGamepadDown(this.button.name);
           }catch(e){
@@ -1621,7 +1671,7 @@ $App.Gamepad.prototype={
         $App.mouse.down=false;
         this.button.down=false;
         this.button.el.style.opacity="1";
-        if(window.onGamepadUp){
+        if(!$App.debug.paused && window.onGamepadUp){
           try{
             window.onGamepadUp(this.button.name);
           }catch(e){
@@ -1642,7 +1692,7 @@ $App.Gamepad.prototype={
         if(this.button.down){
           this.button.down=false;
           this.button.el.style.opacity="1";
-          if(window.onGamepadUp){
+          if(!$App.debug.paused && window.onGamepadUp){
             try{
               window.onGamepadUp(this.button.name);
             }catch(e){
@@ -1670,7 +1720,7 @@ $App.Gamepad.prototype={
       $App.body.root.appendChild(b);
     }
     this.joystick=new $App.$JoyStick(div,function(){
-      if(window.onGamepadDown){
+      if(!$App.debug.paused && window.onGamepadDown){
         try{
           window.onGamepadDown(null);
         }catch(e){
@@ -1678,7 +1728,7 @@ $App.Gamepad.prototype={
         }
       }
     }, function(){
-      if(window.onGamepadUp){
+      if(!$App.debug.paused && window.onGamepadUp){
         try{
           window.onGamepadUp(null);
         }catch(e){
@@ -1821,7 +1871,7 @@ $App.Console.prototype={
         }
         newItems[a]=item;
         let v;
-        let typ=(obj.constructor.name).toLowerCase();
+        let typ=obj && obj.constructor? (obj.constructor.name).toLowerCase():"";
         if(typ.startsWith("html")){
           v=obj.constructor.name;
         }else if(typ==="file"){
@@ -2292,7 +2342,7 @@ $App.addObject("time",false,{
     }
     
     let id=setTimeout(()=>{
-      if(window.onTimeout){
+      if(!$App.debug.paused && window.onTimeout){
         for(let i=0;i<$App.timer.length;i++){
           let t=$App.timer[i];
           if(t.name===name){

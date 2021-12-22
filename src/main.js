@@ -68,10 +68,13 @@ app.component('InputSwitch',InputSwitch);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){
-  message=message.data;
+  let data=message.data;
   let app=window.app;
-  if(message.type==="error"){
-    message=message.data;
-    app.$refs.editor.$refs.editor.setRuntimeError(message.completeMessage);
+  if(data.type==="error"){
+    data=data.data;
+    app.$refs.editor.$refs.editor.setRuntimeError(data.completeMessage);
+  }else if(data.type==="debug-pause"){
+    app.paused=true;
+    app.currentPos=data.pos;
   }
 }

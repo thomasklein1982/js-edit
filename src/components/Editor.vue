@@ -17,19 +17,26 @@
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
         <code-mirror 
           ref="editor"
+          :current-pos="paused ? currentPos : -1"
           :autocomplete-variables="autocompleteVariables"
           @parse="updateOutline"
         />
       </SplitterPanel>
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">  
         <control-area
-          @outlineclick="outlineClick" 
+          @outlineclick="outlineClick"
+          :paused="paused"
+          :breakpoints="breakpoints" 
           ref="controlArea"
         />
       </SplitterPanel>
     </Splitter>
   </div>
-  
+  <span style="position: fixed; bottom: 0.5rem; right: 0.5rem" class="p-buttonset">
+      <Button :disabled="running && !paused" @click="resume()" icon="pi pi-play" />
+      <Button v-if="paused" @click="step()" icon="pi pi-step-forward" />
+      <Button v-if="running" @click="stop()" icon="pi pi-times" />
+  </span>
 </template>
 
 <script>
@@ -41,15 +48,47 @@ import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";
 export default {
+  props: {
+    breakpoints: Object,
+    paused: {
+      type: Boolean,
+      default: false
+    },
+    currentPos: {
+      type: Number,
+      default: -1
+    }
+  },
   data() {
     return {
       fontSize: 20,
-      autocompleteVariables: false
+      autocompleteVariables: true,
+      running: false
     };
   },
   methods: {
+    resume(){
+      this.$root.currentPos=-1;
+      if(this.paused){
+        this.$root.paused=false;
+        this.$refs.controlArea.resume();
+      }else if(!this.running){
+        this.runApp();
+      }
+    },
+    step(){
+      this.$root.currentPos=-1;
+      this.$refs.controlArea.step();
+    },
+    stop(){
+      this.$refs.controlArea.stop();
+      this.$root.paused=false;
+      this.running=false;
+      this.$root.currentPos=-1;
+    },
     outlineClick(info){
       if('from' in info){
+        this.$refs.editor.focus();
         this.$refs.editor.setCursor(info.from);
       }
     },
@@ -68,6 +107,7 @@ export default {
       this.$refs.exportDialog.setVisible(true);
     },
     runApp(){
+      this.running=true;
       this.$refs.editor.setRuntimeError();
       this.$refs.controlArea.play()
     },
@@ -84,3 +124,11 @@ export default {
   }
 }
 </script>
+
+<style>
+  .p-buttonset {
+    .p-button {
+        margin-right: 0;
+    }
+  }
+</style>

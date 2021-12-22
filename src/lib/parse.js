@@ -2,35 +2,18 @@ export const parse=async function(src,tree,options){
   let p=new Promise(function(resolve,reject){
     let infos={
       outline: [],
-      variables: null
+      variables: null,
+      codeDebugging: null
     };
+    let code='';
     let usedNames={};
     let node=tree.topNode.firstChild;
+    
     while(node){
       if(node.type.name==="FunctionDeclaration"){
-        let fname=src.substring(node.firstChild.nextSibling.from,node.firstChild.nextSibling.to);
-        let params=[];
-        let paramList=node.firstChild.nextSibling.nextSibling;
-        if(paramList && paramList.firstChild){
-          let param=paramList.firstChild.nextSibling;
-          while(param && param.type.name!==")"){
-            if(param.type.name==="VariableDefinition"){
-              params.push(src.substring(param.from,param.to));
-            }
-            param=param.nextSibling;
-          }
-        }
-
-        let func={
-          type: "function",
-          params: params,
-          from: node.from,
-          to: node.to,
-          name: fname,
-          alreadyDefined: usedNames[fname]!==undefined
-        }
-        usedNames[fname]=true;
+        let func=parseFunction(src,node, usedNames);
         infos.outline.push(func);
+        code+=func.code+"\n";
       }
       node=node.nextSibling;
     }
@@ -41,9 +24,80 @@ export const parse=async function(src,tree,options){
       getAllVariables(src,node,variables,true);
     }
     infos.variables=variables;
+    infos.code=code;
+    console.log("complete",code);
     resolve(infos);
   })
   return await p;
+}
+
+function parseFunction(src,node,usedNames){
+  let from=node.from;
+  let to=node.to;
+  node=node.firstChild;
+  while(node && node.type.name!=="VariableDefinition"){
+    node=node.nextSibling;
+  }
+  let fname=src.substring(node.from,node.to);
+  let params=[];
+  node=node.nextSibling;
+  let paramList=node;
+  if(paramList && paramList.firstChild){
+    let param=paramList.firstChild.nextSibling;
+    while(param && param.type.name!==")"){
+      if(param.type.name==="VariableDefinition"){
+        params.push(src.substring(param.from,param.to));
+      }
+      param=param.nextSibling;
+    }
+  }
+  while(node && node.type.name!=="Block"){
+    node=node.nextSibling;
+  }
+  let code="async function "+fname+src.substring(paramList.from,paramList.to);
+  code+=parseCodeBlock(src,node);
+  console.log(code);
+  
+  let func={
+    type: "function",
+    params: params,
+    from: from,
+    to: to,
+    name: fname,
+    code: code,
+    alreadyDefined: usedNames[fname]!==undefined
+  }
+  usedNames[fname]=true;
+  return func;
+}
+
+function parseCodeBlock(src,node){
+  let code="{";
+  node=node.firstChild;
+  while(node.nextSibling){
+    node=node.nextSibling;
+    code+="\nawait $App.debug.line("+node.from+");";
+    if(node.type.name.indexOf("Expression")<0 && node.firstChild){
+      code+=parseSpecialStatement(src,node.firstChild);
+    }else{
+      code+=src.substring(node.from,node.to);  
+    }
+    
+  }
+  return code;
+}
+
+function parseSpecialStatement(src,node){
+  let code="";
+  while(node){
+    if(node.name==="Block"){
+      code+=parseCodeBlock(src,node);
+    }else{
+      code+=src.substring(node.from,node.to);
+    }
+    node=node.nextSibling;
+  }
+  return code;
 }
 
 function getAllVariables(src,node,variables,started){

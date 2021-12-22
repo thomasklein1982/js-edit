@@ -2,7 +2,7 @@
   <div style="overflow: hidden" :style="{flex: width, display: 'flex', flexDirection: 'column'}">
     <Splitter layout="vertical" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden;">
-        <app-preview ref="preview"/>
+        <app-preview :breakpoints="breakpoints" ref="preview"/>
       </SplitterPanel>
       <SplitterPanel style="overflow: hidden;" :style="{display: 'flex', flexDirection: 'column'}">
         <Outline 
@@ -22,6 +22,11 @@ import Outline from './Outline.vue'
   export default {
     components: { AppPreview, Outline },
     props: {
+      breakpoints: Object,
+      paused: {
+        type: Boolean,
+        default: false
+      },
       width: {
         type: Number,
         default: 5
@@ -30,6 +35,15 @@ import Outline from './Outline.vue'
     methods: {
       play(){
         this.$refs.preview.reload();
+      },
+      resume(){
+        this.$refs.preview.resume();
+      },
+      step(){
+        this.$refs.preview.step();
+      },
+      stop(){
+        this.$refs.preview.stop();
       },
       outlineClick(item){
         this.$emit('outlineclick',item);

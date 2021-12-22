@@ -1,6 +1,7 @@
 <template>
   <div id="root">
     <div id="editor" ref="editor" :style="{fontSize: (0.55*fontSize+5)+'px'}"></div>
+    <div>{{currentPos}}</div>
     <div v-if="errors || runtimeError" id="errors">
       <div v-if="errors"><span style="color: red" class="pi pi-exclamation-circle"></span>{{errors}}</div> 
       <div v-if="runtimeError" @click="runtimeError=null"><span style="color: red" class="pi pi-exclamation-circle"></span>{{runtimeError}}</div>
@@ -23,8 +24,116 @@
   import  * as autocomplete  from "@codemirror/autocomplete";
   import {CompletionContext} from "@codemirror/autocomplete";
   import {autocompletion} from "@codemirror/autocomplete";
-  
-  //prepareSnippets(snippets);
+  import {StateField, StateEffect} from "@codemirror/state"
+  import {RangeSet} from "@codemirror/rangeset"
+  import {gutter, GutterMarker} from "@codemirror/gutter"
+  import {Decoration,ViewPlugin} from "@codemirror/view"
+
+
+  // function highlightCurrentLine() {
+  //   return currentLineHighlighter;
+  // }
+  // const lineDeco = Decoration.line({ attributes: { class: "cm-currentLine" } });
+  // const currentLineHighlighter = ViewPlugin.fromClass(class {
+  //     constructor(view) {
+  //         this.decorations = this.getDeco(view);
+  //     }
+  //     update() {
+  //       this.decorations = this.getDeco();
+  //     }
+  //     getDeco() {
+  //       if(!app.paused || app.currentPos<0){
+  //         return Decoration.none;
+  //       }
+  //       // let lastLineStart = -1, deco = [];
+  //       let deco=[];
+  //       deco.push(lineDeco.range(app.currentPos));
+  //       // for (let r of view.state.selection.ranges) {
+  //       //     if (!r.empty)
+  //       //         return Decoration.none;
+  //       //     let line = view.visualLineAt(r.head);
+  //       //     if (line.from > lastLineStart) {
+  //       //         deco.push(lineDeco.range(line.from));
+  //       //         lastLineStart = line.from;
+  //       //     }
+  //       // }
+  //       return Decoration.set(deco);
+  //     }
+  // }, {
+  //     decorations: v => v.decorations
+  // });
+
+  const breakpointEffect = StateEffect.define({
+    map: (val, mapping) => ({pos: mapping.mapPos(val.pos), on: val.on})
+  })
+
+  const breakpointState = StateField.define({
+    create() { return RangeSet.empty },
+    update(set, transaction) {
+      set = set.map(transaction.changes)
+      for (let e of transaction.effects) {
+        if (e.is(breakpointEffect)) {
+          if (e.value.on)
+            set = set.update({add: [breakpointMarker.range(e.value.pos)]})
+          else
+            set = set.update({filter: from => from != e.value.pos})
+        }
+      }
+      return set
+    }
+  })
+
+  function toggleBreakpoint(view, line) {
+    let pos=line.from;
+    line=view.state.doc.lineAt(pos)
+    let breakpoints = view.state.field(breakpointState);
+    let hasBreakpoint = false;
+    breakpoints.between(pos, pos, () => {hasBreakpoint = true});
+    view.dispatch({
+      effects: breakpointEffect.of({pos, on: !hasBreakpoint})
+    });
+    /*Fuehrenden Whitespace herausrechnen:*/
+    let text=line.text;
+    if(text.trim().length===0){
+      app.toggleBreakpoint(pos,false);
+      return;
+    }
+    let wscount=0;
+    for(let i=0;i<text.length;i++){
+      if(!(/\s/.test(text.charAt(i)))){
+        wscount=i;
+        break;
+      }
+    }
+    app.toggleBreakpoint(pos+wscount,!hasBreakpoint);
+  }
+
+  const breakpointMarker = new class extends GutterMarker {
+    toDOM() { return document.createTextNode("⬤") }
+  }
+
+  const breakpointGutter = [
+    breakpointState,
+    gutter({
+      class: "cm-breakpoint-gutter",
+      markers: v => v.state.field(breakpointState),
+      initialSpacer: () => breakpointMarker,
+      domEventHandlers: {
+        mousedown(view, line) {
+          toggleBreakpoint(view, line)
+          return true
+        }
+      }
+    }),
+    EditorView.baseTheme({
+      ".cm-breakpoint-gutter .cm-gutterElement": {
+        color: "red",
+        paddingLeft: "5px",
+        cursor: "default"
+      },
+      ".cm-currentLine": {backgroundColor: "#121212", color: "white"}
+    })
+  ]
 
   const additionalCompletions=[];
 
@@ -33,6 +142,21 @@
       autocompleteVariables: {
         type: Boolean,
         default: true
+      },
+      currentPos: {
+        type: Number,
+        default: -1
+      }
+    },
+    watch: {
+      currentPos(nv,ov){
+        if(nv<0 && ov>=0){
+          this.setCursor(ov);
+        }else{
+          let line=this.state.doc.lineAt(nv)
+          this.setSelection(line.from,line.to+1);
+        // currentLineHighlighter.update()
+        }
       }
     },
     data(){
@@ -63,6 +187,8 @@
           doc: "",
           extensions: [
             basicSetup,
+            //highlightCurrentLine(),
+            breakpointGutter,
             EditorView.lineWrapping,
             indentUnit.of("  "),
             javascript(),
@@ -136,6 +262,7 @@
         this.editor.dispatch({
           changes: {from: 0, to: this.size, insert: code}
         });
+        this.check();
       },
       setFontSize(fs){
         this.fontSize=fs;
@@ -147,20 +274,31 @@
         this.editor.dispatch({
           changes: {from: 0, to: this.size, insert: this.$root.sourceCode}
         });
+        this.check();
       },
       setRuntimeError: function(error){
         this.runtimeError=error;
       },
       setCursor: function(position){
-        this.editor.focus();
+        //this.editor.focus();
         this.editor.dispatch({
           selection: new EditorSelection([EditorSelection.cursor(position)], 0),
           scrollIntoView: true
         });
       },
+      setSelection(anchor,head){
+        this.editor.dispatch({
+          selection: {anchor, head},
+          scrollIntoView: true
+        })
+      },
+      focus(){
+        this.editor.focus();
+      },
       async check(){
         let src=this.$root.sourceCode;
         let infos=await parse(src,this.state.tree,{dontParseGlobalVariables: !this.autocompleteVariables});
+        this.$root.sourceCodeDebugging=infos.code;
         this.$emit("parse",infos);
         let p=new Promise((resolve,reject)=>{
           try{
