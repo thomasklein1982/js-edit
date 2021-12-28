@@ -23,7 +23,7 @@ export default {
     return {
       show: false,
       fontSize: 20,
-      autocompleteVariables: false
+      autocompleteVariables: true
     };
   },
   computed: {

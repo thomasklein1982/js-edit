@@ -10,13 +10,13 @@ export default {
   data(){
     return {
       items: [
-        {
-          label: 'Ausführen',
-          icon: 'pi pi-fw pi-play',
-          command: (ev)=>{
-            this.$emit("play");
-          }
-        },
+        // {
+        //   label: 'Ausführen',
+        //   icon: 'pi pi-fw pi-play',
+        //   command: (ev)=>{
+        //     this.$emit("play");
+        //   }
+        // },
         {
           label: 'Formatieren',
           icon: 'pi pi-fw pi-align-left',

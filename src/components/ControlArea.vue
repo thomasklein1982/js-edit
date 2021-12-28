@@ -2,7 +2,7 @@
   <div style="overflow: hidden" :style="{flex: width, display: 'flex', flexDirection: 'column'}">
     <Splitter layout="vertical" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden;">
-        <app-preview :breakpoints="breakpoints" ref="preview"/>
+        <app-preview :paused="paused" :breakpoints="breakpoints" ref="preview"/>
       </SplitterPanel>
       <SplitterPanel style="overflow: hidden;" :style="{display: 'flex', flexDirection: 'column'}">
         <Outline 

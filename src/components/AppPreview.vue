@@ -1,10 +1,19 @@
 <template>
-  <div ref="wrapper" :style="{flex: 1}" style="width: 100%; height: 100%;"></div>
+  <div :style="{flex: 1}" style="position: relative; width: 100%; height: 100%;">
+    <div ref="wrapper" style="width: 100%; height: 100%;"></div>
+    <div v-if="paused" style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: #00000030">
+      <div style="position: absolute; top: 3px; right: 3px">Angehalten...</div>
+    </div>
+  </div>
 </template>
 <script>
   export default {
     props: {
-      breakpoints: Object
+      breakpoints: Object,
+      paused: {
+        type: Boolean,
+        default: false
+      }
     },
     watch: {
       breakpoints: {
@@ -58,9 +67,9 @@
           this.$refs.wrapper.removeChild(this.$refs.wrapper.firstChild);
         }
         this.$refs.wrapper.appendChild(frame);
-        let src=this.$root.sourceCodeDebugging;
         let bp=this.convertBreakpointsToArray(this.breakpoints);
-        src+="$App.debug.setBreakpoints("+JSON.stringify(bp)+");";
+        let src="$App.debug.setBreakpoints("+JSON.stringify(bp)+");";
+        src+=this.$root.sourceCodeDebugging;
         //let code='\<script src="https://thomaskl.uber.space/Webapps/AppJS/app.js?a=2"\>\</script\>\n\<script\>'+src+'\n\</script\>';
         let code="\<script\>"+window.appJScode;
         code+='\n\</script\>\n\<script\>'+src+'\n\</script\>';

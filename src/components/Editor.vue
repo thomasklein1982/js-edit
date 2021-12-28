@@ -34,7 +34,7 @@
   </div>
   <span style="position: fixed; bottom: 0.5rem; right: 0.5rem" class="p-buttonset">
       <Button :disabled="running && !paused" @click="resume()" icon="pi pi-play" />
-      <Button v-if="paused" @click="step()" icon="pi pi-step-forward" />
+      <Button v-if="paused" @click="step()" icon="pi pi-arrow-right" />
       <Button v-if="running" @click="stop()" icon="pi pi-times" />
   </span>
 </template>
@@ -42,8 +42,6 @@
 <script>
 import CodeMirror from "./CodeMirror.vue";
 import EditorMenubar from './EditorMenubar.vue';
-import  * as autocomplete  from "@codemirror/next/autocomplete";
-import { snippets } from "@codemirror/next/lang-javascript";
 import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";

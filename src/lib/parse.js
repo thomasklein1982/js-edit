@@ -5,21 +5,28 @@ export const parse=async function(src,tree,options){
       variables: null,
       codeDebugging: null
     };
-    let code='';
+    let code='(async function(){try{';
     let usedNames={};
     let node=tree.topNode.firstChild;
-    
+    let firstFunctionFound=false;
+    /**wrappe allen Code, der vor der ersten Funktion auftaucht, in eine funktion und fuehre diese direkt aus */
     while(node){
       if(node.type.name==="FunctionDeclaration"){
+        if(!firstFunctionFound){
+          firstFunctionFound=true;
+          code+="}catch(e){$App.handleException(e);}})(); ";
+        }
         let func=parseFunction(src,node, usedNames);
         infos.outline.push(func);
         code+=func.code+"\n";
       }else{
-        code+=src.substring(node.from,node.to);
+        code+=parseStatement(src,node);
       }
       node=node.nextSibling;
     }
-
+    if(!firstFunctionFound){
+      code+="}catch(e){$App.handleException(e);}})(); ";
+    }
     node=tree.topNode.firstChild;
     let variables={};
     if(!options.dontParseGlobalVariables && node){
@@ -27,7 +34,6 @@ export const parse=async function(src,tree,options){
     }
     infos.variables=variables;
     infos.code=code;
-    console.log("complete",code);
     resolve(infos);
   })
   return await p;
@@ -58,7 +64,6 @@ function parseFunction(src,node,usedNames){
   }
   let code="async function "+fname+src.substring(paramList.from,paramList.to);
   code+=parseCodeBlock(src,node);
-  console.log(code);
   
   let func={
     type: "function",
@@ -78,18 +83,23 @@ function parseCodeBlock(src,node){
   node=node.firstChild;
   while(node.nextSibling){
     node=node.nextSibling;
-    code+="\nawait $App.debug.line("+node.from+");";
-    if(node.type.name.indexOf("Expression")<0 && node.firstChild){
-      code+=parseSpecialStatement(src,node.firstChild);
-    }else{
-      //console.log(node.name);
-      if(node.name==="ExpressionStatement" && node.firstChild && node.firstChild.name==="CallExpression"){
-        code+="await ";
-      }
-      code+=src.substring(node.from,node.to);  
-    }
-    
+    code+=parseStatement(src,node);
   }
+  return code;
+}
+
+function parseStatement(src,node){
+  let code="await $App.debug.line("+node.from+");";
+  if(node.type.name.indexOf("Expression")<0 && node.firstChild){
+    code+=parseSpecialStatement(src,node.firstChild);
+  }else{
+    //console.log(node.name);
+    if(node.name==="ExpressionStatement" && node.firstChild && node.firstChild.name==="CallExpression"){
+      code+="await ";
+    }
+    code+=src.substring(node.from,node.to);  
+  }
+  code+="\n";
   return code;
 }
 
@@ -107,7 +117,7 @@ function parseSpecialStatement(src,node){
 }
 
 function getAllVariables(src,node,variables,started){
-  console.log(src.substring(node.from,node.to));
+  //console.log(src.substring(node.from,node.to));
   if(!started && node.type.name.indexOf("Expression")>=0){
     if(node.type.name==="ExpressionStatement"){
       let n=node.firstChild;
@@ -127,3 +137,4 @@ function getAllVariables(src,node,variables,started){
     getAllVariables(src,node,variables);
   }
 }
+ 

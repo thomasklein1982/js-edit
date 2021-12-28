@@ -9,7 +9,7 @@ export default{
     return {
       sourceCode: '',
       sourceCodeDebugging: '',
-      version: "17",
+      version: "19",
       breakpoints: {},
       paused: false,
       currentPos: -1
