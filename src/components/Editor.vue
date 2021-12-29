@@ -4,6 +4,8 @@
     ref="settingsDialog"
     @fontsize="setFontSize"
     @autocompletevariables="setAutocompleteVariables"
+    @downloadprojects="$refs.projectsDialog.downloadAllProjects()"
+    @uploadprojects="$refs.projectsDialog.uploadProjects()"
   />
   <projects-dialog
     ref="projectsDialog"

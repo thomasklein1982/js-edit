@@ -7,7 +7,8 @@
         </template>
       </SelectButton>
     </div>
-    <AppButton @open="$emit('open',a)" @overwrite="$emit('overwrite',a)" @delete="$emit('delete',a)" @select="$emit('select',a.name)" :selected="selected===a.name.toLowerCase()" v-for="(a,i) in listedApps" :app="a"/>
+    <AppButton :ref="setAppRef" :key="'app-'+a.name" @open="$emit('open',a)" @overwrite="$emit('overwrite',a)" @delete="$emit('delete',a)" @select="$emit('select',a.name)" :selected="selectedApp===a" v-for="(a,i) in listedApps" :app="a"/>
+    
   </div>
 </template>
 
@@ -25,6 +26,7 @@ export default {
   data(){
     return {
       sort: null,
+      appRefs: {},
       sortOptions: [
         {icon: 'pi pi-sort-numeric-down', value: 'time-down'},
         {icon: 'pi pi-sort-numeric-up', value: 'time-up'},
@@ -37,6 +39,18 @@ export default {
     this.sort=this.sortOptions[0];
   },
   computed: {
+    selectedApp(){
+      if(!this.selected) return null;
+      for(let i=0;i<this.apps.length;i++){
+        let a=this.apps[i];
+        if(a.name.toLowerCase()===this.selected){
+          //let el=this.appRefs[a.id];
+          //el.$el.scrollIntoView({behavior: "smooth"});
+          return a;
+        }
+      }
+      return null;
+    },
     listedApps(){
       let array=[];
       for(let i=0;i<this.apps.length;i++){
@@ -61,6 +75,13 @@ export default {
       }
       
       return array;
+    }
+  },
+  methods: {
+    setAppRef(el){
+      if(el){
+        this.appRefs[el.app.id]=el;
+      }
     }
   },
   components: {

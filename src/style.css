@@ -17,6 +17,10 @@ body,html{
   font-family: monospace;
 }
 
+.p-card .p-card-content {
+  padding: 0;
+}
+
 .p-error{
   display: block;
 }

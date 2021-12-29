@@ -11,6 +11,11 @@
         <h4>Auto-Vervollständigung für globale Variablen</h4>
         <InputSwitch @change="changeAutocompleteVariables" v-model="autocompleteVariables" />
       </p>
+      <p class="p-m-0">
+        <h4>Import und Export</h4>
+        <Button label="Projekte herunterladen" icon="pi pi-download" @click="$emit('downloadprojects')"/>
+        <Button label="Projekte hochladen" icon="pi pi-upload" @click="$emit('uploadprojects')"/>
+      </p>
       <template #footer>
         <Button label="OK" icon="pi pi-check" @click="setVisible(false)"/>
       </template>

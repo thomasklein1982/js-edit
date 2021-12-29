@@ -1,18 +1,10 @@
 <template>
-  <Dialog header="Als neues Projekt speichern" v-model:visible="showNewProject">
-    <p>Unter welchem Namen soll deine App gespeichert werden?</p>
-    <InputText style="width: 100%" v-model.trim="name" placeholder="Name des neuen Projekts"/>
-    <small v-if="selectedProject" class="p-error">Es gibt bereits ein Projekt mit diesem Namen.</small>
-    <template #footer>
-      <Button :disabled="disableSaveButton" label="Als neues Projekt speichern" icon="pi pi-save"  @click="saveProject(showNewProject=false)"/>
-    </template>
-  </Dialog>
   <Dialog header="Deine Projekte" v-model:visible="show" :maximizable="true" :modal="true">
     <app-chooser :apps="projects" :selected="name.toLowerCase()" @open="openProject()" @overwrite="saveProject()" @delete="removeProject" @select="setName"/>
     <template #footer>
-      <Button label="" icon="pi pi-download" @click="downloadAllProjects()"/>
-      <Button label="" icon="pi pi-upload" @click="uploadProjects()"/>
-      <Button label="Als neues Projekt speichern" icon="pi pi-save" @click="showNewProject=true"/>
+      <ConfirmPopup/>
+      <InputText style="width: 100%" v-model.trim="name" placeholder="Name des neuen Projekts"/>
+      <Button :label="selectedProject? 'Projekt überschreiben': 'Neues Projekt speichern'" icon="pi pi-save" @click="confirmSaveProject($event)"/>
     </template>
   </Dialog>
 </template>
@@ -48,6 +40,7 @@ export default {
   },
   async mounted(){
     let projectIDs=await loadLocally(this.STORAGE_PROJECTS);
+    if(!projectIDs) return;
     projectIDs=projectIDs.split(" ");
     for(let i=0;i<projectIDs.length;i++){
       let id=projectIDs[i];
@@ -70,6 +63,21 @@ export default {
     }
   },
   methods: {
+    confirmSaveProject(event) {
+      this.$confirm.require({
+          target: event.currentTarget,
+          message: 'Das Projekt wird überschrieben. Bist du sicher?',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: "Überschreiben!",
+          rejectLabel: "Abbrechen",
+          accept: () => {
+            this.saveProject();
+          },
+          reject: () => {
+            
+          }
+      });
+    },
     downloadAllProjects(){
       let data=[];
       for(let i=0;i<this.projects.length;i++){

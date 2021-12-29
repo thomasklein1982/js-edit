@@ -1,5 +1,5 @@
 <template>
-  <Card :style="{backgroundColor: selected? 'gold':''}" @click="$emit('select')">
+  <Card :style="{backgroundColor: selected? 'aqua':''}" @click="$emit('select')">
     <template #title>
       {{app.name}}
     </template>
@@ -8,11 +8,11 @@
     </template>
     <template #footer v-if="selected">
       <ConfirmPopup/>
-      <Button icon="pi pi-trash" label="" @click="remove($event)"></Button>
-      <Button icon="pi pi-save" label="Speichern" @click="overwrite($event)"></Button>
+      <Button icon="pi pi-trash" label="Löschen" @click="remove($event)"></Button>
       <Button icon="pi pi-external-link" label="Öffnen" @click="open($event)"></Button>
     </template>
   </Card>
+  
 </template>
 
 <script>

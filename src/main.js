@@ -28,7 +28,7 @@ import 'primevue/resources/primevue.min.css';
 import 'primeicons/primeicons.css';
 import './style.css';
 import './lib/lzstring.js';
-import './lib/localforage.min.js';
+import '../public/localforage.min.js';
 let text=(appJScode+"");
 let pos=text.indexOf("{");
 let pos2=text.lastIndexOf("}");
