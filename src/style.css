@@ -17,6 +17,10 @@ body,html{
   font-family: monospace;
 }
 
+.p-error{
+  display: block;
+}
+
 .p-panel div.p-panel-header{
   padding-top: 0;
   padding-bottom: 0;

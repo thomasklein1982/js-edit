@@ -229,6 +229,11 @@
       }
     },
     methods: {
+      setCode(sourceCode){
+        this.editor.dispatch({
+          changes: {from: 0, to: this.size, insert: sourceCode}
+        });
+      },
       updateAutocompletionSnippets(infos){
         while(additionalCompletions.length>0){
           additionalCompletions.pop();

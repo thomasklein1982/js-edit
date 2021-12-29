@@ -5,11 +5,16 @@
     @fontsize="setFontSize"
     @autocompletevariables="setAutocompleteVariables"
   />
+  <projects-dialog
+    ref="projectsDialog"
+    @load="loadApp"
+  />
   <div style="width: 100%; height: 100%; overflow: hidden" :style="{display: 'flex', flexDirection: 'column'}">
     <editor-menubar 
       @play="runApp()" 
       @export="exportApp()"
       @prettify="prettifyCode()"
+      @projects="$refs.projectsDialog.setVisible(true)"
       @settings="$refs.settingsDialog.setVisible(true)" 
       @new="$refs.editor.reset()"
     />
@@ -45,6 +50,8 @@ import EditorMenubar from './EditorMenubar.vue';
 import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";
+import ProjectsDialog from './ProjectsDialog.vue';
+
 export default {
   props: {
     breakpoints: Object,
@@ -65,6 +72,9 @@ export default {
     };
   },
   methods: {
+    loadApp(sourceCode){
+      this.$refs.editor.setCode(sourceCode);
+    },
     resume(){
       this.$root.currentPos=-1;
       if(this.paused){
@@ -118,7 +128,8 @@ export default {
     EditorMenubar,
     ControlArea,
     ExportDialog,
-    SettingsDialog
+    SettingsDialog,
+    ProjectsDialog
   }
 }
 </script>

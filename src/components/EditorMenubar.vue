@@ -18,13 +18,6 @@ export default {
         //   }
         // },
         {
-          label: 'Formatieren',
-          icon: 'pi pi-fw pi-align-left',
-          command: (ev)=>{
-            this.$emit("prettify");
-          }
-        },
-        {
           label: 'Neu',
           icon: 'pi pi-fw pi-file',
           command: (ev)=>{
@@ -34,6 +27,21 @@ export default {
             }
           }
         },
+        {
+          label: 'Projekte',
+          icon: 'pi pi-folder',
+          command: (ev)=>{
+            this.$emit("projects");
+          }
+        },
+        {
+          label: 'Formatieren',
+          icon: 'pi pi-fw pi-align-left',
+          command: (ev)=>{
+            this.$emit("prettify");
+          }
+        },
+        
         {
           label: 'Exportieren',
           icon: 'pi pi-sign-out',

@@ -20,6 +20,8 @@ import ConfirmPopup from 'primevue/confirmpopup';
 import Splitter from "primevue/splitter";
 import SplitterPanel from 'primevue/splitterpanel'
 import Slider from "primevue/slider";
+import Card from 'primevue/card';
+import SelectButton from 'primevue/selectbutton';
 
 import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css';
@@ -65,6 +67,8 @@ app.component('Splitter',Splitter);
 app.component('SplitterPanel',SplitterPanel);
 app.component('Slider',Slider);
 app.component('InputSwitch',InputSwitch);
+app.component('Card',Card);
+app.component('SelectButton',SelectButton);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){

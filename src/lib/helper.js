@@ -103,16 +103,20 @@ export async function upload(options){
   return q;
 }
 
+export function randomInt(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
 export async function saveLocally(key,data){
   var s=JSON.stringify(data);
   var c=LZString.compress(s);
-  localStorage.setItem(key,c);
-  //await localforage.setItem(key,c);
+  //localStorage.setItem(key,c);
+  await localforage.setItem(key,c);
 }
 
 export async function loadLocally(key){
-  //var c=await localforage.getItem(key);
-  var c=localStorage.getItem(key);
+  var c=await localforage.getItem(key);
+  //var c=localStorage.getItem(key);
   if(c===undefined || c===null){
     return null;
   }
