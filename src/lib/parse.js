@@ -3,29 +3,40 @@ export const parse=async function(src,tree,options){
     let infos={
       outline: [],
       variables: null,
-      codeDebugging: null
+      codeDebugging: null,
+      error: null
+    };
+    let parsingInfos={
+      lastPos: 0,
+      firstFunctionFound: false
     };
     let code='(async function(){try{';
     let usedNames={};
     let node=tree.topNode.firstChild;
-    let firstFunctionFound=false;
-    /**wrappe allen Code, der vor der ersten Funktion auftaucht, in eine funktion und fuehre diese direkt aus */
-    while(node){
-      if(node.type.name==="FunctionDeclaration"){
-        if(!firstFunctionFound){
-          firstFunctionFound=true;
-          code+="}catch(e){$App.handleException(e);}})(); ";
+    try{
+      /**wrappe allen Code, der vor der ersten Funktion auftaucht, in eine funktion und fuehre diese direkt aus */
+      while(node){
+        code+=extractLineBreaks(src,node,parsingInfos);
+        if(node.type.name==="FunctionDeclaration"){
+          if(!parsingInfos.firstFunctionFound){
+            parsingInfos.firstFunctionFound=true;
+            code+="}catch(e){$App.handleException(e);}})(); ";
+          }
+          let func=parseFunction(src,node, usedNames, parsingInfos);
+          infos.outline.push(func);
+          code+=func.code;
+        }else{
+          code+=parseStatement(src,node,parsingInfos);
         }
-        let func=parseFunction(src,node, usedNames);
-        infos.outline.push(func);
-        code+=func.code+"\n";
-      }else{
-        code+=parseStatement(src,node);
+        node=node.nextSibling;
       }
-      node=node.nextSibling;
-    }
-    if(!firstFunctionFound){
-      code+="}catch(e){$App.handleException(e);}})(); ";
+      if(!parsingInfos.firstFunctionFound){
+        code+="}catch(e){$App.handleException(e);}})(); ";
+      }
+    }catch(e){
+      if(e.isError){
+        infos.error=e;
+      }
     }
     node=tree.topNode.firstChild;
     let variables={};
@@ -39,7 +50,15 @@ export const parse=async function(src,tree,options){
   return await p;
 }
 
-function parseFunction(src,node,usedNames){
+function createError(message,node){
+  return {
+    isError: true,
+    message: message,
+    pos: node.from
+  };
+}
+
+function parseFunction(src,node,usedNames,parsingInfos){
   let from=node.from;
   let to=node.to;
   node=node.firstChild;
@@ -58,12 +77,14 @@ function parseFunction(src,node,usedNames){
       }
       param=param.nextSibling;
     }
+  }else{
+    throw createError("Es fehlt '()' hinter dem Funktionsnamen.");
   }
   while(node && node.type.name!=="Block"){
     node=node.nextSibling;
   }
   let code="async function "+fname+src.substring(paramList.from,paramList.to);
-  code+=parseCodeBlock(src,node);
+  code+=parseCodeBlock(src,node,parsingInfos);
   
   let func={
     type: "function",
@@ -78,36 +99,58 @@ function parseFunction(src,node,usedNames){
   return func;
 }
 
-function parseCodeBlock(src,node){
+function parseCodeBlock(src,node,parsingInfos){
   let code="{";
   node=node.firstChild;
-  while(node.nextSibling){
+  while(node.nextSibling && node.nextSibling.type.name!=="}"){
     node=node.nextSibling;
-    code+=parseStatement(src,node);
+    code+=parseStatement(src,node,parsingInfos);
   }
-  return code;
+  node=node.nextSibling;
+  code+=extractLineBreaks(src,node,parsingInfos);
+  return code+"}";
 }
 
-function parseStatement(src,node){
+function extractLineBreaks(src,node,parsingInfos){
+  let lb='';
+  let between=src.substring(parsingInfos.lastPos,node.from);
+  let pos=between.indexOf("\n");
+  while(pos>=0){
+    lb+="\n";
+    pos=between.indexOf("\n",pos+1);
+  }
+  parsingInfos.lastPos=node.from+1;
+  return lb;
+}
+
+function parseStatement(src,node,parsingInfos){
   let code="await $App.debug.line("+node.from+");";
-  if(node.type.name.indexOf("Expression")<0 && node.firstChild){
-    code+=parseSpecialStatement(src,node.firstChild);
+  
+  if(node.type.name==="VariableDeclaration"){
+    code+=extractLineBreaks(src,node,parsingInfos);
+    let c=src.substring(node.from,node.to);
+    if(!parsingInfos.firstFunctionFound && node.firstChild.type.name==="var"){
+      c=c.substring(4);
+    }
+    code+=c+";";
+  }else if(node.type.name.indexOf("Expression")<0 && node.firstChild){
+    code+=parseSpecialStatement(src,node.firstChild,parsingInfos);
   }else{
-    //console.log(node.name);
+    code+=extractLineBreaks(src,node,parsingInfos);
     if(node.name==="ExpressionStatement" && node.firstChild && node.firstChild.name==="CallExpression"){
       code+="await ";
     }
-    code+=src.substring(node.from,node.to);  
+    code+=src.substring(node.from,node.to)+";";  
   }
-  code+="\n";
   return code;
 }
 
-function parseSpecialStatement(src,node){
+function parseSpecialStatement(src,node,parsingInfos){
   let code="";
   while(node){
+    code+=extractLineBreaks(src,node,parsingInfos);
     if(node.name==="Block"){
-      code+=parseCodeBlock(src,node);
+      code+=parseCodeBlock(src,node,parsingInfos);
     }else{
       code+=src.substring(node.from,node.to);
     }
@@ -137,4 +180,3 @@ function getAllVariables(src,node,variables,started){
     getAllVariables(src,node,variables);
   }
 }
- 

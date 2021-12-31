@@ -18,6 +18,8 @@
   import { indentUnit } from "@codemirror/language";
   import * as acorn from "acorn";
   import {parse} from '../lib/parse'
+  import {undo, redo} from '@codemirror/history'
+  import {openSearchPanel,closeSearchPanel} from '@codemirror/search'
   import { loadLocally, saveLocally } from "../lib/helper";
   import { createAutocompletion,createParamsString } from "../lib/snippets";
   import  * as autocomplete  from "@codemirror/autocomplete";
@@ -135,7 +137,8 @@
   ]
 
   const additionalCompletions=[];
-
+  let editor;
+  
   export default {
     props: {
       autocompleteVariables: {
@@ -170,9 +173,9 @@
         state: null,
         view: null,
         size: 0,
-        editor: null,
         errors: null,
-        runtimeError: null
+        runtimeError: null,
+        isSearchPanelOpen: false
       };
     },
     async mounted(){
@@ -182,10 +185,10 @@
       if(saved){
         this.$root.sourceCode=saved;
       }else{
-        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
+        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}';
       }
 
-      let editor=new EditorView({
+      editor=new EditorView({
         state: EditorState.create({
           doc: "",
           extensions: [
@@ -216,8 +219,7 @@
         }),
         parent: this.$refs.editor
       });
-      this.editor=editor;
-      this.editor.dispatch({
+      editor.dispatch({
         changes: {from: 0, to: 0, insert: this.$root.sourceCode}
       });
     },
@@ -230,7 +232,7 @@
     },
     methods: {
       setCode(sourceCode){
-        this.editor.dispatch({
+        editor.dispatch({
           changes: {from: 0, to: this.size, insert: sourceCode}
         });
       },
@@ -267,7 +269,7 @@
           "space_in_empty_paren": true
         });
         this.$root.sourceCode=code;
-        this.editor.dispatch({
+        editor.dispatch({
           changes: {from: 0, to: this.size, insert: code}
         });
         this.check();
@@ -276,32 +278,63 @@
         this.fontSize=fs;
         
       },
+      openSearchPanel(){
+        openSearchPanel(editor);
+        this.isSearchPanelOpen=true;
+      },
+      closeSearchPanel(){
+        closeSearchPanel(editor);
+        this.isSearchPanelOpen=false;
+      },
+      toggleSearchPanel(){
+        if(this.isSearchPanelOpen){
+          this.closeSearchPanel();
+        }else{
+          this.openSearchPanel();
+        }
+      },
+      lineAt(pos){
+        return this.state.doc.lineAt(pos);
+      },
       reset: function(){
         this.runtimeError=null;
-        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,10)\n}';
-        this.editor.dispatch({
+        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}';
+        editor.dispatch({
           changes: {from: 0, to: this.size, insert: this.$root.sourceCode}
         });
         this.check();
       },
+      undo(){
+        undo({state: editor.viewState.state, dispatch: editor.dispatch});
+      },
+      redo(){
+        redo({state: editor.viewState.state, dispatch: editor.dispatch});
+      },
       setRuntimeError: function(error){
         this.runtimeError=error;
       },
+      insert(text){
+        let pos=editor.state.selection.ranges[0].from;
+        editor.dispatch({
+          changes: {from: pos, to: pos, insert: text}
+        });
+        editor.focus();
+      },
       setCursor: function(position){
-        //this.editor.focus();
-        this.editor.dispatch({
+        //editor.focus();
+        editor.dispatch({
           selection: new EditorSelection([EditorSelection.cursor(position)], 0),
           scrollIntoView: true
         });
       },
       setSelection(anchor,head){
-        this.editor.dispatch({
+        editor.dispatch({
           selection: {anchor, head},
           scrollIntoView: true
         })
       },
       focus(){
-        this.editor.focus();
+        editor.focus();
       },
       async check(){
         let src=this.$root.sourceCode;

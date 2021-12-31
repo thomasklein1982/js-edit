@@ -17,6 +17,11 @@ body,html{
   font-family: monospace;
 }
 
+.p-dialog-content{
+  display: flex;
+  flex-direction: column;
+}
+
 .p-card .p-card-content {
   padding: 0;
 }

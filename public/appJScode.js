@@ -17,6 +17,7 @@ window.appJScode=function(){
         if(window===window.top) return;
         if(this.paused || this.breakpoints[pos]){
           this.paused=true;
+          $App.body.overlay.style.display='';
           var p=new Promise((resolve,reject)=>{
             window.parent.postMessage({
               type: "debug-pause",
@@ -47,6 +48,15 @@ window.appJScode=function(){
         }else if(data.type==="debug-step"){
           this.resolve();
         }
+        if(this.paused){
+          if($App.body.overlay.style.display==='none'){
+            $App.body.overlay.style.display='';
+          }
+        }else{
+          if($App.body.overlay.style.display!=='none'){
+            $App.body.overlay.style.display='none';
+          }
+        }
       }
     },
     assets: [],
@@ -54,6 +64,7 @@ window.appJScode=function(){
       element: null,
       root: null,
       right: null,
+      overlay: null,
       width: 0,
       height: 0
     },
@@ -330,6 +341,9 @@ window.appJScode=function(){
       root.appendChild(right);
       left.appendChild(this.console.element);
       right.appendChild(this.canvas.container);
+      this.body.overlay=document.createElement("div");
+      this.body.overlay.style="display: none; position: absolute; width: 100%; height: 100%; top: 0; right: 0; background-color: #00000030";
+      right.appendChild(this.body.overlay);
       this.toast=new $App.Toast(right);
       root.appendChild(this.help.element);
       left.appendChild(this.help.helpButton);

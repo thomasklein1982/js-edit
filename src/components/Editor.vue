@@ -11,6 +11,10 @@
     ref="projectsDialog"
     @load="loadApp"
   />
+  <SymbolsDialog
+    ref="symbolsDialog"
+    @paste="insertSymbol"
+  />
   <div style="width: 100%; height: 100%; overflow: hidden" :style="{display: 'flex', flexDirection: 'column'}">
     <editor-menubar 
       @play="runApp()" 
@@ -19,6 +23,10 @@
       @projects="$refs.projectsDialog.setVisible(true)"
       @settings="$refs.settingsDialog.setVisible(true)" 
       @new="$refs.editor.reset()"
+      @undo="$refs.editor.undo()"
+      @redo="$refs.editor.redo()"
+      @search="$refs.editor.openSearchPanel()"
+      @unicode="$refs.symbolsDialog.setVisible(true)"
     />
     <Splitter :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
@@ -53,6 +61,7 @@ import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";
 import ProjectsDialog from './ProjectsDialog.vue';
+import SymbolsDialog from './SymbolsDialog.vue';
 
 export default {
   props: {
@@ -96,6 +105,9 @@ export default {
       this.running=false;
       this.$root.currentPos=-1;
     },
+    insertSymbol(s){
+      this.$refs.editor.insert(s);
+    },
     outlineClick(info){
       if('from' in info){
         this.$refs.editor.focus();
@@ -131,7 +143,8 @@ export default {
     ControlArea,
     ExportDialog,
     SettingsDialog,
-    ProjectsDialog
+    ProjectsDialog,
+    SymbolsDialog
   }
 }
 </script>

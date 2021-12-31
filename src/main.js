@@ -1,10 +1,12 @@
 import { createApp } from 'vue';
 import App from './App.vue';
+import ClipboardJS from 'clipboard';
 import {registerSW} from 'virtual:pwa-register';
 import  * as PrimeVue  from "primevue/config";
 import  Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import InputText from "primevue/inputtext";
+import Dropdown from "primevue/dropdown";
 import InputNumber from "primevue/inputnumber";
 import InputSwitch from "primevue/inputswitch";
 import * as Dialog  from "primevue/dialog";
@@ -22,6 +24,7 @@ import SplitterPanel from 'primevue/splitterpanel'
 import Slider from "primevue/slider";
 import Card from 'primevue/card';
 import SelectButton from 'primevue/selectbutton';
+import ToggleButton from 'primevue/togglebutton';
 
 import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css';
@@ -34,6 +37,8 @@ let pos=text.indexOf("{");
 let pos2=text.lastIndexOf("}");
 text=text.substring(pos+1,pos2);
 window.appJScode=text;
+
+new ClipboardJS('.copy')
 
 const updateSW=registerSW({
   onNeedRefresh(){
@@ -69,6 +74,8 @@ app.component('Slider',Slider);
 app.component('InputSwitch',InputSwitch);
 app.component('Card',Card);
 app.component('SelectButton',SelectButton);
+app.component('Dropdown',Dropdown);
+app.component('ToggleButton',ToggleButton);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){

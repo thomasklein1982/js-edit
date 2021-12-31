@@ -1,9 +1,7 @@
 <template>
   <div :style="{flex: 1}" style="position: relative; width: 100%; height: 100%;">
     <div ref="wrapper" style="width: 100%; height: 100%;"></div>
-    <div v-if="paused" style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: #00000030">
-      <div style="position: absolute; top: 3px; right: 3px">Angehalten...</div>
-    </div>
+    <div v-if="paused" style="position: absolute; top: 3px; right: 3px">Angehalten...</div>
   </div>
 </template>
 <script>

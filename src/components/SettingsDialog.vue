@@ -1,20 +1,18 @@
 <template>
-  <Dialog header="Einstellungen" v-model:visible="show" :style="{width: '50vw'}" :maximizable="true" :modal="true">
+  <Dialog header="Einstellungen" v-model:visible="show"  :maximizable="true" :modal="true">
       <p class="p-m-0">
         JS-Edit Version {{$root.version}}
       </p>
       <p class="p-m-0">
-        <h4>Schriftgröße</h4>
+        <Button label="Neu starten" icon="pi pi-undo" @click="restart()"/>
+      </p>
+      <h4>Schriftgröße</h4>
+      <p class="p-m-0">
         <Slider @change="changeFontSize()" v-model="fontSize" />
       </p>
+      <h4>Auto-Vervollständigung für globale Variablen</h4>
       <p class="p-m-0">
-        <h4>Auto-Vervollständigung für globale Variablen</h4>
         <InputSwitch @change="changeAutocompleteVariables" v-model="autocompleteVariables" />
-      </p>
-      <p class="p-m-0">
-        <h4>Import und Export</h4>
-        <Button label="Projekte herunterladen" icon="pi pi-download" @click="$emit('downloadprojects')"/>
-        <Button label="Projekte hochladen" icon="pi pi-upload" @click="$emit('uploadprojects')"/>
       </p>
       <template #footer>
         <Button label="OK" icon="pi pi-check" @click="setVisible(false)"/>
@@ -43,6 +41,9 @@ export default {
     },
     setVisible(v){
       this.show=v;
+    },
+    restart(){
+      location.reload();
     }
   }
 }

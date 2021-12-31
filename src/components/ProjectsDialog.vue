@@ -1,10 +1,15 @@
 <template>
   <Dialog header="Deine Projekte" v-model:visible="show" :maximizable="true" :modal="true">
     <app-chooser :apps="projects" :selected="name.toLowerCase()" @open="openProject()" @overwrite="saveProject()" @delete="removeProject" @select="setName"/>
+    <div style="margin-top: 0.5rem" :style="{display: 'flex'}">
+      <Button label="Exportieren" class="p-button-secondary" icon="pi pi-download" :style="{flex: 1}"/>
+      &nbsp;
+      <Button label="Importieren" class="p-button-secondary" icon="pi pi-upload" :style="{flex: 1}"/>
+    </div>
     <template #footer>
       <ConfirmPopup/>
       <InputText style="width: 100%" v-model.trim="name" placeholder="Name des neuen Projekts"/>
-      <Button :label="selectedProject? 'Projekt überschreiben': 'Neues Projekt speichern'" icon="pi pi-save" @click="confirmSaveProject($event)"/>
+      <Button :disabled="disableSaveButton" :label="selectedProject? 'Projekt überschreiben': 'Neues Projekt speichern'" icon="pi pi-save" @click="confirmSaveProject($event)"/>
     </template>
   </Dialog>
 </template>
@@ -29,10 +34,10 @@ export default {
       if(this.name.length===0){
         return true;
       }
-      if(this.name.length>25){
-        this.name=this.name.substring(0,25);
+      if(this.name.length>40){
+        this.name=this.name.substring(0,40);
       }
-      return this.selectedProject!==null;
+      return false;
     },
     selectedProject(){
       return this.getProjectByName(this.name.toLowerCase());
@@ -64,7 +69,8 @@ export default {
   },
   methods: {
     confirmSaveProject(event) {
-      this.$confirm.require({
+      if(this.selectedProject){
+        this.$confirm.require({
           target: event.currentTarget,
           message: 'Das Projekt wird überschrieben. Bist du sicher?',
           icon: 'pi pi-exclamation-triangle',
@@ -76,7 +82,10 @@ export default {
           reject: () => {
             
           }
-      });
+        });
+      }else{
+        this.saveProject();
+      }
     },
     downloadAllProjects(){
       let data=[];

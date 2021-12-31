@@ -3,9 +3,9 @@
       <p class="p-m-0">
         Dieser Programmcode kann in einem modernen Browser ausgeführt werden. Du kannst ihn z. B. in Glitch in die index.html kopieren.
       </p>
-      <textarea style="width: 100%; min-height: 50vh" :value="code"></textarea>
+      <textarea id="exportarea" style="width: 100%; min-height: 50vh" :value="code"></textarea>
       <template #footer>
-        <Button label="OK" icon="pi pi-check" @click="setVisible(false)"/>
+        <Button class="copy" label="Kopieren!" data-clipboard-target="#exportarea" icon="pi pi-copy" @click="copy()"/>
       </template>
   </Dialog>
 </template>
@@ -27,6 +27,9 @@ export default {
   methods: {
     setVisible(v){
       this.show=v;
+    },
+    copy(){
+      this.$root.toast({summary: 'Kopiert!', detail: 'Du kannst den Code jetzt anderswo einfügen.', life: 4000, severity: 'success'});
     }
   }
 }
