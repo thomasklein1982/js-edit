@@ -2,9 +2,9 @@
   <Dialog header="Deine Projekte" v-model:visible="show" :maximizable="true" :modal="true">
     <app-chooser :apps="projects" :selected="name.toLowerCase()" @open="openProject()" @overwrite="saveProject()" @delete="removeProject" @select="setName"/>
     <div style="margin-top: 0.5rem" :style="{display: 'flex'}">
-      <Button label="Exportieren" class="p-button-secondary" icon="pi pi-download" :style="{flex: 1}"/>
+      <Button @click="downloadAllProjects()" label="Exportieren" class="p-button-secondary" icon="pi pi-download" :style="{flex: 1}"/>
       &nbsp;
-      <Button label="Importieren" class="p-button-secondary" icon="pi pi-upload" :style="{flex: 1}"/>
+      <Button @click="uploadProjects()" label="Importieren" class="p-button-secondary" icon="pi pi-upload" :style="{flex: 1}"/>
     </div>
     <template #footer>
       <ConfirmPopup/>
