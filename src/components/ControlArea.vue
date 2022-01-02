@@ -50,6 +50,9 @@ import Outline from './Outline.vue'
       },
       updateOutline(outline){
         this.$refs.outline.update(outline);
+      },
+      focusPreview(){
+        this.$refs.preview.focus();
       }
     }
   }

@@ -8,35 +8,41 @@ export const parse=async function(src,tree,options){
     };
     let parsingInfos={
       lastPos: 0,
-      firstFunctionFound: false
+      firstFunctionFound: false,
+      usedNames: {}
     };
     let code='(async function(){try{';
-    let usedNames={};
+    let codeFuncEnd="}catch(e){$App.handleException(e);}})(); ";
     let node=tree.topNode.firstChild;
     try{
-      /**wrappe allen Code, der vor der ersten Funktion auftaucht, in eine funktion und fuehre diese direkt aus */
+      /**wrappe allen Code, der vor der ersten Funktion / ersten Klasse auftaucht, in eine funktion und fuehre diese direkt aus */
       while(node){
         code+=extractLineBreaks(src,node,parsingInfos);
         if(node.type.name==="FunctionDeclaration"){
           if(!parsingInfos.firstFunctionFound){
             parsingInfos.firstFunctionFound=true;
-            code+="}catch(e){$App.handleException(e);}})(); ";
+            code+=codeFuncEnd;
           }
-          let func=parseFunction(src,node, usedNames, parsingInfos);
+          let func=parseFunction(src,node, parsingInfos);
           infos.outline.push(func);
           code+=func.code;
+        }else if(node.type.name==="ClassDeclaration"){
+          if(!parsingInfos.firstFunctionFound){
+            parsingInfos.firstFunctionFound=true;
+            code+=codeFuncEnd;
+          }
+          let clazz=parseClass(src,node,parsingInfos);
+          code+=clazz.code;
         }else{
           code+=parseStatement(src,node,parsingInfos);
         }
         node=node.nextSibling;
       }
       if(!parsingInfos.firstFunctionFound){
-        code+="}catch(e){$App.handleException(e);}})(); ";
+        code+=codeFuncEnd;
       }
     }catch(e){
-      if(e.isError){
-        infos.error=e;
-      }
+      infos.error=e;
     }
     node=tree.topNode.firstChild;
     let variables={};
@@ -58,7 +64,7 @@ function createError(message,node){
   };
 }
 
-function parseFunction(src,node,usedNames,parsingInfos){
+function parseFunction(src,node,parsingInfos){
   let from=node.from;
   let to=node.to;
   node=node.firstChild;
@@ -93,9 +99,9 @@ function parseFunction(src,node,usedNames,parsingInfos){
     to: to,
     name: fname,
     code: code,
-    alreadyDefined: usedNames[fname]!==undefined
+    alreadyDefined: parsingInfos.usedNames[fname]!==undefined
   }
-  usedNames[fname]=true;
+  parsingInfos.usedNames[fname]=true;
   return func;
 }
 
@@ -121,6 +127,13 @@ function extractLineBreaks(src,node,parsingInfos){
   }
   parsingInfos.lastPos=node.from+1;
   return lb;
+}
+
+function parseClass(src,node,parsingInfos){
+  let code=src.substring(node.from,node.to);
+  return {
+    code: code
+  };
 }
 
 function parseStatement(src,node,parsingInfos){

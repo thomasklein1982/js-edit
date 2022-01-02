@@ -28,12 +28,11 @@ export default {
         {
           label: 'Neu',
           icon: 'pi pi-fw pi-file',
-          command: (ev)=>{
-            let a=confirm("Willst du wirklich ein komplett neues Programm erstellen? Alle Eingaben gehen verloren.");
-            if(a){
-              this.$emit("new");
-            }
-          }
+          items: [
+            {label: 'Leeres Programm', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('')} },
+            {label: 'Programm mit Grafik', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}')} },
+            {label: 'Spiel mit Gamepad-Steuerung', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  gamepad.show();\n  x=50;\n  y=50;\n}\nfunction onNextFrame(){\n  clear()\n  if(gamepad.left){\n    x=x-1;\n  }\n  if(gamepad.right){\n    x=x+1;\n  }\n  if(gamepad.up){\n    y=y+1;\n  }\n  if(gamepad.down){\n    y=y-1;\n  }\n  write("😀",x,y)\n}\n\nfunction onGamepadDown(button){\n  if(button=="A"){\n    x=random(10,90)\n  }\n}')} }
+          ]
         },
         {
           label: 'Projekte',
@@ -106,7 +105,11 @@ export default {
     };
   },
   methods: {
-    updateItems(){
+    newProgram(code){
+      let a=confirm("Willst du wirklich ein neues Programm erstellen? Der alte Code geht dabei verloren!");
+      if(a){
+        this.$emit('new',code);
+      }
     } 
   }
 }

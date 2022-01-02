@@ -22,7 +22,7 @@
       @prettify="prettifyCode()"
       @projects="$refs.projectsDialog.setVisible(true)"
       @settings="$refs.settingsDialog.setVisible(true)" 
-      @new="$refs.editor.reset()"
+      @new="$refs.editor.reset($event)"
       @undo="$refs.editor.undo()"
       @redo="$refs.editor.redo()"
       @search="$refs.editor.openSearchPanel()"
@@ -94,6 +94,7 @@ export default {
       }else if(!this.running){
         this.runApp();
       }
+      this.$refs.controlArea.focusPreview();
     },
     step(){
       this.$root.currentPos=-1;

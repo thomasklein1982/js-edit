@@ -22,12 +22,13 @@ export default{
     toast=useToast();
   },
   methods: {
-    toggleBreakpoint(pos,isOn){
-      if(this.breakpoints[pos]){
+    setBreakpoint(pos,isOn){
+      if(!isOn){
         delete this.breakpoints[pos];
       }else{
         this.breakpoints[pos]=true;
       }
+      console.log(pos,isOn,this.breakpoints);
     },
     toast(object){
       toast.add(object);//{severity:'info', summary: 'Info Message', detail:'Message Content', life: 3000});

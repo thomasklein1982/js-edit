@@ -74,10 +74,28 @@
       set = set.map(transaction.changes)
       for (let e of transaction.effects) {
         if (e.is(breakpointEffect)) {
-          if (e.value.on)
+          /*Fuehrenden Whitespace herausrechnen:*/
+          let pos=e.value.pos;
+          let state=transaction.startState;
+          let line=state.doc.lineAt(pos);
+          let text=line.text;
+          let wscount=0;
+          if(text.trim().length>0){
+            for(let i=0;i<text.length;i++){
+              if(!(/\s/.test(text.charAt(i)))){
+                wscount=i;
+                break;
+              }
+            }  
+          }
+          //app.toggleBreakpoint(pos+wscount,!hasBreakpoint);
+          app.setBreakpoint(pos+wscount,e.value.on);
+          if (e.value.on){
             set = set.update({add: [breakpointMarker.range(e.value.pos)]})
-          else
+
+          }else{
             set = set.update({filter: from => from != e.value.pos})
+          }
         }
       }
       return set
@@ -93,20 +111,7 @@
     view.dispatch({
       effects: breakpointEffect.of({pos, on: !hasBreakpoint})
     });
-    /*Fuehrenden Whitespace herausrechnen:*/
-    let text=line.text;
-    if(text.trim().length===0){
-      app.toggleBreakpoint(pos,false);
-      return;
-    }
-    let wscount=0;
-    for(let i=0;i<text.length;i++){
-      if(!(/\s/.test(text.charAt(i)))){
-        wscount=i;
-        break;
-      }
-    }
-    app.toggleBreakpoint(pos+wscount,!hasBreakpoint);
+    
   }
 
   const breakpointMarker = new class extends GutterMarker {
@@ -296,9 +301,9 @@
       lineAt(pos){
         return this.state.doc.lineAt(pos);
       },
-      reset: function(){
+      reset: function(sourceCode){
         this.runtimeError=null;
-        this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}';
+        this.$root.sourceCode=sourceCode;
         editor.dispatch({
           changes: {from: 0, to: this.size, insert: this.$root.sourceCode}
         });
@@ -341,6 +346,10 @@
         let infos=await parse(src,this.state.tree,{dontParseGlobalVariables: !this.autocompleteVariables});
         this.$root.sourceCodeDebugging=infos.code;
         this.$emit("parse",infos);
+        if(infos.error){
+          this.errors=infos.error.message;
+          return;
+        }
         let p=new Promise((resolve,reject)=>{
           try{
             let ast=acorn.parse(src, {ecmaVersion: 2020});

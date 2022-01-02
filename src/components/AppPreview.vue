@@ -33,6 +33,11 @@
       }
     },
     methods: {
+      focus(){
+        if(this.frame){
+          this.frame.focus();
+        }
+      },
       convertBreakpointsToArray(breakpointsObject){
         let bp=[];
         for(let a in this.breakpoints){
