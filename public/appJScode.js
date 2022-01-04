@@ -6,7 +6,7 @@ window.appJScode=function(){
   };
   
   window.$App={
-    version: 13,
+    version: 14,
     setupData: null,
     debug: {
       breakpoints: {},
@@ -2121,7 +2121,7 @@ window.appJScode=function(){
   
   $App.help=new $App.Help();
   
-  $App.addFunction=function addFunction(func,info,args,details,level){
+  $App.addFunction=function addFunction(func,returnType,info,args,details,level){
     let name,isNative;
     if(typeof func==="string"){
       //native Funktion
@@ -2134,6 +2134,7 @@ window.appJScode=function(){
     }
     this.help.addFunction({
       name: name,
+      returnType: returnType,
       args: args,
       info: info,
       details: details,
@@ -2179,35 +2180,36 @@ window.appJScode=function(){
   
   $App.addEventHandler("onStart",[],'Wird einmalig ausgeführt, wenn das Programm startet.','');
   $App.addEventHandler("onNextFrame",[],'Wird ca. 60 mal pro Sekunde ausgeführt.','');
-  $App.addEventHandler("onKeyDown",[{name: 'keycode', info: 'Der Code der gedrückten Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur gedrückt wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
-  $App.addEventHandler("onKeyUp",[{name: 'keycode', info: 'Der Code der losgelassenen Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
+  $App.addEventHandler("onKeyDown",[{name: 'keycode', type: 'int', info: 'Der Code der gedrückten Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur gedrückt wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
+  $App.addEventHandler("onKeyUp",[{name: 'keycode', type: 'int', info: 'Der Code der losgelassenen Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
   $App.addEventHandler("onMouseDown",[],'Wird ausgeführt, wenn der Benutzer eine Maustaste drückt oder mit dem Finger den Touchscreen berührt.','');
   $App.addEventHandler("onMouseMove",[],'Wird ausgeführt, wenn der Benutzer die Maus bewegt oder mit dem Finger über den Touchscreen streicht.','');
   $App.addEventHandler("onMouseUp",[],'Wird ausgeführt, wenn der Benutzer die Maustaste loslässt oder die Berührung des Touchscreens mit dem Finger beendet.','');
-  $App.addEventHandler("onGamepadDown",[{name: 'button', info: 'Der Name des Buttons, der gedrückt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer einen Teil des Gamepads berührt oder die zugeordnete Taste auf der Tastatur drückt.','');
-  $App.addEventHandler("onGamepadUp",[{name: 'button', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer die Berührung des Gamepads beendet oder aufhört, die zugeordnete Taste auf der Tastatur zu drücken.','');
-  $App.addEventHandler("onTimeout",[{name: 'name', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgeführt, wenn ein Timer abläuft. Du kannst mit time.start einen Timer starten.','');
-  $App.addEventHandler("onAction",[{name: 'trigger', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgeführt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
+  $App.addEventHandler("onGamepadDown",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der gedrückt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer einen Teil des Gamepads berührt oder die zugeordnete Taste auf der Tastatur drückt.','');
+  $App.addEventHandler("onGamepadUp",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer die Berührung des Gamepads beendet oder aufhört, die zugeordnete Taste auf der Tastatur zu drücken.','');
+  $App.addEventHandler("onTimeout",[{name: 'name',type: 'String', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgeführt, wenn ein Timer abläuft. Du kannst mit time.start einen Timer starten.','');
+  $App.addEventHandler("onAction",[{name: 'trigger', type: 'JComponent', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgeführt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
   
   $App.addFunction(function setupApp(title,favicon,width,height,backgroundColor){
     $App.setupApp(title,favicon,width,height,backgroundColor);
-  }, 
+  },
+  null,
   "Legt die Grundeigenschaften der App fest: Den Titel, das Icon, die Breite und die Höhe sowie die Hintergrundfarbe.",
-  [{name: 'title', info: 'Der Name der App, der im Browser-Tab angezeigt wird.'}, {name: 'favicon', info: 'Ein beliebiges Unicode-Symbol, das als Icon für die App verwendet wird. Du findest viele Unicode-Symbole, wenn du direkt nach z. B. "unicode drache" googelst oder unter <a href="https://www.compart.com/de/unicode/" target="_blank">compart.com/de/unicode</a>.'}, {name: 'width', info: 'Die Breite der App.'}, {name: 'height', info: 'Die Höhe der App.'}, {name: 'backgroundColor', info: 'Die Hintergrundfarbe der App.'}],
+  [{name: 'title', type: 'String', info: 'Der Name der App, der im Browser-Tab angezeigt wird.'}, {name: 'favicon', type: 'String', info: 'Ein beliebiges Unicode-Symbol, das als Icon für die App verwendet wird. Du findest viele Unicode-Symbole, wenn du direkt nach z. B. "unicode drache" googelst oder unter <a href="https://www.compart.com/de/unicode/" target="_blank">compart.com/de/unicode</a>.'}, {name: 'width', type: 'int', info: 'Die Breite der App.'}, {name: 'height', type: 'int', info: 'Die Höhe der App.'}, {name: 'backgroundColor', type: 'String', info: 'Die Hintergrundfarbe der App.'}],
   'Verwende diesen Befehl zu Beginn der <code>onStart</code>-Funktion.<code><pre>onStart(){\n\tsetupApp("Meine App","🚀",100,100,"black");\n\t//weitere Befehle\n}</pre></code><p></p>',
   true);
   
   $App.addFunction(function distance(x1,y1,x2,y2){
     return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
-  },'Berechnet den Abstand der beiden Punkte (<code>x1</code>|<code>y1</code>) und (<code>x2</code>|<code>y2</code>) mit Hilfe des Satz des Pythagoras.',[],'Verwende diesen Befehl, um festzustellen, ob zwei Dinge kollidieren.<code><pre>if(distance(x,y,gegnerX,gegnerY) < 10){\n\t//Kollision\n}</pre></code>',"everywhere");
+  },'double','Berechnet den Abstand der beiden Punkte (<code>x1</code>|<code>y1</code>) und (<code>x2</code>|<code>y2</code>) mit Hilfe des Satz des Pythagoras.',[{name: 'x1', type: 'double', info: 'x-Koordinate des ersten Punktes'},{name: 'y1', type: 'double', info: 'y-Koordinate des ersten Punktes'},{name: 'x2', type: 'double', info: 'x-Koordinate des zweiten Punktes'},{name: 'y2', type: 'double', info: 'y-Koordinate des zweiten Punktes'}],'Verwende diesen Befehl, um festzustellen, ob zwei Dinge kollidieren.<code><pre>if(distance(x,y,gegnerX,gegnerY) < 10){\n\t//Kollision\n}</pre></code>',"everywhere");
   
   $App.addFunction(function clear(){
     $App.canvas.clear();
-  },'Löscht den Inhalt der Zeichenfläche.',[],'Verwende diesen Befehl zu Beginn der Funktion <a href="#help-onNextFrame"><code>onNextFrame</code></a>, damit du danach alles neu zeichnen kannst.');
+  },null,'Löscht den Inhalt der Zeichenfläche.',[],'Verwende diesen Befehl zu Beginn der Funktion <a href="#help-onNextFrame"><code>onNextFrame</code></a>, damit du danach alles neu zeichnen kannst.');
   
-  $App.addFunction("alert",'Zeigt eine Messagebox mit einer Nachricht.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+  $App.addFunction("alert",null,'Zeigt eine Messagebox mit einer Nachricht.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
   
-  $App.addFunction("prompt",'Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurück.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+  $App.addFunction("prompt",'String','Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurück.',[{name: 'text', type: 'String',info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
   
   $App.addFunction(function promptNumber(text){
     let a;
@@ -2217,80 +2219,80 @@ window.appJScode=function(){
       zusatz="\n\nBitte eine Zahl eingeben.";
     }while(isNaN(a));
     return a;
-  },'Zeigt eine Messagebox mit einer Nachricht und einem Eingabefeld. Liefert die eingegebene Zahl zurück.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+  },'double','Zeigt eine Messagebox mit einer Nachricht und einem Eingabefeld. Liefert die eingegebene Zahl zurück.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
   
-  $App.addFunction("confirm",'Zeigt eine Messagebox mit einer Nachricht. Der Benutzer muss zwischen OK und Abbrechen wählen. Die Auswahl wird als <code>true</code> oder <code>false</code> zurückgegeben.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+  $App.addFunction("confirm",'boolean','Zeigt eine Messagebox mit einer Nachricht. Der Benutzer muss zwischen OK und Abbrechen wählen. Die Auswahl wird als <code>true</code> oder <code>false</code> zurückgegeben.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
   
   $App.addFunction(function toast(text,position,duration){
     $App.toast.show(text,position,duration);
-  },'Zeigt eine Nachricht für einen gewissen Zeitraum an.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', info: 'Optional: Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wo der Text erscheinen soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
+  },null,'Zeigt eine Nachricht für einen gewissen Zeitraum an.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', type: 'String', info: 'Optional: Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wo der Text erscheinen soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', type: 'int', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
   
   $App.addFunction(function sound(asset){
     $App.audio.play(asset);
-  },'Spielt einen Sound ab. Dieser muss vorher mit loadAssets geladen werden.',[{name: 'text', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', info: 'Optional: Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wo der Text erscheinen soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
+  },null,'Spielt einen Sound ab. Dieser muss vorher mit loadAssets geladen werden.',[{name: 'asset', type: 'String', info: 'URL des Sounds, der abgespielt werden soll.'}],'');
   
   $App.addFunction(function drawLine(x1,y1,x2,y2){
     return $App.canvas.drawLine(x1,y1,x2,y2);
-  },'Zeichnet eine gerade Linie von (x1|y1) bis (x2|y2)',
-  [{name: 'x1', info: 'x-Koordinate des ersten Punkts.'}, {name: 'y1', info: 'y-Koordinate des ersten Punkts.'}, {name: 'x2', info: 'x-Koordinate des zweiten Punkts.'}, {name: 'y2', info: 'y-Koordinate des zweiten Punkts.'}],
+  },'Path','Zeichnet eine gerade Linie von (x1|y1) bis (x2|y2)',
+  [{name: 'x1', type: 'double', info: 'x-Koordinate des ersten Punkts.'}, {name: 'y1', type: 'double', info: 'y-Koordinate des ersten Punkts.'}, {name: 'x2', type: 'double', info: 'x-Koordinate des zweiten Punkts.'}, {name: 'y2', type: 'double', info: 'y-Koordinate des zweiten Punkts.'}],
   'Wenn du eine ganze Figur zeichnen willst, ist es oft besser, einen mittels <a href="#help-path">path</a> einen Pfad zu zeichnen.');
   
   $App.addFunction(function drawCircle(cx,cy,r){
     return $App.canvas.paintCircle(cx,cy,r,false);
-  },'Zeichnet einen Kreis und gibt diesen zurück',
-  [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', info: 'Radius.'}],
+  },'Path','Zeichnet einen Kreis und gibt diesen zurück',
+  [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
   '');
   
   $App.addFunction(function fillCircle(cx,cy,r){
     return $App.canvas.paintCircle(cx,cy,r,true);
-  },'Zeichnet einen ausgefüllten Kreis und gibt diesen zurück.',
-  [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', info: 'Radius.'}],
+  },'Path','Zeichnet einen ausgefüllten Kreis und gibt diesen zurück.',
+  [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
   '');
   
   $App.addFunction(function drawRect(cx,cy,width,height){
     return $App.canvas.paintRect(cx,cy,width,height,false);
-  },'Zeichnet ein Rechteck und gibt dieses zurück.',
-  [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', info: 'Breite.'}, {name: 'height', info: 'Höhe.'}],
+  },'Path','Zeichnet ein Rechteck und gibt dieses zurück.',
+  [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
   '');
   
   $App.addFunction(function fillRect(cx,cy,width,height){
     return $App.canvas.paintRect(cx,cy,width,height,true);
-  },'Zeichnet ein ausgefülltes Rechteck und gibt dieses zurück.',
-  [{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', info: 'Breite.'}, {name: 'height', info: 'Höhe.'}],
+  },'Path','Zeichnet ein ausgefülltes Rechteck und gibt dieses zurück.',
+  [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
   '');
   
   $App.addFunction(async function loadAssets(){
     $App.registerAssets.apply($App,arguments);
-  },'Lädt beliebig viele sog. "Assets" (Bilder und Sounds). Muss vor onStart aufgerufen werden.',
-  [{name: 'url1', info: 'Pfad zur ersten Datei.'}, {name: 'url2', info: 'Pfad zur zweiten Datei.'}, {name: '...', info: 'Pfad zu weiteren Dateien.'}],
+  },null,'Lädt beliebig viele sog. "Assets" (Bilder und Sounds). Muss vor onStart aufgerufen werden.',
+  [{name: 'url1', type: 'String', info: 'Pfad zur ersten Datei.'}, {name: 'url2', type: 'String', info: 'Pfad zur zweiten Datei.'}, {name: '...', type: 'String', info: 'Pfad zu weiteren Dateien.'}],
   'Verwende diese Funktion, um Bilder und Sound-Dateien zu deiner App hinzuzufügen.<p><code><pre>setupApp("Meine App mit Assets","🖼", 100,100, "black");\nloadAssets("Datei1", "Datei2", "Datei3",...);\n\nfunction onStart(){\n\t...\n}</pre></code></p>',"topLevel");
   
   $App.addFunction(function drawImage(image,cx,cy,width,height,rotation){
     $App.canvas.drawImage(image,cx,cy,width,height,rotation);
-  },'Zeichnet ein Bild. Dieses musst du vorher mittels loadAssets laden.',
-  [{name: 'image', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAssets"><code>loadAssets</code></a> geladen werden.'},{name: 'cx', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', info: 'Breite.'}, {name: 'height', info: 'Höhe.'}, {name: 'rotation', info: 'Winkel, um den das Bild gedreht werden soll.'}],
+  },null,'Zeichnet ein Bild. Dieses musst du vorher mittels loadAssets laden.',
+  [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAssets"><code>loadAssets</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.'}],
   '');
   
   $App.addFunction(function setColor(color){
     $App.canvas.setColor(color);
-  },'Legt die Farbe für alle nachfolgenden Zeichnungen fest.',[{name: 'color', info: 'Farbe, die ab sofort zum Zeichnen und Füllen verwendet werden soll. Kann eine beliebige Bezeichnung für eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
+  },null,'Legt die Farbe für alle nachfolgenden Zeichnungen fest.',[{name: 'color', type: 'String', info: 'Farbe, die ab sofort zum Zeichnen und Füllen verwendet werden soll. Kann eine beliebige Bezeichnung für eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
   
   $App.addFunction(function setOpacity(value){
     $App.canvas.setOpacity(value);
-  },'Legt die Transparenz alle nachfolgenden Zeichnungen fest.',[{name: 'value', info: 'Wert zwischen 0 (komplett transparent) und 1 (komplett sichtbar).'}],'');
+  },null,'Legt die Transparenz alle nachfolgenden Zeichnungen fest.',[{name: 'value', type: 'double', info: 'Wert zwischen 0 (komplett transparent) und 1 (komplett sichtbar).'}],'');
   
   $App.addFunction(function setFontsize(size){
     $App.canvas.setFontsize(size);
-  },'Legt die Schriftgröße für alle nachfolgenden write-Befehle fest.',[{name: 'size', info: 'Schriftgröße, die ab sofort zum Schreiben verwendet werden soll.'}],'');
+  },null,'Legt die Schriftgröße für alle nachfolgenden write-Befehle fest.',[{name: 'size', type: 'double', info: 'Schriftgröße, die ab sofort zum Schreiben verwendet werden soll.'}],'');
   
   $App.addFunction(function setLinewidth(size){
     $App.canvas.setLinewidth(size);
-  },'Legt die Breite der Linien für alle nachfolgenden Zeichnungen fest.',[{name: 'size', info: 'Die Dicke der Linien, die ab sofort verwendet werden soll.'}],'');
+  },null,'Legt die Breite der Linien für alle nachfolgenden Zeichnungen fest.',[{name: 'size', type: 'double', info: 'Die Dicke der Linien, die ab sofort verwendet werden soll.'}],'');
   
   $App.addFunction(function write(text,x,y,align){
     $App.canvas.write(text,x,y,align);
-  },'Schreibt Text auf den Bildschirm.',
-  [{name: 'text', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> für Zeilenumbrüche.'}, {name: 'x', info: 'Die x-Koordinate des Texts.'}, {name: 'y', info: 'Die y-Koordinate des Texts.'}, {name: 'align', info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],
+  },null,'Schreibt Text auf den Bildschirm.',
+  [{name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> für Zeilenumbrüche.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],
   '');
   
   /*$App.addFunction(async function read(placeholdertext,x,y,width,align){
@@ -2303,22 +2305,22 @@ window.appJScode=function(){
   
   $App.addFunction(function random(min,max){
     return Math.floor(Math.random()*(max-min+1)+min);
-  },'Liefert eine ganze Zufallszahl zwischen <code>min</code> und <code>max</code> (jeweils einschließlich).',[{name: 'min', info: 'Mindestwert für die Zufallszahl.'}, {name: 'max', info: 'Maximalwert für die Zufallszahl.'}],'',"everywhere");
+  },'int','Liefert eine ganze Zufallszahl zwischen <code>min</code> und <code>max</code> (jeweils einschließlich).',[{name: 'min', type: 'int', info: 'Mindestwert für die Zufallszahl.'}, {name: 'max', type: 'int', info: 'Maximalwert für die Zufallszahl.'}],'',"everywhere");
   
   $App.addFunction(function isKeyDown(key){
     if(typeof key==="string"){
       key=key.codePointAt(0);
     }
     return $App.keyboard.down[keycode]===true;
-  },'Prüft, ob eine bestimmte Taste auf der Tastatur gedrückt wird.',[{name: 'key', info: 'Das Zeichen, von dem geprüft werden soll, ob die zugehörige Taste gedrückt wird; bspw. "W", " " oder "4".'}],'');
+  },'boolean','Prüft, ob eine bestimmte Taste auf der Tastatur gedrückt wird.',[{name: 'key', type: 'String', info: 'Das Zeichen, von dem geprüft werden soll, ob die zugehörige Taste gedrückt wird; bspw. "W", " " oder "4".'}],'');
   
   $App.addFunction(function hideHelp(){
     $App.help.setButtonVisible(false);
-  },'Versteckt den Hilfe-Button oben rechts.',[],'',"everywhere");
+  },null,'Versteckt den Hilfe-Button oben rechts.',[],'',"everywhere");
   
   $App.addFunction(function showHelp(){
     $App.help.setButtonVisible(true);
-  },'Zeigt den Hilfe-Button oben rechts wieder an.',[],'',"everywhere");
+  },null,'Zeigt den Hilfe-Button oben rechts wieder an.',[],'',"everywhere");
   
   $App.addObject("mouse",false,{
     get x(){
