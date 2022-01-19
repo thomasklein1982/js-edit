@@ -198,7 +198,7 @@
           doc: "",
           extensions: [
             basicSetup,
-            //highlightCurrentLine(),
+            //highlightActiveLine(),
             breakpointGutter,
             EditorView.lineWrapping,
             indentUnit.of("  "),

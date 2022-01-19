@@ -44,6 +44,7 @@ export const parse=async function(src,tree,options){
     }catch(e){
       infos.error=e;
     }
+    code=addAwaits(code);
     node=tree.topNode.firstChild;
     let variables={};
     if(!options.dontParseGlobalVariables && node){
@@ -54,6 +55,59 @@ export const parse=async function(src,tree,options){
     resolve(infos);
   })
   return await p;
+}
+
+function getWortVorher(code,pos){
+  var index=pos;
+  //skip whitespace:
+  var gefunden=false;
+  while(!gefunden && index>0){
+    var c=code.charAt(index-1);
+    gefunden=!(/\s/.test(c));
+    index--;
+  }
+  if(!gefunden) return null;
+  var gefunden=false;
+  pos=index+1;
+  index=pos;
+  while(!gefunden && index>0){
+    var c=code.charAt(index-1).toLowerCase();
+    gefunden=!(/[$\[\].a-z0-9_]/.test(c));
+    index--;
+  }
+  if(gefunden){
+    var wortVorher=code.substring(index+1,pos);
+    return {wort: wortVorher, index: index};
+  }
+  return null;
+}
+
+function addAwaits(code){
+  //fuegt vor jedem Wort vor jeder oeffnenden Klammer "await " hinzu
+  var pos=0;
+  pos=code.indexOf("(",pos);
+  while(pos>=0){
+    var vorher=getWortVorher(code,pos);
+    if(vorher){
+      var wortVorher=vorher.wort;
+      if(wortVorher.length>0 && wortVorher!=="await" && wortVorher!=="function" && wortVorher!=="catch" && wortVorher!=="if" && wortVorher!=="while" && wortVorher!=="for"){
+        var vorher2=getWortVorher(code,vorher.index);
+        if(vorher2){
+          wortVorher=vorher2.wort;
+          if(wortVorher!=="function" && wortVorher!=="await"){
+            code=code.substring(0,vorher.index+1)+"await "+code.substring(vorher.index+1);
+            pos+=6;
+          }
+        }else{
+          code=code.substring(0,vorher.index+1)+"await "+code.substring(vorher.index+1);
+          pos+=6;
+        }
+      }
+    }
+    pos++;
+    pos=code.indexOf("(",pos);
+  }
+  return code;
 }
 
 function createError(message,node){
@@ -154,18 +208,10 @@ function parseStatement(src,node,parsingInfos){
     code+=parseSpecialStatement(src,node.firstChild,parsingInfos);
   }else{
     code+=extractLineBreaks(src,node,parsingInfos);
-    let c=src.substring(node.from,node.to);
-    if(node.name==="ExpressionStatement" && node.firstChild){ 
-      if(node.firstChild.name==="CallExpression"){
-        code+="await ";
-        //TODO: bei jedem Argument ein await hinzufügen
-      }else if(node.firstChild.name==="AssignmentExpression"){
-        let pos=c.indexOf("=");
-        code+=c.substring(0,pos+1)+"await ";
-        c=c.substring(pos+1);
-      }
+    if(node.name==="ExpressionStatement" && node.firstChild && node.firstChild.name==="CallExpression"){
+      code+="await ";
     }
-    code+=c+";";  
+    code+=src.substring(node.from,node.to)+";";  
   }
   return code;
 }
