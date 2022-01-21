@@ -1,4 +1,4 @@
-export const parse=async function(src,tree,options){
+export const parse=async function(src,tree,options,state){
   let p=new Promise(function(resolve,reject){
     let infos={
       outline: [],
@@ -9,7 +9,8 @@ export const parse=async function(src,tree,options){
     let parsingInfos={
       lastPos: 0,
       firstFunctionFound: false,
-      usedNames: {}
+      usedNames: {},
+      state: state
     };
     let code='(async function(){try{';
     let codeFuncEnd="}catch(e){$App.handleException(e);}})(); ";
@@ -137,7 +138,8 @@ function parseClass(src,node,parsingInfos){
 }
 
 function parseStatement(src,node,parsingInfos){
-  let code="await $App.debug.line("+node.from+");";
+  let line=parsingInfos.state.doc.lineAt(node.from).number;
+  let code="await $App.debug.line("+line+",true);";
   
   if(node.type.name==="VariableDeclaration"){
     code+=extractLineBreaks(src,node,parsingInfos);

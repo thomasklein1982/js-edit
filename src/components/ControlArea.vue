@@ -22,7 +22,7 @@ import Outline from './Outline.vue'
   export default {
     components: { AppPreview, Outline },
     props: {
-      breakpoints: Object,
+      breakpoints: Array,
       paused: {
         type: Boolean,
         default: false
@@ -33,8 +33,8 @@ import Outline from './Outline.vue'
       }
     },
     methods: {
-      play(){
-        this.$refs.preview.reload();
+      play(debugging){
+        this.$refs.preview.reload(debugging);
       },
       resume(){
         this.$refs.preview.resume();

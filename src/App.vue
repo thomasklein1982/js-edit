@@ -1,6 +1,6 @@
 <template>
   <Toast />
-  <Editor :current-pos="currentPos" :paused="paused" :breakpoints="breakpoints" ref="editor"/>
+  <Editor :current-line="currentLine" :paused="paused" :breakpoints="breakpoints" ref="editor"/>
 </template>
 
 <script>
@@ -12,23 +12,29 @@ export default{
     return {
       sourceCode: '',
       sourceCodeDebugging: '',
-      version: "29",
-      breakpoints: {},
+      version: "30",
+      breakpoints: [],
       paused: false,
-      currentPos: -1
+      currentLine: -1
     };
   },
   setup(){
     toast=useToast();
   },
   methods: {
-    setBreakpoint(pos,isOn){
-      if(!isOn){
-        delete this.breakpoints[pos];
-      }else{
-        this.breakpoints[pos]=true;
+    updateBreakpoints(breakpointSet,document){
+      var n=breakpointSet.size;
+      var iter=breakpointSet.iter(0);
+      let bp=[];
+      for(let i=0;i<n;i++){
+        let pos=iter.from;
+        let line=document.lineAt(pos);
+        bp.push({
+          n: line.number
+        });
+        iter.next();
       }
-      console.log(pos,isOn,this.breakpoints);
+      this.breakpoints=bp;
     },
     toast(object){
       toast.add(object);//{severity:'info', summary: 'Info Message', detail:'Message Content', life: 3000});

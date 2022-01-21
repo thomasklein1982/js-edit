@@ -6,22 +6,27 @@ window.appJScode=function(){
   };
   
   window.$App={
-    version: 14,
+    version: 15,
+    language: 'js',
     setupData: null,
     debug: {
       breakpoints: {},
       breakpointCount: 0,
       paused: false,
       resolve: null,
-      line: async function(pos){
+      line: async function(line,name){
         if(window===window.top) return;
-        if(this.paused || this.breakpoints[pos]){
+        if(!name){
+          name=true;
+        }
+        if(this.paused || this.breakpoints[line]===name){
           this.paused=true;
           $App.body.overlay.style.display='';
           var p=new Promise((resolve,reject)=>{
             window.parent.postMessage({
               type: "debug-pause",
-              pos: pos
+              line: line,
+              name: name
             });
             this.resolve=resolve;
           });
@@ -30,10 +35,22 @@ window.appJScode=function(){
         }
       },
       setBreakpoints: function(bp){
-        this.breakpointCount=bp.length;
         this.breakpoints={};
-        for(let i=0;i<bp.length;i++){
-          this.breakpoints[bp[i]]=true;
+        if(!bp){
+          this.breakpointCount=0;
+          return;
+        }
+        this.breakpointCount=bp.length;
+        for(var i=0;i<bp.length;i++){
+          var n,f;
+          if(bp[i].n){
+            n=bp[i].n;
+            f=bp[i].f||true;
+          }else{
+            n=bp[i];
+            f=true;
+          }
+          this.breakpoints[n]=f;
         }
         
       },
@@ -435,6 +452,10 @@ window.appJScode=function(){
     this.canvas.setSize(width,height,this.body.width,this.body.height);
     this.body.element.style.backgroundColor=backgroundColor;
   }
+  
+  $App.asyncFunctionCall=async function(object,methodname,argumentsArray){
+    return await object[methodname].apply(object,argumentsArray);
+  };
   
   $App.onResize=function(force){
     if(!$App.body.element){
@@ -1795,8 +1816,55 @@ window.appJScode=function(){
   }
   $App.gamepad=new $App.Gamepad()
   
-  
-  
+  /*****Array */
+  $App.Array=function(type, dim){
+    this.type=type;
+    this.dim=dim;
+    this.values=$App.Array.createArrayValues(type,null,dim,0);
+  };
+
+  $App.Array.prototype={
+    get length(){
+      return this.dim[0];
+    },
+    checkBounds: function(index){
+      if(index>=this.length || index<0){
+        var m="Index "+index+" liegt außerhalb der Array-Grenzen von 0 bis "+(this.length-1);
+        console.error(m);
+        throw m;
+      }
+    },
+    get: function(index){
+      this.checkBounds(index);
+      return this.values[index];//this.privateGet(index,this.values,0);
+    },
+    set: function(index,value){
+      this.checkBounds(index);
+      this.values[index]=value;
+    }
+  };
+
+  $App.Array.createArrayValues=function(type,value,dim){
+    if(dim.length===1){
+      var array=[];
+      for(var i=0;i<dim[0];i++){
+        array.push(value);
+      }
+      return array;
+    }else{
+      var array=[];
+      var newDim=[];
+      for(let i=1;i<dim.length;i++){
+        newDim.push(dim[i]);
+      }
+      for(var i=0;i<dim[0];i++){
+        var subArray=new $App.Array(type, newDim);
+        array.push(subArray);
+      }
+      return array;
+    }
+  }
+
   /**Toast */
   $App.Toast=function(container){
     this.container=container;
@@ -1889,7 +1957,7 @@ window.appJScode=function(){
     update: function(){
       let newItems={};
       for(let a in window){
-        if(!(a in $App.systemVariables)){
+        if(!(a in $App.systemVariables) && !window[a].$hideFromConsole){
           let obj=window[a];
           if(typeof obj==="function"){
             continue;
@@ -2342,7 +2410,24 @@ window.appJScode=function(){
       let y=this.y;
       return ((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r*r);
     }
-  },'Liefert dir Informationen über den Mauszeiger / den Finger (bei Touchscreens).',[{name: 'x', info: 'Die aktuelle x-Koordinate der Maus.'},{name: 'y', info: 'Die aktuelle y-Koordinate der Maus.'},{name: 'down', info: 'Ist gerade die Maustaste gedrückt / berührt der Finger gerade den Bildschirm?'}, {name: 'inRect(cx,cy,width,height)', info: 'Prüft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und Höhe height befindet.'}, {name: 'inCircle(cx,cy,r)', info: 'Prüft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'}]);
+  },'Liefert dir Informationen über den Mauszeiger / den Finger (bei Touchscreens).',
+  [
+    {name: 'x', type: 'double', info: 'Die aktuelle x-Koordinate der Maus.'},
+    {name: 'y', type: 'double', info: 'Die aktuelle y-Koordinate der Maus.'},
+    {name: 'down', type: 'boolean', info: 'Ist gerade die Maustaste gedrückt / berührt der Finger gerade den Bildschirm?'}, 
+    {
+      name: 'inRect', 
+      returnType: 'boolean',
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'cx', type: 'double', info: 'Höhe des Rechtecks'}],
+      info: 'Prüft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und Höhe height befindet.'
+    }, 
+    {
+      name: 'inCircle',
+      returnType: 'boolean',
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Kreises'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Kreises'}, {name: 'r', type: 'double', info: 'Radius des Kreises'}],
+      info: 'Prüft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'
+    }
+  ]);
   
   $App.addObject("time",false,{
     get now(){
@@ -2425,7 +2510,28 @@ window.appJScode=function(){
         $App.timer=[];
       }
     }
-  },'Liefert dir Informationen über die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',[{name: 'now', info: 'Die aktuelle Zeit in Millisekunden seit dem 1.1.1970.'},{name: 'sec', info: 'Die Sekundenzahl der aktuellen Uhrzeit.'},{name: 'min', info: 'Die Minutenzahl der aktuellen Uhrzeit.'},{name: 'h', info: 'Die Stundenzahl der aktuellen Uhrzeit.'},{name: 'day', info: 'Der aktuelle Tag im Monat.'},{name: 'month', info: 'Der aktuelle Monat (1-12).'},{name: 'year', info: 'Die aktuelle Jahreszahl.'}, {name: 'start(millis, name)', info: 'Startet einen Timer, der millis Millisekunden lang läuft. Wenn er abläuft löst er die Funktion <code>onTimeout</code> aus.'}, {name: 'stop(name)', info: 'Stoppt den Timer mit dem angegebenen Namen. Wenn du keinen Namen angibst, werden alle laufenden Timer gestoppt.'},{name: 'year', info: 'Die aktuelle Jahreszahl.'}], "everywhere");
+  },'Liefert dir Informationen über die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',
+  [
+    {name: 'now', info: 'Die aktuelle Zeit in Millisekunden seit dem 1.1.1970.', type: 'int'},
+    {name: 'sec', info: 'Die Sekundenzahl der aktuellen Uhrzeit.', type: 'int'},
+    {name: 'min', type: 'int', info: 'Die Minutenzahl der aktuellen Uhrzeit.'},
+    {name: 'h', type: 'int', info: 'Die Stundenzahl der aktuellen Uhrzeit.'},
+    {name: 'day', type: 'int', info: 'Der aktuelle Tag im Monat.'},
+    {name: 'month', type: 'int', info: 'Der aktuelle Monat (1-12).'},{name: 'year', type: 'int', info: 'Die aktuelle Jahreszahl.'}, 
+    {
+      name: 'start', 
+      returnType: null, 
+      args: [{name: 'millis', type: 'int', info: 'Anzahl Millisekunden bis der Timer auslöst.'}, {name: 'name', type: 'String', info: "Name des Timers, mit dem onTimeout aufgerufen wird."}], 
+      info: 'Startet einen Timer, der millis Millisekunden lang läuft. Wenn er abläuft, löst er die Funktion <code>onTimeout</code> aus.'
+    }, 
+    {
+      name: 'stop', 
+      returnType: null,
+      args: [{name: 'name', type: 'String', info: 'Name des Timers, der gestoppt werden soll.'}], 
+      info: 'Stoppt den Timer mit dem angegebenen Namen. Wenn du keinen Namen angibst, werden alle laufenden Timer gestoppt.'
+    },
+    {name: 'year', type: 'int', info: 'Die aktuelle Jahreszahl (vierstellig).'}
+  ], "everywhere");
   
   $App.addObject('gamepad',false,{
     get left(){
@@ -2500,7 +2606,139 @@ window.appJScode=function(){
     hide: function(){
       $App.gamepad.setVisible(false);
     },
-  },'Erlaubt die Benutzung des Gamepads.',[{name: 'show()',info: 'Zeigt das Gamepad an.'}, {name: 'hide()',info: 'Verbirgt das Gamepad.'},{name: 'left',info: 'Wird gerade der Joystick nach links bewegt?'}, {name: 'right',info: 'Dasselbe, nach rechts.'}, {name: 'up',info: 'Dasselbe, nach oben.'}, {name: 'down',info: 'Dasselbe, nach unten.'}, {name: 'A',info: 'Wird gerade die Taste "A" gedrückt?'}, {name: 'B',info: 'Dasselbe mit Taste "B".'}, {name: 'X',info: 'Dasselbe mit Taste "X".'}, {name: 'Y',info: 'Dasselbe mit Taste "Y".'}, {name: 'E',info: 'Dasselbe mit Taste "E".'}, {name: 'F',info: 'Dasselbe mit Taste "F".'}],'Durch Zuweisen eines Zeichens zu einer Taste kannst du festlegen, welche Taste zu welchem Button gehoert:<code><pre>function onStart(){\n\tgamepad.show();\n\t//Bewegung mit WASD:\n\tgamepad.up = "W";\n\tgamepad.down = "S";\n\tgamepad.left = "A";\n\tgamepad.right = "D";\n\t//Buttons E und F ausblenden:\n\tgamepad.E = null;\n\tgamepad.F = null;\n\t//Button B durch Leertaste:\n\tgamepad.B = " ";\n}</pre></code>');
+  },'Erlaubt die Benutzung des Gamepads.',
+  [
+    {
+      name: 'show',
+      returnType: null,
+      info: 'Zeigt das Gamepad an.'
+    }, 
+    {
+      name: 'hide',
+      returnType: null,
+      info: 'Verbirgt das Gamepad.'
+    },
+    {
+      name: 'left',
+      type: 'boolean',
+      info: 'Wird gerade der Joystick nach links bewegt?',
+    },
+    {
+      name: 'setLeft',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "Links" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "Steuerkreuz - Links" verbunden werden soll.',
+    },
+    {
+      name: 'right',
+      type: 'boolean',
+      info: 'Wird gerade der Joystick nach rechts bewegt?'
+    },
+    {
+      name: 'setRight',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "Rechts" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "Steuerkreuz - Rechts" verbunden werden soll.',
+    }, 
+    {
+      name: 'up',
+      type: 'boolean',
+      info: 'Wird gerade der Joystick nach oben bewegt?'
+    },
+    {
+      name: 'setUp',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "Oben" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "Steuerkreuz - Oben" verbunden werden soll.',
+    },
+    {
+      name: 'down',
+      type: 'boolean',
+      info: 'Wird gerade der Joystick nach unten bewegt?'
+    }, 
+    {
+      name: 'setDown',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "Unten" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "Steuerkreuz - Unten" verbunden werden soll.',
+    },
+    {
+      name: 'A',
+      type: 'boolean',
+      info: 'Wird gerade die Taste "A" gedrückt?'
+    }, 
+    {
+      name: 'setA',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "A" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "A" verbunden werden soll.',
+    },
+    {
+      name: 'B',
+      type: 'boolean',
+      info: 'Wird gerade die Taste "B" gedrückt?'
+    },
+    {
+      name: 'setB',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "B" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "B" verbunden werden soll.',
+    }, 
+    {
+      name: 'X',
+      type: 'boolean',
+      info: 'Wird gerade die Taste "X" gedrückt?'
+    }, 
+    {
+      name: 'setX',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "X" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "X" verbunden werden soll.',
+    },
+    {
+      name: 'Y',
+      type: 'boolean',
+      info: 'Wird gerade die Taste "Y" gedrückt?'
+    }, 
+    {
+      name: 'setY',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "Y" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "Y" verbunden werden soll.',
+    },
+    {
+      name: 'E',
+      type: 'boolean',
+      info: 'Wird gerade die Taste "E" gedrückt?'
+    }, 
+    {
+      name: 'setE',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "E" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "E" verbunden werden soll.',
+    },
+    {
+      name: 'F',
+      type: 'boolean',
+      info: 'Wird gerade die Taste "F" gedrückt?'
+    },
+    {
+      name: 'setF',
+      language: "java",
+      returnType: null,
+      args: [{name: 'keycode', type: 'int', info: 'Keycode der Taste, die mit "F" verbunden werden soll.'}],
+      info: 'Legt fest, welche Taste auf der Tastatur mit "F" verbunden werden soll.',
+    },
+  ],'Durch Zuweisen eines Zeichens zu einer Taste kannst du festlegen, welche Taste zu welchem Button gehoert:<code><pre>function onStart(){\n\tgamepad.show();\n\t//Bewegung mit WASD:\n\tgamepad.up = "W";\n\tgamepad.down = "S";\n\tgamepad.left = "A";\n\tgamepad.right = "D";\n\t//Buttons E und F ausblenden:\n\tgamepad.E = null;\n\tgamepad.F = null;\n\t//Button B durch Leertaste:\n\tgamepad.B = " ";\n}</pre></code>');
   
   $App.addObject('path',false,{
     begin: function (x,y){
@@ -2542,7 +2780,66 @@ window.appJScode=function(){
     contains: function(x,y){
       return $App.canvas.isPointInPath(x,y);
     }
-  },'Erlaubt das Zeichnen von Figuren und Linien.',[{name: 'begin(x,y)', info: 'Beginnt einen neuen Pfad am Punkt (<code>x</code>|<code>y</code>)'}, {name: 'jump(dx,dy)', info: 'Springt von der aktuellen Position um <code>dx</code> nach rechts und um <code>dy</code> nach oben, ohne etwas zu zeichnen.'}, {name: 'jumpTo(x,y)', info: 'Springt von der aktuellen Position zum Punkt (<code>x</code>|<code>y</code>), ohne etwas zu zeichnen.'}, {name: 'line(dx,dy)', info: 'Zeichnet eine gerade Linie von der aktuellen Position um <code>dx</code> nach rechts und um <code>dy</code> nach oben.'}, {name: 'close()', info: 'Zeichnet eine gerade Linie vom aktuellen Punkt zurück zum Startpunkt des Pfades.'}, {name: 'draw()', info: 'Zeichnet den Pfad.'}, {name: 'fill()', info: 'Füllt den Pfad.'}, {name: 'contains(x,y)', info: 'Prüft, ob sich der Punkt (<code>x</code>|<code>y</code>) innerhalb des aktuellen Pfades befindet.'}, {name: 'rect(w,h)', info: 'Zeichnet ein Rechteck mit dem aktuellen Punkt als Mittelpunkt und Breite w und Höhe h.'}, {name: 'circle(r,[start,stop])', info: 'Zeichnet einen Kreisbogen mit dem aktuellen Punkt als Mittelpunkt Radius <code>r</code>. Optional kannst du mit <code>start</code> und <code>stop</code> den Anfangs- und den Endwinkel festlegen, um nur einen Teil des Kreises zu zeichnen.'}],'');
+  },'Erlaubt das Zeichnen von Figuren und Linien.',
+  [
+    {
+      name: 'begin', 
+      returnType: 'Path',
+      args: [{name: 'x', type: 'double', info: 'x-Koordinate'}, {name: 'y', type: 'double', info: 'y-Koordinate'}],
+      info: 'Beginnt einen neuen Pfad am Punkt (<code>x</code>|<code>y</code>)'
+    }, 
+    {
+      name: 'jump',
+      returnType: 'Path',
+      args: [{name: 'dx', type: 'double', info: 'Unterschied in x-Richtung'}, {name: 'dy', type: 'double', info: 'Unterschied in y-Richtung'}],
+      info: 'Springt von der aktuellen Position um <code>dx</code> nach rechts und um <code>dy</code> nach oben, ohne etwas zu zeichnen.'
+    }, 
+    {
+      name: 'jumpTo',
+      returnType: 'Path',
+      args: [{name: 'x', type: 'double', info: 'x-Koordinate'}, {name: 'y', type: 'double', info: 'y-Koordinate'}], 
+      info: 'Springt von der aktuellen Position zum Punkt (<code>x</code>|<code>y</code>), ohne etwas zu zeichnen.'
+    }, 
+    {
+      name: 'line',
+      returnType: 'Path',
+      args: [{name: 'dx', type: 'double', info: 'Unterschied in x-Richtung'}, {name: 'dy', type: 'double', info: 'Unterschied in y-Richtung'}], 
+      info: 'Zeichnet eine gerade Linie von der aktuellen Position um <code>dx</code> nach rechts und um <code>dy</code> nach oben.'
+    }, 
+    {
+      name: 'close',
+      returnType: 'Path', 
+      info: 'Zeichnet eine gerade Linie vom aktuellen Punkt zurück zum Startpunkt des Pfades.'
+    }, 
+    {
+      name: 'draw',
+      returnType: 'Path', 
+      info: 'Zeichnet den Pfad.'
+    }, 
+    {
+      name: 'fill', 
+      returnType: 'Path',
+      info: 'Füllt den Pfad.'
+    }, 
+    {
+      name: 'contains',
+      returnType: 'boolean',
+      args: [{name: 'x', type: 'double', info: 'x-Koordinate'}, {name: 'y', type: 'double', info: 'y-Koordinate'}], 
+      info: 'Prüft, ob sich der Punkt (<code>x</code>|<code>y</code>) innerhalb des aktuellen Pfades befindet.'
+    }, 
+    {
+      name: 'rect', 
+      returnType: 'Path',
+      args: [{name: 'w', type: 'double', info: 'Breite'}, {name: 'h', type: 'double', info: 'Höhe'}],
+      info: 'Zeichnet ein Rechteck mit dem aktuellen Punkt als Mittelpunkt und Breite w und Höhe h.'
+    }, 
+    {
+      name: 'circle(r,[start,stop])',
+      returnType: 'Path',
+      args: [{name: 'r', type: 'double', info: 'Radius'}, {name: 'start', type: 'double', info: 'Startwinkel'}, {name: 'stop', type: 'double', info: 'Endwinkel'}], 
+      info: 'Zeichnet einen Kreisbogen mit dem aktuellen Punkt als Mittelpunkt Radius <code>r</code>. Optional kannst du mit <code>start</code> und <code>stop</code> den Anfangs- und den Endwinkel festlegen, um nur einen Teil des Kreises zu zeichnen.'
+    }
+  ],'');
   
   $App.addObject('ui',false,{
     button: function (text,cx,cy,width,height){
@@ -2623,11 +2920,179 @@ window.appJScode=function(){
       return b;
     }
   },'Erlaubt das Hinzufügen und Manipulieren der grafischen Benutzeroberfläche (UI).',[
-    {name: 'button(text,cx,cy,width,height)', info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert den Button zurück.'},
-    {name: 'input(type,placeholdertext,cx,cy,width,height)', info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst außerdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Höhe <code>height</code> festlegen. Liefert das Eingabefeld zurück.'},
-    {name: 'textarea(placeholdertext,cx,cy,width,height)', info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert die TextArea zurück.'},
-    {name: 'select(options,cx,cy,width,height)', info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Select-Element zurück.'},
-    {name: 'label(text,cx,cy,width,height)', info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Label zurück.'}
+    {
+      name: 'button', 
+      returnType: 'JButton',
+      args: [{name: 'text', type: 'String', info: 'Aufschrift des Buttons'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}, {name: 'height', type: 'double', info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}],
+      info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert den Button zurück.'
+    },
+    {
+      name: 'input',
+      language: 'js', 
+      returnType: 'Input',
+      args: [
+        {
+          name: 'text',
+          type: 'String', 
+          info: 'Art des Inputs'
+        },
+        {
+          name: 'placeholdertext',
+          type: 'String', 
+          info: 'Text, der angezeigt wird, wenn das Element leer ist.'
+        }, 
+        {
+          name: 'cx', 
+          type: 'double', 
+          info: 'x-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'cy', 
+          type: 'double', 
+          info: 'y-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'width', 
+          type: 'double', 
+          info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }, 
+        {
+          name: 'height', 
+          type: 'double', 
+          info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }
+      ],
+      info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst außerdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Höhe <code>height</code> festlegen. Liefert das Eingabefeld zurück.'
+    },
+    {
+      name: 'textfield',
+      language: 'java',
+      returnType: 'JTextField',
+      args: [
+        {
+          name: 'placeholdertext',
+          type: 'String', 
+          info: 'Text, der angezeigt wird, wenn das Element leer ist.'
+        }, 
+        {
+          name: 'cx', 
+          type: 'double', 
+          info: 'x-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'cy', 
+          type: 'double', 
+          info: 'y-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'width', 
+          type: 'double', 
+          info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }, 
+        {
+          name: 'height', 
+          type: 'double', 
+          info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }
+      ],
+      info: 'Erzeugt ein neues Eingabefeld, in das der User Text eingeben kann. Du kannst den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Höhe <code>height</code> festlegen. Liefert das Element zurück.'
+    },
+    {
+      name: 'textarea', 
+      returnType: 'JTextArea',
+      args: [
+        {
+          name: 'placeholdertext',
+          type: 'String', 
+          info: 'Text, der angezeigt wird, wenn das Element leer ist.'
+        }, 
+        {
+          name: 'cx', 
+          type: 'double', 
+          info: 'x-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'cy', 
+          type: 'double', 
+          info: 'y-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'width', 
+          type: 'double', 
+          info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }, 
+        {
+          name: 'height', 
+          type: 'double', 
+          info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }
+      ],
+      info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert die TextArea zurück.'
+    },
+    {
+      name: 'select',
+      returnType: 'JCombobox',
+      args: [
+        {
+          name: 'options',
+          type: 'String[]', 
+          info: 'Optionen, die zur Auswahl stehen'
+        }, 
+        {
+          name: 'cx', 
+          type: 'double', 
+          info: 'x-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'cy', 
+          type: 'double', 
+          info: 'y-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'width', 
+          type: 'double', 
+          info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }, 
+        {
+          name: 'height', 
+          type: 'double', 
+          info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }
+      ],
+      info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Select-Element zurück.'
+    },
+    {
+      name: 'label',
+      returnType: 'JLabel',
+      args: [
+        {
+          name: 'text',
+          type: 'String', 
+          info: 'Art des Inputs'
+        },
+        {
+          name: 'cx', 
+          type: 'double', 
+          info: 'x-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'cy', 
+          type: 'double', 
+          info: 'y-Koordinate des Mittelpunkts'
+        }, 
+        {
+          name: 'width', 
+          type: 'double', 
+          info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }, 
+        {
+          name: 'height', 
+          type: 'double', 
+          info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+        }
+      ], 
+      info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Label zurück.'
+    }
   ],'');
   
   console.realLog=console.log;
@@ -2649,7 +3114,25 @@ window.appJScode=function(){
       $App.showConsoleOnStart=false;
       $App.console.setVisible(false);
     }
-  },'Erlaubt die Benutzung der Konsole.',[{name: 'log(text)', info: 'Gibt den <code>text</code> in der Konsole aus.'}, {name: 'show()', info: 'Zeigt die Konsole an.'}, {name: 'hide()', info: 'Verbirgt die Konsole.'}],'',"everywhere");
+  },'Erlaubt die Benutzung der Konsole.',
+  [
+    {
+      name: 'log',
+      returnType: null,
+      args: [{name: 'text', type: 'String', info: 'Text, der ausgegeben werden soll.'}],
+      info: 'Gibt den <code>text</code> in der Konsole aus.'
+    }, 
+    {
+      name: 'show',
+      returnType: null, 
+      info: 'Zeigt die Konsole an.'
+    }, 
+    {
+      name: 'hide()', 
+      returnType: null,
+      info: 'Verbirgt die Konsole.'
+    }
+  ],'',"everywhere");
   
   $App.help.compileScreen();
   

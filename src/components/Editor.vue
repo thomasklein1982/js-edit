@@ -32,7 +32,7 @@
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
         <code-mirror 
           ref="editor"
-          :current-pos="paused ? currentPos : -1"
+          :current="paused ? currentLine : -1"
           :autocomplete-variables="autocompleteVariables"
           @parse="updateOutline"
         />
@@ -49,6 +49,7 @@
   </div>
   <span style="position: fixed; bottom: 0.5rem; right: 0.5rem" class="p-buttonset">
       <Button :disabled="running && !paused" @click="resume()" icon="pi pi-play" />
+      <Button v-if="!running" @click="debug()" icon="pi pi-bolt" />
       <Button v-if="paused" @click="step()" icon="pi pi-arrow-right" />
       <Button v-if="running" @click="stop()" icon="pi pi-times" />
   </span>
@@ -65,12 +66,12 @@ import SymbolsDialog from './SymbolsDialog.vue';
 
 export default {
   props: {
-    breakpoints: Object,
+    breakpoints: Array,
     paused: {
       type: Boolean,
       default: false
     },
-    currentPos: {
+    currentLine: {
       type: Number,
       default: -1
     }
@@ -86,13 +87,16 @@ export default {
     loadApp(sourceCode){
       this.$refs.editor.setCode(sourceCode);
     },
-    resume(){
+    debug(){
+      this.resume(true);
+    },
+    resume(debugging){
       this.$root.currentPos=-1;
       if(this.paused){
         this.$root.paused=false;
         this.$refs.controlArea.resume();
       }else if(!this.running){
-        this.runApp();
+        this.runApp(debugging);
       }
       this.$refs.controlArea.focusPreview();
     },
@@ -129,10 +133,10 @@ export default {
     exportApp(){
       this.$refs.exportDialog.setVisible(true);
     },
-    runApp(){
+    runApp(debugging){
       this.running=true;
       this.$refs.editor.setRuntimeError();
-      this.$refs.controlArea.play()
+      this.$refs.controlArea.play(debugging);
     },
     prettifyCode(){
       this.$refs.editor.prettifyCode();

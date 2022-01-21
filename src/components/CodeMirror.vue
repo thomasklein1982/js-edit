@@ -65,81 +65,66 @@
   // });
 
   const breakpointEffect = StateEffect.define({
-    map: (val, mapping) => ({pos: mapping.mapPos(val.pos), on: val.on})
-  })
+  map: (val, mapping) => ({pos: mapping.mapPos(val.pos), on: val.on})
+})
 
-  const breakpointState = StateField.define({
-    create() { return RangeSet.empty },
-    update(set, transaction) {
-      set = set.map(transaction.changes)
-      for (let e of transaction.effects) {
-        if (e.is(breakpointEffect)) {
-          /*Fuehrenden Whitespace herausrechnen:*/
-          let pos=e.value.pos;
-          let state=transaction.startState;
-          let line=state.doc.lineAt(pos);
-          let text=line.text;
-          let wscount=0;
-          if(text.trim().length>0){
-            for(let i=0;i<text.length;i++){
-              if(!(/\s/.test(text.charAt(i)))){
-                wscount=i;
-                break;
-              }
-            }  
-          }
-          //app.toggleBreakpoint(pos+wscount,!hasBreakpoint);
-          app.setBreakpoint(pos+wscount,e.value.on);
-          if (e.value.on){
-            set = set.update({add: [breakpointMarker.range(e.value.pos)]})
+const breakpointState = StateField.define({
+  create() { return RangeSet.empty },
+  update(set, transaction) {
+    set = set.map(transaction.changes)
+    for (let e of transaction.effects) {
+      if (e.is(breakpointEffect)) {
+        if (e.value.on){
+          set = set.update({add: [breakpointMarker.range(e.value.pos)]})
 
-          }else{
-            set = set.update({filter: from => from != e.value.pos})
-          }
+        }else{
+          set = set.update({filter: from => from != e.value.pos})
         }
+        app.updateBreakpoints(set,transaction.startState.doc);
       }
-      return set
     }
-  })
-
-  function toggleBreakpoint(view, line) {
-    let pos=line.from;
-    line=view.state.doc.lineAt(pos)
-    let breakpoints = view.state.field(breakpointState);
-    let hasBreakpoint = false;
-    breakpoints.between(pos, pos, () => {hasBreakpoint = true});
-    view.dispatch({
-      effects: breakpointEffect.of({pos, on: !hasBreakpoint})
-    });
-    
+    return set
   }
+})
 
-  const breakpointMarker = new class extends GutterMarker {
-    toDOM() { return document.createTextNode("⬤") }
-  }
+function toggleBreakpoint(view, line) {
+  let pos=line.from;
+  line=view.state.doc.lineAt(pos)
+  let breakpoints = view.state.field(breakpointState);
+  let hasBreakpoint = false;
+  breakpoints.between(pos, pos, () => {hasBreakpoint = true});
+  view.dispatch({
+    effects: breakpointEffect.of({pos, on: !hasBreakpoint})
+  });
+  
+}
 
-  const breakpointGutter = [
-    breakpointState,
-    gutter({
-      class: "cm-breakpoint-gutter",
-      markers: v => v.state.field(breakpointState),
-      initialSpacer: () => breakpointMarker,
-      domEventHandlers: {
-        mousedown(view, line) {
-          toggleBreakpoint(view, line)
-          return true
-        }
+const breakpointMarker = new class extends GutterMarker {
+  toDOM() { return document.createTextNode("⬤") }
+}
+
+const breakpointGutter = [
+  breakpointState,
+  gutter({
+    class: "cm-breakpoint-gutter",
+    markers: v => v.state.field(breakpointState),
+    initialSpacer: () => breakpointMarker,
+    domEventHandlers: {
+      mousedown(view, line) {
+        toggleBreakpoint(view, line)
+        return true
       }
-    }),
-    EditorView.baseTheme({
-      ".cm-breakpoint-gutter .cm-gutterElement": {
-        color: "red",
-        paddingLeft: "5px",
-        cursor: "default"
-      },
-      ".cm-currentLine": {backgroundColor: "#121212", color: "white"}
-    })
-  ]
+    }
+  }),
+  EditorView.baseTheme({
+    ".cm-breakpoint-gutter .cm-gutterElement": {
+      color: "red",
+      paddingLeft: "5px",
+      cursor: "default"
+    },
+    ".cm-currentLine": {backgroundColor: "#121212", color: "white"}
+  })
+]
 
   const additionalCompletions=[];
   let editor;
@@ -150,17 +135,14 @@
         type: Boolean,
         default: true
       },
-      currentPos: {
-        type: Number,
-        default: -1
-      }
+      current: Number
     },
     watch: {
-      currentPos(nv,ov){
-        if(nv<0 && ov>=0){
-          this.setCursor(ov);
+      current(nv,ov){
+        if(nv<=0 && ov>0){
+          this.setCursorToLine(ov);
         }else{
-          let line=this.state.doc.lineAt(nv)
+          let line=this.getLineByNumber(nv);
           try{
             this.setSelection(line.from,line.to+1);
           }catch(e){
@@ -332,6 +314,13 @@
           scrollIntoView: true
         });
       },
+      setCursorToLine: function(linenumber){
+        let line=this.getLineByNumber(linenumber);
+        this.setCursor(line.from);
+      },
+      getLineByNumber: function(linenumber){
+        return editor.state.doc.line(linenumber);
+      },
       setSelection(anchor,head){
         editor.dispatch({
           selection: {anchor, head},
@@ -343,7 +332,7 @@
       },
       async check(){
         let src=this.$root.sourceCode;
-        let infos=await parse(src,this.state.tree,{dontParseGlobalVariables: !this.autocompleteVariables});
+        let infos=await parse(src,this.state.tree,{dontParseGlobalVariables: !this.autocompleteVariables},this.state);
         this.$root.sourceCodeDebugging=infos.code;
         this.$emit("parse",infos);
         if(infos.error){
