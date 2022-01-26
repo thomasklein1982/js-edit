@@ -2295,33 +2295,40 @@ window.appJScode=function(){
     update: function(){
       let newItems={};
       for(let a in window){
-        if(!(a in $App.systemVariables) && !window[a].$hideFromConsole){
-          let obj=window[a];
-          if(typeof obj==="function"){
-            continue;
-          }
-          let item;
-          if(a in this.items){
-            item=this.items[a];
-          }else{
-            item={
-              expanded: false,
-              element: document.createElement("div")
-            };
-            this.variablesDiv.appendChild(item.element);
-          }
-          newItems[a]=item;
-          let v;
-          let typ=obj && obj.constructor? (obj.constructor.name).toLowerCase():"";
-          if(typ.startsWith("html")){
-            v=obj.constructor.name;
-          }else if(typ==="file"){
-            v="File";
-          }else{
-            v=JSON.stringify(obj);
-          }
-          item.element.textContent=""+a+": "+v;
+        if((a in $App.systemVariables)){
+          continue;
         }
+        let obj=window[a];
+        if(obj && obj.$hideFromConsole){
+          continue;
+        }
+        if(obj===window){
+          continue;
+        }
+        if(typeof obj==="function"){
+          continue;
+        }
+        let item;
+        if(a in this.items){
+          item=this.items[a];
+        }else{
+          item={
+            expanded: false,
+            element: document.createElement("div")
+          };
+          this.variablesDiv.appendChild(item.element);
+        }
+        newItems[a]=item;
+        let v;
+        let typ=obj && obj.constructor? (obj.constructor.name).toLowerCase():"";
+        if(typ.startsWith("html")){
+          v=obj.constructor.name;
+        }else if(typ==="file"){
+          v="File";
+        }else{
+          v=JSON.stringify(obj);
+        }
+        item.element.textContent=""+a+": "+v;
       }
       for(let a in this.items){
         if(!(a in newItems)){
