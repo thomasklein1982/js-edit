@@ -49,7 +49,7 @@
   </div>
   <span style="position: fixed; bottom: 0.5rem; right: 0.5rem" class="p-buttonset">
       <Button :disabled="running && !paused" @click="resume()" icon="pi pi-play" />
-      <Button v-if="!running" @click="debug()" icon="pi pi-bolt" />
+      <Button v-if="!running" @click="debug()" icon="editor-extra debug" />
       <Button v-if="paused" @click="step()" icon="pi pi-arrow-right" />
       <Button v-if="running" @click="stop()" icon="pi pi-times" />
   </span>
@@ -133,7 +133,10 @@ export default {
     exportApp(){
       this.$refs.exportDialog.setVisible(true);
     },
-    runApp(debugging){
+    async runApp(debugging){
+      if(debugging){
+        await this.$refs.editor.check(true);
+      }
       this.running=true;
       this.$refs.editor.setRuntimeError();
       this.$refs.controlArea.play(debugging);

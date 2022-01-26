@@ -10,7 +10,8 @@ export const parse=async function(src,tree,options,state){
       lastPos: 0,
       firstFunctionFound: false,
       usedNames: {},
-      state: state
+      state: state,
+      debugging: options.debugging
     };
     let code='(async function(){try{';
     let codeFuncEnd="}catch(e){$App.handleException(e);}})(); ";
@@ -68,6 +69,7 @@ function createError(message,node){
 function parseFunction(src,node,parsingInfos){
   let from=node.from;
   let to=node.to;
+  
   node=node.firstChild;
   while(node && node.type.name!=="VariableDefinition"){
     node=node.nextSibling;
@@ -90,9 +92,13 @@ function parseFunction(src,node,parsingInfos){
   while(node && node.type.name!=="Block"){
     node=node.nextSibling;
   }
-  let code="async function "+fname+src.substring(paramList.from,paramList.to);
-  code+=parseCodeBlock(src,node,parsingInfos);
-  
+  let code;
+  if(parsingInfos.debugging){
+    code="async function "+fname+src.substring(paramList.from,paramList.to);
+    code+=parseCodeBlock(src,node,parsingInfos);   
+  }else{
+    code+=src.substring(from,to);
+  }
   let func={
     type: "function",
     params: params,
@@ -119,6 +125,9 @@ function parseCodeBlock(src,node,parsingInfos){
 }
 
 function extractLineBreaks(src,node,parsingInfos){
+  if(!parsingInfos.debugging){
+    return "";
+  }
   let lb='';
   let between=src.substring(parsingInfos.lastPos,node.from);
   let pos=between.indexOf("\n");
@@ -138,9 +147,13 @@ function parseClass(src,node,parsingInfos){
 }
 
 function parseStatement(src,node,parsingInfos){
+  if(!parsingInfos.debugging){
+    let code=src.substring(node.from,node.to);
+    return code;
+  }
   let line=parsingInfos.state.doc.lineAt(node.from).number;
-  let code="await $App.debug.line("+line+",true);";
-  
+  let code;
+  code="await $App.debug.line("+line+",true);";
   if(node.type.name==="VariableDeclaration"){
     code+=extractLineBreaks(src,node,parsingInfos);
     let c=src.substring(node.from,node.to);

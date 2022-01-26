@@ -12,7 +12,7 @@ export default{
     return {
       sourceCode: '',
       sourceCodeDebugging: '',
-      version: "30",
+      version: "34",
       breakpoints: [],
       paused: false,
       currentLine: -1
@@ -29,9 +29,9 @@ export default{
       for(let i=0;i<n;i++){
         let pos=iter.from;
         let line=document.lineAt(pos);
-        bp.push({
-          n: line.number
-        });
+        bp.push(
+          line.number
+        );
         iter.next();
       }
       this.breakpoints=bp;

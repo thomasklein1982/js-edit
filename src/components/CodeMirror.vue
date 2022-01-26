@@ -330,9 +330,12 @@ const breakpointGutter = [
       focus(){
         editor.focus();
       },
-      async check(){
+      async check(debugging){
         let src=this.$root.sourceCode;
-        let infos=await parse(src,this.state.tree,{dontParseGlobalVariables: !this.autocompleteVariables},this.state);
+        let time1=new Date();
+        let infos=await parse(src,this.state.tree,{debugging: debugging, dontParseGlobalVariables: !this.autocompleteVariables},this.state);
+        let time2=new Date();
+        console.info("Parsing completed in "+(time2-time1)+"ms");
         this.$root.sourceCodeDebugging=infos.code;
         this.$emit("parse",infos);
         if(infos.error){

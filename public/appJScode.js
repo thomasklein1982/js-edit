@@ -5,8 +5,14 @@ window.appJScode=function(){
     $App.debug.onMessage(message);
   };
   
+  Object.defineProperty(window,"assets",{
+    get: function(){
+      return $App.assets;
+    }
+  })
+
   window.$App={
-    version: 15,
+    version: 18,
     language: 'js',
     setupData: null,
     debug: {
@@ -21,7 +27,9 @@ window.appJScode=function(){
         }
         if(this.paused || this.breakpoints[line]===name){
           this.paused=true;
-          $App.body.overlay.style.display='';
+          if($App.body.overlay){
+            $App.body.overlay.style.display='';
+          }
           var p=new Promise((resolve,reject)=>{
             window.parent.postMessage({
               type: "debug-pause",
@@ -45,7 +53,7 @@ window.appJScode=function(){
           var n,f;
           if(bp[i].n){
             n=bp[i].n;
-            f=bp[i].f||true;
+            f=bp[i].f;
           }else{
             n=bp[i];
             f=true;
@@ -66,17 +74,17 @@ window.appJScode=function(){
           this.resolve();
         }
         if(this.paused){
-          if($App.body.overlay.style.display==='none'){
+          if($App.body.overlay && $App.body.overlay.style.display==='none'){
             $App.body.overlay.style.display='';
           }
         }else{
-          if($App.body.overlay.style.display!=='none'){
+          if($App.body.overlay && $App.body.overlay.style.display!=='none'){
             $App.body.overlay.style.display='none';
           }
         }
       }
     },
-    assets: [],
+    assets: {},
     body: {
       element: null,
       root: null,
@@ -144,6 +152,7 @@ window.appJScode=function(){
     animationFrame: null,
     gamepad: null,
     canvas: null,
+    world: null,
     showConsoleOnStart: true
   };
   
@@ -166,9 +175,14 @@ window.appJScode=function(){
   }
   
   $App.handleException=function(e){
-    var m=e.message;
+    var m;
     var line=-1;
     var col=-1;
+    if(e && e.substring){
+      m=e;
+    }else{
+      m=e.message;
+    }
     if(e.stack){
       var stack=e.stack;
       var pos=stack.lastIndexOf("(");
@@ -178,7 +192,7 @@ window.appJScode=function(){
         //TODO: Verweise auf appJS herausnehmen??
       }
     }else{
-      stack="Fehler an unbekannter Stelle.";
+      stack=m;
     }
     
     $App.handleError({
@@ -288,6 +302,16 @@ window.appJScode=function(){
           return this.appJSData.value;
         }
       });
+    }else if(tagname==="input"){
+      // Object.defineProperty(el,'value', {
+      //   set: function(v){
+      //     this.appJSData.value=v;
+      //     this.innerHTML=v;
+      //   },
+      //   get: function(){
+      //     return this.appJSData.value;
+      //   }
+      // });
     }
     Object.defineProperty(el, 'visible', {
       set: function(v) {
@@ -326,9 +350,9 @@ window.appJScode=function(){
   
   $App.$JoyStick=function(t,onDown,onUp,e){var i=void 0===(e=e||{}).title?"joystick":e.title,n=void 0===e.width?0:e.width,o=void 0===e.height?0:e.height,r=void 0===e.internalFillColor?"#00AA00":e.internalFillColor,h=void 0===e.internalLineWidth?2:e.internalLineWidth,a=void 0===e.internalStrokeColor?"#003300":e.internalStrokeColor,d=void 0===e.externalLineWidth?2:e.externalLineWidth,f=void 0===e.externalStrokeColor?"#008000":e.externalStrokeColor,l=void 0===e.autoReturnToCenter||e.autoReturnToCenter,s=t,c=document.createElement("canvas");c.id=i,0===n&&(n=s.clientWidth),0===o&&(o=s.clientHeight),c.width=n,c.height=o,s.appendChild(c);var u=c.getContext("2d"),g=0,v=2*Math.PI,p=(c.width-(c.width/2+10))/2,C=p+5,w=p+30,m=c.width/2,L=c.height/2,E=c.width/10,P=-1*E,S=c.height/10,k=-1*S,W=m,T=L;function G(){u.beginPath(),u.arc(m,L,w,0,v,!1),u.lineWidth=d,u.strokeStyle=f,u.stroke()}function x(){u.beginPath(),W<p&&(W=C),W+p>c.width&&(W=c.width-C),T<p&&(T=C),T+p>c.height&&(T=c.height-C),u.arc(W,T,p,0,v,!1);var t=u.createRadialGradient(m,L,5,m,L,200);t.addColorStop(0,r),t.addColorStop(1,a),u.fillStyle=t,u.fill(),u.lineWidth=h,u.strokeStyle=a,u.stroke()}"ontouchstart"in document.documentElement?(c.addEventListener("touchstart",function(t){g=1;if(onDown){onDown()}},!1),c.addEventListener("touchmove",function(t){t.preventDefault(),1===g&&t.targetTouches[0].target===c&&(W=t.targetTouches[0].pageX,T=t.targetTouches[0].pageY,"BODY"===c.offsetParent.tagName.toUpperCase()?(W-=c.offsetLeft,T-=c.offsetTop):(W-=c.offsetParent.offsetLeft,T-=c.offsetParent.offsetTop),u.clearRect(0,0,c.width,c.height),G(),x())},!1),c.addEventListener("touchend",function(t){g=0,l&&(W=m,T=L);u.clearRect(0,0,c.width,c.height),G(),x();if(onUp){onUp()}},!1)):(c.onmouseleave=function(){g=0,l&&(W=m,T=L);u.clearRect(0,0,c.width,c.height),G(),x();if(onUp){onUp()}},c.addEventListener("mousedown",function(t){g=1;if(onDown){onDown()}},!1),c.addEventListener("mousemove",function(t){1===g&&(W=t.pageX,T=t.pageY,"BODY"===c.offsetParent.tagName.toUpperCase()?(W-=c.offsetLeft,T-=c.offsetTop):(W-=c.offsetParent.offsetLeft,T-=c.offsetParent.offsetTop),u.clearRect(0,0,c.width,c.height),G(),x())},!1),c.addEventListener("mouseup",function(t){g=0,l&&(W=m,T=L);u.clearRect(0,0,c.width,c.height),G(),x();if(onUp){onUp()}},!1)),G(),x(),this.GetWidth=function(){return c.width},this.GetHeight=function(){return c.height},this.GetPosX=function(){return W},this.GetPosY=function(){return T},this.GetX=function(){return((W-m)/C*100).toFixed()},this.GetY=function(){return((T-L)/C*100*-1).toFixed()},this.setDir=function(dir){if(dir==="N"){W=m;T=-1000;}else if(dir==="S"){W=m;T=1000;}else if(dir==="W"){W=-1000;T=L;}else if(dir==="E"){W=1000;T=L;}else if(dir==="NW"){W=-1000;T=-1000;}else if(dir==="NE"){W=1000;T=-1000;}else if(dir==="SW"){W=-1000;T=1000;}else if(dir==="SE"){W=1000;T=1000;}else{W=m;T=L;}u.clearRect(0,0,c.width,c.height),G(),x();},this.GetDir=function(){var t="",e=W-m,i=T-L;return i>=k&&i<=S&&(t="C"),i<k&&(t="N"),i>S&&(t="S"),e<P&&("C"===t?t="W":t+="W"),e>E&&("C"===t?t="E":t+="E"),t}};
   
-  $App.setup=async function(){
+  $App.setup=async function(dontStart){
     await this.loadAssets();
-    if(document.body){
+    if(!dontStart && document.body){
       this.body.element=document.body;
       this.body.element.style="padding: 0; margin: 0; width: 100%; height: 100%; overflow: hidden";
       this.body.element.parentElement.style=this.body.style;
@@ -349,6 +373,7 @@ window.appJScode=function(){
       root.className="app-root";
       this.body.element.appendChild(root);
       this.canvas=new $App.Canvas(root,100,100);
+      this.world=new $App.World(this.canvas);
       let left=document.createElement("div");
       left.style="font-family: monospace; position: absolute; width: 30%; height: 100%; left: 0; top: 0; display: none";
       let right=document.createElement("div");
@@ -595,13 +620,12 @@ window.appJScode=function(){
     };
   };
   
-  $App.registerAssets=function(){
-    for(let i=0;i<arguments.length;i++){
-      let url=arguments[i];
-      this.assets.push(url);
+  $App.registerAsset=function(url, name){
+    this.assets[name]={
+      url: url
     }
   };
-  
+
   $App.getAsset=function(asset){
     if(!asset){
       var m="Dieses Asset konnte nicht geladen werden.";
@@ -638,20 +662,14 @@ window.appJScode=function(){
   }
   
   $App.loadAssets=async function(){
-    if(!window.assets){
-      window.assets=[];
-    }
-    for(let i=0;i<this.assets.length;i++){
-      let fullurl=(new URL(this.assets[i],document.baseURI)).href;
-      let url=this.assets[i].toLowerCase();
+    for(let a in this.assets){
+      let asset=this.assets[a];
+      let fullurl=(new URL(asset.url,document.baseURI)).href;
+      let url=asset.url.toLowerCase();
       let p;
       let type=null;
-      let name=url;
-      let asset;
-      name=url.substring(0,url.length-4);
-      let pos=name.lastIndexOf("/");
-      name=name.substring(pos+1);
       if(url.endsWith("mp3")||url.endsWith("wav")||url.endsWith("ogg")){
+        continue;
         if(!this.audio.context){
           this.audio.context=new AudioContext();
         }
@@ -682,13 +700,7 @@ window.appJScode=function(){
               this.audio.play();
             }
           }
-          window.assets.push(asset);
-          window.assets[name]=asset;
-          this.assets[i]={
-            asset: asset,
-            url: url,
-            type: type
-          };
+          
         };
   
         // p=new Promise((resolve,reject)=>{
@@ -707,7 +719,6 @@ window.appJScode=function(){
         let image=new Image();
         p=new Promise((resolve,reject)=>{
           image.onload=()=>{
-            type="image";
             resolve(image);
           };
           image.onerror=()=>{
@@ -715,25 +726,14 @@ window.appJScode=function(){
           };
         });
         image.src=fullurl;
-        asset=await p;
-        if(asset){
-          window.assets.push(asset);
-          window.assets[name]=asset;
-          this.assets[i]={
-            asset: asset,
-            url: url,
-            type: type
-          };
+        image=await p;
+        if(image){
+          asset.object=image;
+          asset.type="image";
         }else{
           var m="Das Asset '"+url+"' konnte nicht geladen werden.";
         }
-      } 
-      if(type){
-        
-      }else{
-        type="unknown";
       }
-      
     }
   };
   
@@ -791,10 +791,16 @@ window.appJScode=function(){
   };
   
   $App.Canvas.prototype={
-    pushState: function(){
+    save: function(dontAdd){
+      if(!dontAdd){
+        this.addCommand("save",[])
+      }
       this.ctx.save();
     },
-    popState: function(){
+    restore: function(dontAdd){
+      if(!dontAdd){
+        this.addCommand("restore",[])
+      }
       this.ctx.restore();
     },
     reset: function(){
@@ -808,28 +814,53 @@ window.appJScode=function(){
       this.setColor(this.state.color,true);
       this.setOpacity(this.state.opacity,true);
     },
-    rotate: function(theta,x,y){
+    rotate: function(theta,x,y,dontAdd){
+      if(!dontAdd){
+        this.addCommand("rotate",[theta,x,y]);
+      }
+      x=this.getX(x);
+      y=this.getY(y);
       theta*=Math.PI/180;
+      
       if(x===undefined){
         this.ctx.rotate(-theta);
       }else{
-        this.ctx.translate(x*this.dpr,y*this.dpr);
+        this.ctx.translate(x,y);
         this.ctx.rotate(-theta);
-        this.ctx.translate(-x*this.dpr,-y*this.dpr);
+        this.ctx.translate(-x,-y);
       }
     },
-    translate: function(x,y){
-      this.ctx.translate(x*this.dpr,-y*this.dpr);
+    translate: function(x,y,dontAdd){
+      if(!dontAdd){
+        this.addCommand("translate",[x,y]);
+      }
+      x=this.getWidth(x);
+      y=this.getHeight(y);
+      this.ctx.translate(x,-y);
     },
     shear: function(sx,sy){
   
     },
-    scale: function(sx,sy){
-      this.ctx.translate(0,this.height*this.dpr);
-      this.ctx.scale(sx*1.0,sy*1.0);
-      this.ctx.translate(0,-this.height*this.dpr);
+    scale: function(sx,sy,x,y,dontAdd){
+      if(!dontAdd){
+        this.addCommand("scale",[sx,sy,x,y]);
+      }
+      if(x===undefined){
+        this.ctx.translate(0,this.height*this.dpr);
+        this.ctx.scale(sx*1.0,sy*1.0);
+        this.ctx.translate(0,-this.height*this.dpr);
+      }else{
+        x=this.getX(x);
+        y=this.getY(y);
+        this.ctx.translate(x,y);
+        this.ctx.scale(sx,sy);
+        this.ctx.translate(-x,-y);
+      }
     },
-    setTransform: function(m00,m10,m01,m11,m02,m12){
+    setTransform: function(m00,m10,m01,m11,m02,m12,dontAdd){
+      if(!dontAdd){
+        this.addCommand("setTransform",[m00,m10,m01,m11,m02,m12]);
+      }
       this.ctx.setTransform(m00,m10,m01,m11,m02*this.dpr,m12*this.dpr);
     },
     redraw: function(){
@@ -1181,21 +1212,41 @@ window.appJScode=function(){
       }
       return q;
     },
-    drawImage: function(image,cx,cy,w,h,angle,dontAdd){
+    drawImage: function(image,cx,cy,w,h,angle,mirrored,sourceRect,dontAdd){
+      if(!image) return;
       if(!dontAdd){
         angle*=Math.PI/180;
-        this.addCommand('drawImage',[image,cx,cy,w,h,angle]);
+        this.addCommand('drawImage',[image,cx,cy,w,h,angle,mirrored,sourceRect]);
       }
       cx=this.getX(cx);
       cy=this.getY(cy);
       w=this.getWidth(w);
       h=this.getHeight(h);
+      this.ctx.save();
       this.ctx.translate(cx,cy);
-      this.ctx.rotate(-angle);
-      image=$App.getAsset(image);
-      this.ctx.drawImage(image,-w/2,-h/2,w,h);
-      this.ctx.rotate(angle);
-      this.ctx.translate(-cx,-cy);
+      if(mirrored){
+        this.ctx.scale(-1,1);
+      }
+      if(angle){
+        this.ctx.rotate(-angle);
+      }
+      if(image.object){
+        image=image.object;
+      }else if(image.substring){
+        var asset=$App.assets[image];
+        if(!asset){
+          var m="Es gibt kein Bild namens '"+image+"'. Du musst es vorher mittels loadAsset laden.";
+          console.log(m);
+          throw m;
+        }
+        image=asset.object;
+      }
+      if(sourceRect){
+        this.ctx.drawImage(image,image.width/2+sourceRect.cx-sourceRect.w/2,image.height/2+sourceRect.cy-sourceRect.h/2,sourceRect.w,sourceRect.h,-w/2,-h/2,w,h);
+      }else{
+        this.ctx.drawImage(image,-w/2,-h/2,w,h);
+      }
+      this.ctx.restore();
     },
     getImageBase64: function(){
       return this.el.toDataURL("image/png");
@@ -1462,6 +1513,293 @@ window.appJScode=function(){
     }
   };
   
+
+  /**World */
+  $App.World=function(canvas){
+    this.canvas=canvas;
+    this.zoom=1;
+    this.cx=0;
+    this.cy=0;
+    this.width=0;
+    this.height=0;
+    this.mouse={
+      x: -1,
+      y: -1,
+    }
+  };
+
+  $App.World.prototype={
+    addRow: function(description){
+      if(this.height===0){
+        this.create(0,0);
+      }
+      this.height++;
+      var cells=[];
+      var val=null;
+      var x=1;
+      var y=this.tiles.length+1;
+      var l=description;
+      for(var j=0;j<l.length;j++){
+        var tile={
+          x: x,
+          y: y,
+          info: null
+        };
+        var c=l.charAt(j);
+        if(c==="("){
+          val="";
+          var tile={
+            x: x,
+            y: y,
+            info: null
+          };
+        }else if(c===")"){
+          tile.type=val;
+          cells.push(tile);
+          val=null;
+        }else{
+          if(val===null){
+            tile.type=c;
+            cells.push(tile);
+          }else{
+            val+=c;
+          }
+        }
+        x++;
+      }
+      if(this.height>1 && cells.length!==this.width){
+        throw "addRow: '"+description+"' definiert "+cells.length+" Felder, die Welt hat aber "+this.width+" Felder!";
+      }
+      this.tiles.push(cells);
+      if(cells.length>this.width){
+        this.width=cells.length;
+      }
+      this.cx=(1+this.width)/2;
+      this.cy=(1+this.height)/2;
+      this.calcLayout();
+      return cells;
+    },
+    create: function(width,height){
+      this.tiles=[];
+      var y=1;
+      for(var i=0;i<height;i++){
+        var cells=[];
+        var x=1;
+        for(var j=0;j<width;j++){
+          var tile={
+            x: x,
+            y: y,
+            info: null,
+            type: " "
+          };
+          cells.push(tile);
+          x++;
+        }
+        this.tiles.push(cells);
+        y++;
+      }
+      this.width=width;
+      this.height=height;
+      this.cx=(1+this.width)/2;
+      this.cy=(1+this.height)/2;
+      this.calcLayout();
+    },
+    setup: function(description){
+      this.width=0;
+      this.height=0;
+      if(!description || !description.substring){
+        var m="setup: Die Beschreibung ist kein String";
+        throw m;
+      }
+      var lines=description.split("\n");
+      this.height=lines.length;
+      this.tiles=[];
+      for(var i=0;i<lines.length;i++){
+        var l=lines[i].trim();
+        this.addRow(l);
+      }
+      this.cx=(1+this.width)/2;
+      this.cy=(1+this.height)/2;
+      this.zoom=1;
+      this.calcLayout();
+    },
+    replaceTypes: function(oldType,newType){
+      this.forAllTiles((t)=>{
+        if(t.type===oldType){
+          t.type=newType;
+        }
+      });
+    },
+    forAllTiles: function(f){
+      if(this.width*this.height===0){
+        return;
+      }
+      for(var i=0;i<this.tiles.length;i++){
+        for(var j=0;j<this.tiles[0].length;j++){
+          var t=this.tiles[i][j];
+          if(t){
+            f(t);
+          }
+        }
+      }
+    },
+    draw: function(){
+      for(var i=0;i<this.tiles.length;i++){
+        var row=this.tiles[i];
+        for(var j=0;j<row.length;j++){
+          var t=row[j];
+          var x=j+1;
+          var y=i+1;
+          var tile=this.getTile(x,y);
+          if(window.onTileDraw){
+            window.onTileDraw(x,y,tile.type,tile.info);
+          }else{
+            this.paintRect(x,y,1,1,false);
+            this.write(tile.type,x,y);
+          }
+        }
+      }
+    },
+    calcLayout: function(){
+      this.offsetX=0;
+      this.offsetY=0;
+      this.screenWidth=0;
+      this.screenHeight=0;
+      this.scaleFactor=1;
+      if(this.width*this.height===0){
+        return;
+      }
+      if(this.width*this.canvas.height>=this.height*this.canvas.width){
+        var f=this.canvas.width/this.width;
+        this.offsetY=(this.canvas.height-this.height*f)/2;
+      }else{
+        var f=this.canvas.height/this.height;
+        this.offsetX=(this.canvas.width-this.width*f)/2;
+      }
+      this.scaleFactor=f;
+      var f=this.scaleFactor*this.zoom;
+      var sw=f*this.width;
+      var sh=f*this.height;
+      this.offsetX=this.cx*f-sw;
+      this.offsetY=this.cy*f-sh;
+      this.screenWidth=sw,
+      this.screenHeight=sh;
+    },
+    getWorldBounds(sx,sy,sw,sh){
+      /**berechnet das entsprechende Rechteck in der Spielwelt, umkehrung von getScreenBounds*/
+      var dx=(sx-this.canvas.width/2)/(this.zoom*this.scaleFactor);
+      var dy=(sy-this.canvas.height/2)/(this.zoom*this.scaleFactor);
+      var x=dx+this.cx;
+      var y=dy+this.cy;
+      var w=sw/(this.zoom*this.scaleFactor);
+      var h=sh/(this.zoom*this.scaleFactor);
+      return {
+        x: x,
+        y: y,
+        w: w,
+        h: h
+      };
+    },
+    getScreenBounds: function(x,y,w,h){
+      var sx,sy,sw,sh;
+      var dx=x-this.cx;
+      var dy=y-this.cy;
+      var sx=this.canvas.width/2+dx*this.zoom*this.scaleFactor;
+      var sy=this.canvas.height/2+dy*this.zoom*this.scaleFactor;
+      sw=w*this.zoom*this.scaleFactor;
+      sh=h*this.zoom*this.scaleFactor;
+      return {
+        x: sx,
+        y: sy,
+        w: sw,
+        h: sh
+      };
+    },
+    getTiles: function(type){
+      var tiles=[];
+      if(this.width*this.height===0){
+        return tiles;
+      }
+      for(var i=0;i<this.tiles.length;i++){
+        for(var j=0;j<this.tiles[0].length;j++){
+          var t=this.tiles[i][j];
+          if(t && t.type===type){
+            tiles.push(t);
+          }
+        }
+      }
+      return tiles;
+    },
+    getTile: function(x,y){
+      var c=Math.floor(x-0.5);
+      var r=Math.floor(y-0.5);
+      r=this.tiles.length-1-r;
+      if(r<0 || r>= this.tiles.length || c<0 || c>=this.tiles[r].length){
+        return null;
+      }
+      return this.tiles[r][c];
+    },
+    setCenter(cx,cy){
+      this.cx=cx;
+      this.cy=cy;
+      this.calcLayout();
+    },
+    setZoom(factor){
+      this.zoom=factor;
+      this.calcLayout;
+    },
+    write: function(text,x,y,align){
+      var bounds=this.getScreenBounds(x,y,1,1);
+      write(text,bounds.x,bounds.y,align);
+    },
+    paintRect: function(x,y,w,h,fill){
+      var bounds=this.getScreenBounds(x,y,w,h);
+      $App.canvas.paintRect(bounds.x,bounds.y,bounds.w,bounds.h,fill);
+    },
+    paintCircle(cx,cy,r,fill){
+      var bounds=this.getScreenBounds(cx,cy,r,r);
+      $App.canvas.paintCircle(bounds.x,bounds.y,bounds.w,fill);
+    },
+    drawImage: function(asset,x,y,w,h,rotation,mirrored,sx,sy,sw,sh){
+      var bounds=this.getScreenBounds(x,y,w,h);
+      if(sx!==undefined && sy!==undefined && sw!==undefined && sh!==undefined){
+        drawImagePart(asset,bounds.x,bounds.y,bounds.w,bounds.h,sx,sy,sw,sh,rotation,mirrored);
+      }else{
+        drawImage(asset,bounds.x,bounds.y,bounds.w,bounds.h,rotation,mirrored);
+      }
+      
+    },
+    getType: function(x,y){
+      var tile=this.getTile(x,y);
+      if(tile){
+        return tile.type;
+      }else{
+        return null;
+      }
+    },
+    setType: function(x,y,newType){
+      var tile=this.getTile(x,y);
+      if(tile){
+        tile.type=newType
+      }
+    },
+    setInfo: function(x,y,newInfo){
+      var tile=this.getTile(x,y);
+      if(tile){
+        tile.info=newInfo
+      }
+    },
+    getInfo: function(x,y){
+      var tile=this.getTile(x,y);
+      if(tile){
+        return tile.info;
+      }else{
+        return null;
+      }
+    }
+  };
+
+
   /**Gamepad: */
   $App.Gamepad=function(){
     this.element=null;
@@ -2057,6 +2395,9 @@ window.appJScode=function(){
   }
   
   $App.Help.prototype={
+    printInfos: function(){
+      console.log(this.getInfos());
+    },
     getInfos: function(){
       return JSON.stringify({
         functions: this.functions,
@@ -2247,6 +2588,12 @@ window.appJScode=function(){
   /**API */
   
   $App.addEventHandler("onStart",[],'Wird einmalig ausgeführt, wenn das Programm startet.','');
+  $App.addEventHandler("onTileDraw",[
+    {name: 'x', type: 'double', info: 'x-Koordinate des Mittelpunkts des Feldes.'},
+    {name: 'y', type: 'double', info: 'y-Koordinate des Mittelpunkts des Feldes.'},
+    {name: 'type', type: 'String', info: 'Typ des Feldes (das Zeichen).'},
+    {name: 'info', type: 'String', info: 'Information des Feldes.'},
+  ],'Wird für jedes Feld der Spielwelt ausgeführt, wenn diese gezeichnet wird.','');
   $App.addEventHandler("onNextFrame",[],'Wird ca. 60 mal pro Sekunde ausgeführt.','');
   $App.addEventHandler("onKeyDown",[{name: 'keycode', type: 'int', info: 'Der Code der gedrückten Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur gedrückt wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
   $App.addEventHandler("onKeyUp",[{name: 'keycode', type: 'int', info: 'Der Code der losgelassenen Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
@@ -2329,16 +2676,51 @@ window.appJScode=function(){
   [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
   '');
   
-  $App.addFunction(async function loadAssets(){
-    $App.registerAssets.apply($App,arguments);
-  },null,'Lädt beliebig viele sog. "Assets" (Bilder und Sounds). Muss vor onStart aufgerufen werden.',
-  [{name: 'url1', type: 'String', info: 'Pfad zur ersten Datei.'}, {name: 'url2', type: 'String', info: 'Pfad zur zweiten Datei.'}, {name: '...', type: 'String', info: 'Pfad zu weiteren Dateien.'}],
-  'Verwende diese Funktion, um Bilder und Sound-Dateien zu deiner App hinzuzufügen.<p><code><pre>setupApp("Meine App mit Assets","🖼", 100,100, "black");\nloadAssets("Datei1", "Datei2", "Datei3",...);\n\nfunction onStart(){\n\t...\n}</pre></code></p>',"topLevel");
-  
-  $App.addFunction(function drawImage(image,cx,cy,width,height,rotation){
-    $App.canvas.drawImage(image,cx,cy,width,height,rotation);
-  },null,'Zeichnet ein Bild. Dieses musst du vorher mittels loadAssets laden.',
-  [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAssets"><code>loadAssets</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.'}],
+  $App.addFunction(function rotate(angle,cx,cy){
+    $App.canvas.rotate(angle,cx,cy);
+  },null,'Dreht alles, was danach gezeichnet wird.',
+  [{name: 'angle', type: 'double', info: 'Winkel, um den gedreht wird'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts der Drehung.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts der Drehung.'}],
+  '');
+
+  $App.addFunction(function translate(dx,dy){
+    $App.canvas.translate(dx,dy);
+  },null,'Verschiebt alles, was danach gezeichnet wird.',
+  [{name: 'dx', type: 'double', info: 'Verschiebung in x-Richtung.'}, {name: 'dy', type: 'double', info: 'Verschiebung in y-Richtung.'}],
+  '');
+
+  $App.addFunction(function scale(sx,sy,cx,cy){
+    $App.canvas.scale(sx,sy,cx,cy);
+  },null,'Skaliert alles, was danach gezeichnet wird.',
+  [{name: 'sx', type: 'double', info: 'Skalierungsfaktor in x-Richtung. Bei negativem Wert wird an einer vertikalen Achse gespiegelt.'}, {name: 'sy', type: 'double', info: 'Skalierungsfaktor in y-Richtung. Bei negativem Wert wird an einer horizontalen Achse gespiegelt.'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts der Skalierung.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts der Skalierung.'}],
+  '');
+
+  $App.addFunction(function saveCanvasState(){
+    $App.canvas.save();
+  },null,'Speichert den aktuellen Zustand des Canvas auf einem Stack.',
+  [],
+  '');
+
+  $App.addFunction(function restoreCanvasState(){
+    $App.canvas.restore();
+  },null,'Stellt den zuletzt gespeicherten Zustand des Canvas wieder her.',
+  [],
+  '');
+
+  $App.addFunction(async function loadAsset(url, name){
+    $App.registerAsset.call($App,url, name);
+  },null,'Lädt ein sog. "Asset" (ein Bild oder ein Sound) und speichert es unter dem angegebenen Namen im Objekt "assets". Muss vor onStart aufgerufen werden.',
+  [{name: 'url', type: 'String', info: 'URL der Datei'}, {name: 'name', type: 'String', info: 'Name, unter dem das Asset gespeichert wird.'}],
+  '',"topLevel");
+
+  $App.addFunction(function drawImage(image,cx,cy,width,height,rotation,mirrored){
+    $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored);
+  },null,'Zeichnet ein Bild. Dieses musst du vorher mittels loadAsset laden.',
+  [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.'}],
+  '');
+  $App.addFunction(function drawImagePart(image,cx,cy,width,height,scx,scy,swidth,sheight,rotation,mirrored){
+    $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored,{cx: scx, cy: scy, w: swidth, h: sheight});
+  },null,'Zeichnet einen rechteckigen Ausschnitt eines Bildes. Dieses musst du vorher mittels "loadAsset" laden.',
+  [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Höhe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.'}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.'}],
   '');
   
   $App.addFunction(function setColor(color){
@@ -2879,22 +3261,21 @@ window.appJScode=function(){
           }
           
         };
-        
+        Object.defineProperty(b,"value",{
+          get: function(){
+            if(b.type==="file"){
+              return b.files[0];
+            }
+            var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
+            var v=valueProp.get.call(b);
+            if(b.type==="number"||b.type==="range"){
+              return v*1;
+            }else{
+              return v;
+            }
+          }
+        })  
       }
-      Object.defineProperty(b,"value",{
-        get: function(){
-          if(b.type==="file"){
-            return b.files[0];
-          }
-          var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
-          var v=valueProp.get.call(b);
-          if(b.type==="number"||b.type==="range"){
-            return v*1;
-          }else{
-            return v;
-          }
-        }
-      })
       b.placeholder=placeholdertext;
       $App.canvas.addElement(b,cx,cy,width,height);
       return b;
@@ -3095,6 +3476,270 @@ window.appJScode=function(){
     }
   ],'');
   
+
+  $App.addObject('world',true,{
+    create: function(width,height){
+      $App.world.create(width,height);
+    },
+    addRow: function(description){
+      $App.world.addRow(description);
+    },
+    setup: function(description){
+      $App.world.setup(description);
+    },
+    replaceTypes: function(oldType,newType){
+      $App.world.replaceTypes(oldType,newType);
+    },
+    draw: function(){
+      $App.world.draw();
+    },
+    scrollTo(cx,cy){
+      $App.world.setCenter(cx,cy);
+    },
+    scroll(dx,dy){
+      $App.world.moveCenter(dx,dy);
+    },
+    zoom: function(factor){
+      $App.world.setZoom(factor);
+    },
+    write: function(text,x,y,align){
+      $App.world.write(text,x,y,align);
+    },
+    drawRect: function(x,y,w,h){
+      $App.world.paintRect(x,y,w,h,false);
+    },
+    fillRect: function(x,y,w,h){
+      $App.world.paintRect(x,y,w,h,true);
+    },
+    drawCircle: function(cx,cy,r,fill){
+      $App.world.paintCircle(cx,cy,r,false);
+    },
+    fillCircle: function(cx,cy,r,fill){
+      $App.world.paintCircle(cx,cy,r,true);
+    },
+    drawImage: function(asset,x,y,w,h,rotation,mirrored){
+      $App.world.drawImage(asset,x,y,w,h,rotation,mirrored);
+    },
+    drawImagePart: function(asset,x,y,w,h,sx,sy,sw,sh,rotation,mirrored){
+      $App.world.drawImage(asset,x,y,w,h,rotation,mirrored,sx,sy,sw,sh);
+    },
+    getType: function(x,y){
+      return $App.world.getType(x,y);
+    },
+    setType: function(x,y,newType){
+      $App.world.setType(x,y,newType);
+    },
+    setInfo: function(x,y,newInfo){
+      $App.world.setInfo(x,y,newInfo);
+    },
+    getInfo: function(x,y){
+      return $App.world.getInfo(x,y);
+    },
+    get mouseX(){
+      if(!$App.canvas) return null;
+      var c=$App.canvas.getCanvasX($App.mouse.x);
+      var w=$App.world.getWorldBounds(c,0,0,0);
+      return w.x;
+    },
+    get mouseY(){
+      if(!$App.canvas) return null;
+      var c=$App.canvas.getCanvasY($App.mouse.y);
+      var w=$App.world.getWorldBounds(0,c,0,0);
+      return w.y;
+    },
+    get mouseDown(){
+      return $App.mouse.down;
+    },
+    mouseInRect(cx,cy,width,height){
+      if(!$App.canvas) return false;
+      var x=$App.canvas.getCanvasX($App.mouse.x);
+      var y=$App.canvas.getCanvasY($App.mouse.y);
+      var w=$App.world.getWorldBounds(x,y,0,0);
+      x=w.x;
+      y=w.y;
+      return (x>=cx-width/2 && x<=cx+width/2 && y>=cy-height/2 && y<=cy+height/2);
+    },
+    mouseInCircle(cx,cy,r){
+      if(!$App.canvas) return false;
+      var x=$App.canvas.getCanvasX($App.mouse.x);
+      var y=$App.canvas.getCanvasY($App.mouse.y);
+      var w=$App.world.getWorldBounds(x,y,0,0);
+      x=w.x;
+      y=w.y;
+      return ((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r*r);
+    }
+  },'Erlaubt es, eine zweidimensionale Spielwelt zu verwenden, die aus einzelnen quadratischen Feldern (sog. "Tiles" = "Fliesen") besteht.',
+  [
+    {
+      name: 'setup',
+      returnType: null,
+      args: [{name: 'description', type: 'String', info: 'Dieser Text definiert die Felder der Spielwelt: Jede Zeile definiert eine Zeile der Spielwelt.'}],
+      info: 'Definiert die Felder (Tiles) der Spielwelt.'
+    }, 
+    {
+      name: 'getType',
+      returnType: "String", 
+      args: [
+        {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
+        {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'}
+      ],
+      info: 'Gibt den Typ (das Zeichen) an der angegebenen Position zurück. Falls es an der Position kein eindeutiges Zeichen gibt, wird null zurückgegeben.'
+    }, 
+    {
+      name: 'setType', 
+      returnType: null,
+      args: [
+        {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
+        {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'},
+        {name: 'newType', type: 'String', info: 'Neuer Typ'}
+      ],
+      info: 'Ändert den Typ (das Zeichen) an der angegebenen Position.'
+    },
+    {
+      name: 'getInfo',
+      returnType: "String", 
+      args: [
+        {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
+        {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'}
+      ],
+      info: 'Gibt die Information an der angegebenen Position zurück.'
+    }, 
+    {
+      name: 'setInfo', 
+      returnType: null,
+      args: [
+        {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
+        {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'},
+        {name: 'newInfo', type: 'String', info: 'Neuer Typ'}
+      ],
+      info: 'Ändert die Information an der angegebenen Position.'
+    },
+    {
+      name: 'create',
+      returnType: null,
+      args: [
+        {name: 'width', type: 'int', info: 'Anzahl Felder nebeneinander'},
+        {name: 'height', type: 'int', info: 'Anzahl Felder untereinander'}
+      ],
+      info: 'Erschafft eine neue Spielwelt der angegebenen Größe. Alle Typen werden auf " " gesetzt.'
+    },
+    {
+      name: 'addRow',
+      returnType: null,
+      args: [{name: 'description', type: 'String', info: 'Dieser Text definiert die Felder der neuen Zeile.'}],
+      info: 'Fügt der Spielwelt eine neue Zeile hinzu.'
+    },
+    {
+      name: 'replaceTypes',
+      returnType: null,
+      args: [
+        {name: 'oldType', type: 'String', info: 'Felder mit diesem Typ erhalten den neuen Typ.'},
+        {name: 'newType', type: 'String', info: 'Der neue Typ, den die Felder erhalten.'}
+      ],
+      info: 'Ändert den Typ von allen Felder eines bestimmten Typs.'
+    },
+    {
+      name: 'draw',
+      returnType: null,
+      args: [],
+      info: 'Zeichnet die Welt. Implementiere die Funktion "onTileDraw", um zu festzulegen, wie die Felder gezeichnet werden sollen.'
+    },
+    {
+      name: 'scrollTo',
+      returnType: null, 
+      args: [
+        {name: 'cx', type: 'double', info: 'x-Koordinate, zu der gescrollt wird'},
+        {name: 'cy', type: 'double', info: 'y-Koordinate, zu der gescrollt wird'}
+      ],
+      info: 'Verschiebt die Welt so, dass der angegebene Punkt im Mittelpunkt des Bildschirms liegt.'
+    },
+    {
+      name: 'scroll',
+      returnType: null, 
+      args: [
+        {name: 'dx', type: 'double', info: 'Scroll-Weite in x-Richtung'},
+        {name: 'dy', type: 'double', info: 'Scroll-Weite in y-Richtung'}
+      ],
+      info: 'Verschiebt die Welt um die angegebenen Zahlen.'
+    },
+    {
+      name: 'zoom',
+      returnType: null, 
+      args: [
+        {name: 'factor', type: 'double', info: 'Die Stärke des Zoomens: 1 für Einpassung der Welt in den Bildschirm.'}
+      ],
+      info: 'Legt fest, wie weit in die Welt hinein- bzw. herausgezoomt wird.'
+    },
+    {
+      name: 'write',
+      returnType: null, 
+      args: [
+        {name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> für Zeilenumbrüche.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}
+      ],
+      info: 'Schreibt Text in die Spielwelt.'
+    },
+    {
+      name: 'drawRect',
+      returnType: 'Path', 
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
+      info: 'Zeichnet ein Rechteck in die Spielwelt und gibt dieses zurück.'
+    },
+    {
+      name: 'fillRect',
+      returnType: 'Path', 
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
+      info: 'Zeichnet ein ausgefülltes Rechteck in die Spielwelt und gibt dieses zurück.'
+    },
+    {
+      name: 'drawCircle',
+      returnType: 'Path', 
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
+      info: 'Zeichnet einen Kreis in die Spielwelt und gibt dieses zurück.'
+    },
+    {
+      name: 'fillCircle',
+      returnType: 'Path', 
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
+      info: 'Zeichnet einen ausgefüllten Kreis in die Spielwelt und gibt dieses zurück.'
+    },
+    {
+      name: 'drawImage',
+      returnType: null, 
+      args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.'}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.'}],
+      info: 'Zeichnet ein Bild in die Spielwelt. Dieses musst du vorher mittels "loadAsset" laden.'
+    },
+    {
+      name: 'drawImagePart',
+      returnType: null, 
+      args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Höhe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.'}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.'}],
+      info: 'Zeichnet einen rechteckigen Ausschnitt eines Bild in die Spielwelt. Dieses musst du vorher mittels "loadAsset" laden.'
+    },
+    {
+      name: 'mouseX',
+      info: 'Die aktuelle x-Koordinate der Maus innerhalb der Spielwelt.'
+    },
+    {
+      name: 'mouseY',
+      info: 'Die aktuelle y-Koordinate der Maus innerhalb der Spielwelt.'
+    },
+    {
+      name: 'mouseDown',
+      info: 'Ist die Maus aktuell gedrückt oder nicht (entspricht mouse.down).'
+    },
+    {
+      name: 'mouseInRect',
+      returnType: 'boolean', 
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
+      info: 'Prüft, ob sich die Maus aktuell innerhalb eines Rechtecks in der Spielwelt befindet.'
+    },
+    {
+      name: 'mouseInCircle',
+      returnType: 'boolean', 
+      args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
+      info: 'Prüft, ob sich die Maus aktuell innerhalb eines Kreises in der Spielwelt befindet.'
+    }
+  ],'');
+
   console.realLog=console.log;
   console.realClear=console.clear;
   $App.addObject('console',true,{
@@ -3136,7 +3781,7 @@ window.appJScode=function(){
   
   $App.help.compileScreen();
   
-  $App.setup();
+  $App.setup(true);
   
   /**Vordefinierte Variablennamen speichern:*/
   $App.systemVariables={};
@@ -3145,4 +3790,5 @@ window.appJScode=function(){
       $App.systemVariables[a]=true;
     }
   })();
+
 }
