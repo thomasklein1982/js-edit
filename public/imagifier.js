@@ -15,22 +15,26 @@ Imagifier.prototype={
   setOutputAnchor: function(aElement){
     this.outputAnchor=aElement;
   },
-  toText: function(imageFile){
-    var that=this;
-    var reader = new FileReader();
+  toTextFromDataURL: function(dataURL){
     var image=document.createElement("img");
+    image.src=dataURL;
+    var that=this;
+    image.onload=function(){
+      that.canvas.width=image.width;
+      that.canvas.height=image.height;
+      var context=that.canvas.getContext("2d");
+      context.fillStyle="white";
+      context.fillRect(0,0,image.width,image.height);
+      context.drawImage(image,0,0,image.width,image.height);
+      var data=context.getImageData(0,0,that.canvas.width,that.canvas.height).data;
+      that._toTextFinish(data);
+    };
+  },
+  toText: function(imageFile){
+    var reader = new FileReader();
+    reader.imagifier=this;
     reader.onload = function(e) {
-      image.src=e.target.result;
-      image.onload=function(){
-        that.canvas.width=image.width;
-        that.canvas.height=image.height;
-        var context=that.canvas.getContext("2d");
-        context.fillStyle="white";
-        context.fillRect(0,0,image.width,image.height);
-        context.drawImage(image,0,0,image.width,image.height);
-        var data=context.getImageData(0,0,that.canvas.width,that.canvas.height).data;
-        that._toTextFinish(data);
-      };
+      reader.imagifier.toTextFromDataURL(e.target.result);
     };
     /* Read in the image file as a data URL.*/
     reader.readAsDataURL(imageFile);

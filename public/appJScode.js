@@ -1,4 +1,5 @@
 window.appJScode=function(){
+  
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
   window.onmessage=function(message){
@@ -785,7 +786,8 @@ window.appJScode=function(){
       color: "black",
       lineWidth: 0.5,
       fontSize: 5,
-      opacity: 1
+      opacity: 1,
+      font: 'monospace'
     };
     this.reset();
   };
@@ -811,6 +813,7 @@ window.appJScode=function(){
       this.setLinewidth(this.state.lineWidth,true);
       this.ctx.setTransform(1,0,0,1,0,0);
       this.setFontsize(this.state.fontSize,true);
+      this.setFont(this.state.font);
       this.setColor(this.state.color,true);
       this.setOpacity(this.state.opacity,true);
     },
@@ -958,7 +961,14 @@ window.appJScode=function(){
       if(!dontAdd){
         this.addCommand("setFontsize",[size]);
       }
-      this.ctx.font=this.getHeight(size,true)+"px monospace";
+      this.ctx.font=this.getHeight(this.state.fontSize,true)+"px "+this.state.font;
+    },
+    setFont: function(name,dontAdd){
+      this.state.font=name;
+      if(!dontAdd){
+        this.addCommand("setFont",[name]);
+      }
+      this.ctx.font=this.getHeight(this.state.fontSize,true)+"px "+this.state.font;
     },
     getPixelFontsize: function(){
       return parseFloat(this.ctx.font);
@@ -2741,6 +2751,10 @@ window.appJScode=function(){
   $App.addFunction(function setFontsize(size){
     $App.canvas.setFontsize(size);
   },null,'Legt die Schriftgröße für alle nachfolgenden write-Befehle fest.',[{name: 'size', type: 'double', info: 'Schriftgröße, die ab sofort zum Schreiben verwendet werden soll.'}],'');
+
+  $App.addFunction(function setFont(name){
+    $App.canvas.setFont(name);
+  },null,'Legt die Schriftart für alle nachfolgenden write-Befehle fest.',[{name: 'name', type: 'String', info: 'Schriftart, z. B. Arial.'}],'');
   
   $App.addFunction(function setLinewidth(size){
     $App.canvas.setLinewidth(size);
@@ -3500,10 +3514,10 @@ window.appJScode=function(){
     draw: function(){
       $App.world.draw();
     },
-    scrollTo(cx,cy){
+    scroll(cx,cy){
       $App.world.setCenter(cx,cy);
     },
-    scroll(dx,dy){
+    scrollBy(dx,dy){
       $App.world.moveCenter(dx,dy);
     },
     zoom: function(factor){
@@ -3652,7 +3666,7 @@ window.appJScode=function(){
       info: 'Zeichnet die Welt. Implementiere die Funktion "onTileDraw", um zu festzulegen, wie die Felder gezeichnet werden sollen.'
     },
     {
-      name: 'scrollTo',
+      name: 'scroll',
       returnType: null, 
       args: [
         {name: 'cx', type: 'double', info: 'x-Koordinate, zu der gescrollt wird'},
@@ -3661,7 +3675,7 @@ window.appJScode=function(){
       info: 'Verschiebt die Welt so, dass der angegebene Punkt im Mittelpunkt des Bildschirms liegt.'
     },
     {
-      name: 'scroll',
+      name: 'scrollBy',
       returnType: null, 
       args: [
         {name: 'dx', type: 'double', info: 'Scroll-Weite in x-Richtung'},
@@ -3797,5 +3811,6 @@ window.appJScode=function(){
       $App.systemVariables[a]=true;
     }
   })();
+
 
 }

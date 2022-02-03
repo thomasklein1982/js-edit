@@ -25,6 +25,8 @@ import Slider from "primevue/slider";
 import Card from 'primevue/card';
 import SelectButton from 'primevue/selectbutton';
 import ToggleButton from 'primevue/togglebutton';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
 
 import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css';
@@ -76,6 +78,8 @@ app.component('Card',Card);
 app.component('SelectButton',SelectButton);
 app.component('Dropdown',Dropdown);
 app.component('ToggleButton',ToggleButton);
+app.component('TabPanel',TabPanel);
+app.component('TabView',TabView);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){

@@ -15,9 +15,12 @@
     ref="symbolsDialog"
     @paste="insertSymbol"
   />
+  <ShareDialog
+    ref="shareDialog"
+  />
   <div style="width: 100%; height: 100%; overflow: hidden" :style="{display: 'flex', flexDirection: 'column'}">
     <editor-menubar 
-      @play="runApp()" 
+      @upload="uploadApp()" 
       @export="exportApp()"
       @prettify="prettifyCode()"
       @projects="$refs.projectsDialog.setVisible(true)"
@@ -27,6 +30,7 @@
       @redo="$refs.editor.redo()"
       @search="$refs.editor.openSearchPanel()"
       @unicode="$refs.symbolsDialog.setVisible(true)"
+      @share="$refs.shareDialog.setVisible(true)"
     />
     <Splitter :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
@@ -63,6 +67,8 @@ import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";
 import ProjectsDialog from './ProjectsDialog.vue';
 import SymbolsDialog from './SymbolsDialog.vue';
+import ShareDialog from './ShareDialog.vue'
+import { upload} from "../lib/helper";
 
 export default {
   props: {
@@ -84,6 +90,36 @@ export default {
     };
   },
   methods: {
+    async uploadApp(){
+      let img=await upload({dataURL: true});
+      if(img){
+        let imagifier=new Imagifier(
+          (data)=>{
+            let error=false;
+            try{
+              data=JSON.parse(data);
+              if(data.type==="JSEdit-App" && data.code!==undefined){
+                data=data.code;
+                this.$refs.editor.reset(data);
+              }else{
+                error=true;
+              }
+            }catch(e){
+              error=true;
+            }
+            if(error){
+              this.$root.toast({summary: 'Fehler', detail: 'Dies ist kein JSEdit-Programm!', life: 4000, severity: 'error'});
+            }else{
+              this.$root.toast({summary: 'App hochgeladen', detail: '', life: 4000, severity: 'success'});
+            }
+          },
+          ()=>{
+            this.$root.toast({summary: 'Fehler', detail: 'Dies ist kein JSEdit-Programm!', life: 4000, severity: 'error'});
+          }
+        );
+        imagifier.toTextFromDataURL(img.code);
+      }
+    },
     loadApp(sourceCode){
       this.$refs.editor.setCode(sourceCode);
     },
@@ -152,7 +188,8 @@ export default {
     ExportDialog,
     SettingsDialog,
     ProjectsDialog,
-    SymbolsDialog
+    SymbolsDialog,
+    ShareDialog
   }
 }
 </script>
