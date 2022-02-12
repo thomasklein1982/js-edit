@@ -71,6 +71,9 @@
           src+=this.$root.sourceCode;
         }
         let code="\<script\>";
+        if(debugging){
+          code+="appJSdebugMode=true;";
+        }
         code+=window.appJScode;
         code+='\n\</script\>\n\<script\>'+src+'\n\</script\>';
         let doc=frame.contentWindow.document;

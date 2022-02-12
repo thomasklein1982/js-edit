@@ -163,8 +163,13 @@ function parseStatement(src,node,parsingInfos){
     code+=c+";";
   }else if(node.name==="ReturnStatement"){
     code+=extractLineBreaks(src,node,parsingInfos);
-    let c=src.substring(node.from+6,node.to);
-    code+="return await "+c+";";
+    let n=node.firstChild.nextSibling;
+    if(n){
+      let c=src.substring(n.from,node.to);
+      code+="return await "+c+";";  
+    }else{
+      code+="return;"
+    }
   }else if(node.type.name.indexOf("Expression")<0 && node.firstChild){
     code+=parseSpecialStatement(src,node.firstChild,parsingInfos);
   }else{

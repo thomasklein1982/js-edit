@@ -1,5 +1,4 @@
 window.appJScode=function(){
-  
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
   window.onmessage=function(message){
@@ -13,10 +12,11 @@ window.appJScode=function(){
   })
 
   window.$App={
-    version: 18,
-    language: 'js',
+    version: 20,
+    language: window.language? window.language:'js',
     setupData: null,
     debug: {
+      enabled: window.appJSdebugMode? window.appJSdebugMode: false,
       breakpoints: {},
       breakpointCount: 0,
       paused: false,
@@ -61,7 +61,6 @@ window.appJScode=function(){
           }
           this.breakpoints[n]=f;
         }
-        
       },
       onMessage: function(message){
         var data=message.data;
@@ -86,6 +85,8 @@ window.appJScode=function(){
       }
     },
     assets: {},
+    scripts: [],
+    headLoaded: false,
     body: {
       element: null,
       root: null,
@@ -206,21 +207,62 @@ window.appJScode=function(){
   
   $App.createElement=function(tagname){
     let el=document.createElement(tagname);
+    el.style.boxSizing="border-box";
+    el.style.display="flex";
     this.implementStyleGetterAndSetter(el);
     el.appJSData={
       oldDisplayValue: undefined,
       cx: null,
       cy: null,
       width: null,
-      height: null
+      height: null,
+      align: $App.Canvas.$getAlignment("center"),
+      alignContent: $App.Canvas.$getAlignment("center")
     };
-    el.updatePosition=function(cx,cy,width,height){
-      $App.canvas.updateElementPosition(this,cx,cy,width,height);
+    el.updatePosition=function(cx,cy,width,height,align){
+      $App.canvas.updateElementPosition(this,cx,cy,width,height,align);
     };
+    el.updateAlignContent=function(v){
+      var a=$App.Canvas.$getAlignment(v);
+      this.appJSData.alignContent=a;
+      console.log(a);
+      if(a.h==="center"){
+        this.style.justifyContent="center";
+      }else if(a.h==="left"){
+        this.style.justifyContent="flex-end";
+      }else{
+        this.style.justifyContent="flex-start";
+      }
+      if(a.v==="middle"){
+        this.style.alignItems="center";
+      }else if(a.v==="top"){
+        this.style.alignItems="flex-end";
+      }else{
+        this.style.alignItems="flex-start";
+      }
+    };
+    el.updateAlignContent();
+    Object.defineProperty(el,'align', {
+      set: function(v){
+        this.appJSData.align=$App.Canvas.$getAlignment(v);
+        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height, this.appJSData.align);
+      },
+      get: function(){
+        return this.appJSData.align.h+" "+this.appJSData.align.v;
+      }
+    });
+    Object.defineProperty(el,'alignContent', {
+      set: function(v){
+        this.updateAlignContent(v);
+      },
+      get: function(){
+        return this.appJSData.align.h+" "+this.appJSData.align.v;
+      }
+    });
     Object.defineProperty(el,'cx', {
       set: function(v){
         this.appJSData.cx=v;
-        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height);
+        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height, this.appJSData.align);
       },
       get: function(){
         return this.appJSData.cx;
@@ -229,7 +271,7 @@ window.appJScode=function(){
     Object.defineProperty(el,'cy', {
       set: function(v){
         this.appJSData.cy=v;
-        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height);
+        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height, this.appJSData.align);
       },
       get: function(){
         return this.appJSData.cy;
@@ -238,7 +280,7 @@ window.appJScode=function(){
     Object.defineProperty(el,'width', {
       set: function(v){
         this.appJSData.width=v;
-        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height);
+        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height, this.appJSData.align);
       },
       get: function(){
         return this.appJSData.width;
@@ -247,7 +289,7 @@ window.appJScode=function(){
     Object.defineProperty(el,'height', {
       set: function(v){
         this.appJSData.height=v;
-        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height);
+        this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height, this.appJSData.align);
       },
       get: function(){
         return this.appJSData.height;
@@ -290,6 +332,16 @@ window.appJScode=function(){
         },
         get: function(){
           return this.appJSData.value;
+        }
+      });
+    }else if(tagname==="img"){
+      Object.defineProperty(el,'value', {
+        set: function(v){
+          this.appJSData.value=v;
+          this.src=v;
+        },
+        get: function(){
+          return this.src;
         }
       });
     }else if(tagname==="div"){
@@ -349,14 +401,13 @@ window.appJScode=function(){
     });
   };
   
+  
   $App.$JoyStick=function(t,onDown,onUp,e){var i=void 0===(e=e||{}).title?"joystick":e.title,n=void 0===e.width?0:e.width,o=void 0===e.height?0:e.height,r=void 0===e.internalFillColor?"#00AA00":e.internalFillColor,h=void 0===e.internalLineWidth?2:e.internalLineWidth,a=void 0===e.internalStrokeColor?"#003300":e.internalStrokeColor,d=void 0===e.externalLineWidth?2:e.externalLineWidth,f=void 0===e.externalStrokeColor?"#008000":e.externalStrokeColor,l=void 0===e.autoReturnToCenter||e.autoReturnToCenter,s=t,c=document.createElement("canvas");c.id=i,0===n&&(n=s.clientWidth),0===o&&(o=s.clientHeight),c.width=n,c.height=o,s.appendChild(c);var u=c.getContext("2d"),g=0,v=2*Math.PI,p=(c.width-(c.width/2+10))/2,C=p+5,w=p+30,m=c.width/2,L=c.height/2,E=c.width/10,P=-1*E,S=c.height/10,k=-1*S,W=m,T=L;function G(){u.beginPath(),u.arc(m,L,w,0,v,!1),u.lineWidth=d,u.strokeStyle=f,u.stroke()}function x(){u.beginPath(),W<p&&(W=C),W+p>c.width&&(W=c.width-C),T<p&&(T=C),T+p>c.height&&(T=c.height-C),u.arc(W,T,p,0,v,!1);var t=u.createRadialGradient(m,L,5,m,L,200);t.addColorStop(0,r),t.addColorStop(1,a),u.fillStyle=t,u.fill(),u.lineWidth=h,u.strokeStyle=a,u.stroke()}"ontouchstart"in document.documentElement?(c.addEventListener("touchstart",function(t){g=1;if(onDown){onDown()}},!1),c.addEventListener("touchmove",function(t){t.preventDefault(),1===g&&t.targetTouches[0].target===c&&(W=t.targetTouches[0].pageX,T=t.targetTouches[0].pageY,"BODY"===c.offsetParent.tagName.toUpperCase()?(W-=c.offsetLeft,T-=c.offsetTop):(W-=c.offsetParent.offsetLeft,T-=c.offsetParent.offsetTop),u.clearRect(0,0,c.width,c.height),G(),x())},!1),c.addEventListener("touchend",function(t){g=0,l&&(W=m,T=L);u.clearRect(0,0,c.width,c.height),G(),x();if(onUp){onUp()}},!1)):(c.onmouseleave=function(){g=0,l&&(W=m,T=L);u.clearRect(0,0,c.width,c.height),G(),x();if(onUp){onUp()}},c.addEventListener("mousedown",function(t){g=1;if(onDown){onDown()}},!1),c.addEventListener("mousemove",function(t){1===g&&(W=t.pageX,T=t.pageY,"BODY"===c.offsetParent.tagName.toUpperCase()?(W-=c.offsetLeft,T-=c.offsetTop):(W-=c.offsetParent.offsetLeft,T-=c.offsetParent.offsetTop),u.clearRect(0,0,c.width,c.height),G(),x())},!1),c.addEventListener("mouseup",function(t){g=0,l&&(W=m,T=L);u.clearRect(0,0,c.width,c.height),G(),x();if(onUp){onUp()}},!1)),G(),x(),this.GetWidth=function(){return c.width},this.GetHeight=function(){return c.height},this.GetPosX=function(){return W},this.GetPosY=function(){return T},this.GetX=function(){return((W-m)/C*100).toFixed()},this.GetY=function(){return((T-L)/C*100*-1).toFixed()},this.setDir=function(dir){if(dir==="N"){W=m;T=-1000;}else if(dir==="S"){W=m;T=1000;}else if(dir==="W"){W=-1000;T=L;}else if(dir==="E"){W=1000;T=L;}else if(dir==="NW"){W=-1000;T=-1000;}else if(dir==="NE"){W=1000;T=-1000;}else if(dir==="SW"){W=-1000;T=1000;}else if(dir==="SE"){W=1000;T=1000;}else{W=m;T=L;}u.clearRect(0,0,c.width,c.height),G(),x();},this.GetDir=function(){var t="",e=W-m,i=T-L;return i>=k&&i<=S&&(t="C"),i<k&&(t="N"),i>S&&(t="S"),e<P&&("C"===t?t="W":t+="W"),e>E&&("C"===t?t="E":t+="E"),t}};
   
   $App.setup=async function(dontStart){
+    await this.loadScripts();
     await this.loadAssets();
-    if(!dontStart && document.body){
-      this.body.element=document.body;
-      this.body.element.style="padding: 0; margin: 0; width: 100%; height: 100%; overflow: hidden";
-      this.body.element.parentElement.style=this.body.style;
+    if(!$App.headLoaded && document.head){
       var meta=document.createElement("meta");
       meta.setAttribute("charset","utf-8");
       document.head.appendChild(meta);
@@ -364,6 +415,12 @@ window.appJScode=function(){
       meta.setAttribute("name","viewport");
       meta.setAttribute("content","width=device-width, initial-scale=1");
       document.head.appendChild(meta);
+      $App.headLoaded=true;
+    }
+    if(!dontStart && document.body){
+      this.body.element=document.body;
+      this.body.element.style="padding: 0; margin: 0; width: 100%; height: 100%; overflow: hidden";
+      this.body.element.parentElement.style=this.body.style;
       // var style=document.createElement("style");
       // document.head.appendChild(style);
       // style=style.sheet;
@@ -627,6 +684,10 @@ window.appJScode=function(){
     }
   };
 
+  $App.registerScript=function(url){
+    this.scripts.push(url);
+  }
+
   $App.getAsset=function(asset){
     if(!asset){
       var m="Dieses Asset konnte nicht geladen werden.";
@@ -662,6 +723,26 @@ window.appJScode=function(){
     throw m;
   }
   
+  $App.loadScripts=async function(){
+    for(var i=0;i<this.scripts.length;i++){
+      var s=document.createElement("script");
+      var url=this.scripts[i];
+      
+      var p=new Promise((resolve,reject)=>{
+        s.onload=()=>{
+          resolve();
+        };
+        s.onerror=()=>{
+          resolve();
+        };
+        document.head.insertBefore(s,document.head.firstChild);
+        s.src=url;
+      });
+      await p;
+      
+    }
+  }
+
   $App.loadAssets=async function(){
     for(let a in this.assets){
       let asset=this.assets[a];
@@ -792,6 +873,33 @@ window.appJScode=function(){
     this.reset();
   };
   
+  $App.Canvas.$getAlignment=function(align){
+    var ha,va;
+    if(align && align.toLowerCase){
+      align=align.toLowerCase(); 
+      if(align.indexOf("left")>=0){
+        ha="right";
+      }else if(align.indexOf("right")>=0){
+        ha="left";
+      }else{
+        ha="center";
+      }
+      if(align.indexOf("bottom")>=0){
+        va="top";
+      }else if(align.indexOf("top")>=0){
+        va="bottom";
+      }else{
+        va="middle";
+      }
+    }else{
+      ha="center";
+      va="middle";
+    }
+    return {
+      h: ha, v: va
+    };
+  };
+
   $App.Canvas.prototype={
     save: function(dontAdd){
       if(!dontAdd){
@@ -879,11 +987,15 @@ window.appJScode=function(){
       this.height=height;
       this.resize(fullWidth,fullHeight,true);
     },
-    updateElementPosition: function(el,cx,cy,width,height){
+    updateElementPosition: function(el,cx,cy,width,height,align){
       el.appJSData.cx=cx;
       el.appJSData.cy=cy;
       el.appJSData.width=width;
       el.appJSData.height=height;
+      if(!align){
+        align=$App.Canvas.$getAlignment("center");
+      }
+      el.appJSData.align=align;
       if(width===undefined){
         width=el.offsetWidth;
         width=this.getCanvasWidth(width);
@@ -893,8 +1005,23 @@ window.appJScode=function(){
         height=this.getCanvasHeight(height);
       }
       el.style.position="absolute";
-      el.style.left=(100*(cx-width/2))/(this.width)+"%";
-      el.style.bottom=(100*(cy-height/2))/(this.height)+"%";
+      var x,y;
+      if(align.h==="center"){
+        x=cx-width/2;
+      }else if(align.h==="left"){
+        x=cx;
+      }else{
+        x=cx-width;
+      }
+      if(align.v==="middle"){
+        y=cy-height/2;
+      }else if(align.v==="top"){
+        y=cy-height;
+      }else{
+        y=cy;
+      }
+      el.style.left=(100*(x))/(this.width)+"%";
+      el.style.bottom=(100*(y))/(this.height)+"%";
       el.style.width=100*width/this.width+"%";
       el.style.height=100*height/this.height+"%";
     },
@@ -1124,7 +1251,7 @@ window.appJScode=function(){
     },
     write: function(text,x,y,align,dontAdd){
       if(!dontAdd){
-        align=this.$getAlignment(align);
+        align=$App.Canvas.$getAlignment(align);
         this.addCommand("write",[text,x,y,align]);
       }
       x=this.getX(x);
@@ -1148,39 +1275,13 @@ window.appJScode=function(){
         y+=lineHeight;
       }
     },
-    $getAlignment: function(align){
-      var ha,va;
-      if(align && align.toLowerCase){
-        align=align.toLowerCase(); 
-        if(align.indexOf("left")>=0){
-          ha="right";
-        }else if(align.indexOf("right")>=0){
-          ha="left";
-        }else{
-          ha="center";
-        }
-        if(align.indexOf("bottom")>=0){
-          va="top";
-        }else if(align.indexOf("top")>=0){
-          va="bottom";
-        }else{
-          va="middle";
-        }
-      }else{
-        ha="center";
-        va="middle";
-      }
-      return {
-        h: ha, v: va
-      };
-    },
     $adjustInputPosition: function(){
       var x=this.getRawX(this.input.x);
       var y=this.getRawY(this.input.y);
       var width=this.getRawWidth(this.input.width);
       var height=this.input.height;
       var align=this.input.align;
-      align=this.$getAlignment(align);
+      align=$App.Canvas.$getAlignment(align);
       this.input.element.style.textAlign="left";
       if(align.h==="center"){
         x-=width/2;
@@ -1649,6 +1750,23 @@ window.appJScode=function(){
           var t=this.tiles[i][j];
           if(t){
             f(t);
+          }
+        }
+      }
+    },
+    drawAsync: async function(){
+      for(var i=0;i<this.tiles.length;i++){
+        var row=this.tiles[i];
+        for(var j=0;j<row.length;j++){
+          var t=row[j];
+          var x=j+1;
+          var y=i+1;
+          var tile=this.getTile(x,y);
+          if(window.onTileDraw){
+            await window.onTileDraw(x,y,tile.type,tile.info);
+          }else{
+            this.paintRect(x,y,1,1,false);
+            this.write(tile.type,x,y);
           }
         }
       }
@@ -2277,10 +2395,10 @@ window.appJScode=function(){
     this.items={};
     this.visible=false;
     this.variablesDiv=document.createElement("div");
-    this.variablesDiv.style="height: 50%; overflow: auto";
+    this.variablesDiv.style="height: 70%; overflow: auto";
     this.element.appendChild(this.variablesDiv);
     this.outputDiv=document.createElement("div");
-    this.outputDiv.style="height: 50%; overflow: auto";
+    this.outputDiv.style="height: 30%; overflow: auto";
     this.element.appendChild(this.outputDiv);
   
   };
@@ -2303,6 +2421,130 @@ window.appJScode=function(){
       this.element.appendChild(this.outputDiv);
     },
     update: function(){
+      if($App.language==="js"){
+        this.updateJS();
+      }else if($App.language==="java"){
+        this.updateJava();
+      }
+    },
+    updateJava: function(){
+      for(let a in $main){
+        let v=$main[a];
+        if(typeof v==="function") continue;
+        let item;
+        if(a in this.items){
+          item=this.items[a];
+        }else{
+          item={
+            expanded: false,
+            element: document.createElement("div")
+          };
+          this.items[a]=item;
+          this.variablesDiv.appendChild(item.element);
+        }
+        let typ=v && v.constructor? (v.constructor.name).toLowerCase():"";
+        if(typ.startsWith("html")){
+          v=v.constructor.name;
+        }else if(typ==="file"){
+          v="File";
+        }else{
+          if(v){
+            if(typ==="string"){
+              v=JSON.stringify(v);
+            }
+          }
+        }
+        
+        item.element.textContent=""+a+": "+v;
+      }
+    },
+    createConsoleItem: function(name){
+      let item={
+          expanded: false,
+          element: document.createElement("div"),
+          value: document.createElement("span"),
+          button: document.createElement("span"),
+          line: document.createElement("div"),
+          expandable: false,
+          subItems: [],
+          sublist: document.createElement("div"),
+          object: undefined
+      };
+      item.sublist.style.marginLeft="1em";
+      item.button.style="text-align: center; display: inline-block; width: 1em; border-radius: 3px";
+      item.element.appendChild(item.line);
+      item.line.appendChild(item.button);
+      var el=document.createElement("span");
+      el.textContent=name+": ";
+      item.line.appendChild(el);
+      item.line.appendChild(item.value);
+      item.line.onclick=()=>{
+        if(item.expandable){
+          item.expanded=!item.expanded;
+        }
+      };
+      item.element.appendChild(item.sublist);
+      item.updateSublist=function(){
+        if(!this.expanded){
+          this.sublist.style.display="none";
+        }else{
+          var newItems={};
+          for(var a in this.object){
+            var item;
+            var obj=this.object[a];
+            if(typeof obj==="function"){
+              continue;
+            }
+            if(a in this.subItems){
+              item=this.subItems[a];
+            }else{
+              item=$App.console.createConsoleItem(a)
+              this.sublist.appendChild(item.element);
+            }
+            item.update(obj);
+            newItems[a]=item;
+          }
+          this.sublist.style.display="";
+          for(var a in this.subItems){
+            if(!(a in newItems)){
+              this.sublist.removeChild(this.subItems[a].element);
+            }
+          }
+          this.subItems=newItems;
+        }
+      };
+      item.update=function(obj){
+        var v;
+        this.object=obj;
+        if(obj===undefined){
+          v="undefiniert";
+        }else if(obj===null){
+          v="null";
+        }else if(typeof obj==="object"){
+          this.button.style.backgroundColor="gray";
+          this.button.textContent=this.expanded? "-": "+";
+          this.expandable=true;
+          if(Array.isArray(obj)){
+            v="Array ("+obj.length+")";
+          }else{
+            if(obj.constructor){
+              v=obj.constructor.name;
+            }else{
+              v="Objekt";
+            }
+          }
+        }else{
+          this.button.style.backgroundColor="";
+          this.button.textContent="";
+          this.expandable=false;
+          v=JSON.stringify(obj);
+        }
+        this.value.textContent=v;
+        this.updateSublist();
+      }
+      return item;
+    },
+    updateJS: function(){
       let newItems={};
       for(let a in window){
         if((a in $App.systemVariables)){
@@ -2322,23 +2564,11 @@ window.appJScode=function(){
         if(a in this.items){
           item=this.items[a];
         }else{
-          item={
-            expanded: false,
-            element: document.createElement("div")
-          };
+          item=this.createConsoleItem(a)
           this.variablesDiv.appendChild(item.element);
         }
+        item.update(obj);
         newItems[a]=item;
-        let v;
-        let typ=obj && obj.constructor? (obj.constructor.name).toLowerCase():"";
-        if(typ.startsWith("html")){
-          v=obj.constructor.name;
-        }else if(typ==="file"){
-          v="File";
-        }else{
-          v=JSON.stringify(obj);
-        }
-        item.element.textContent=""+a+": "+v;
       }
       for(let a in this.items){
         if(!(a in newItems)){
@@ -2546,6 +2776,9 @@ window.appJScode=function(){
   };
   
   $App.help=new $App.Help();
+  if($App.language==="java"){
+    $App.help.setButtonVisible(false);
+  }
   
   $App.addFunction=function addFunction(func,returnType,info,args,details,level){
     let name,isNative;
@@ -2727,6 +2960,12 @@ window.appJScode=function(){
     $App.registerAsset.call($App,url, name);
   },null,'Lädt ein sog. "Asset" (ein Bild oder ein Sound) und speichert es unter dem angegebenen Namen im Objekt "assets". Muss vor onStart aufgerufen werden.',
   [{name: 'url', type: 'String', info: 'URL der Datei'}, {name: 'name', type: 'String', info: 'Name, unter dem das Asset gespeichert wird.'}],
+  '',"topLevel");
+
+  $App.addFunction(async function loadScript(url){
+    $App.registerScript.call($App,url);
+  },null,'Lädt ein JavaScript. Muss vor onStart aufgerufen werden.',
+  [{name: 'url', type: 'String', info: 'URL des Scripts'}],
   '',"topLevel");
 
   $App.addFunction(function drawImage(image,cx,cy,width,height,rotation,mirrored){
@@ -3251,6 +3490,12 @@ window.appJScode=function(){
       $App.canvas.addElement(b,cx,cy,width,height);
       return b;
     },
+    image: function (url,cx,cy,width,height){
+      var b=$App.createElement("img");
+      b.src=url;
+      $App.canvas.addElement(b,cx,cy,width,height);
+      return b;
+    },
     input: function (type,placeholdertext,cx,cy,width,height){
       //Legacy: wenn die ersten beiden argumente strings sind, passiert nichts, ansonsten wird type auf "text" gesetzt
       if(type!==undefined && type.split && placeholdertext!==undefined && placeholdertext.split){
@@ -3259,7 +3504,21 @@ window.appJScode=function(){
       }
       var b=$App.createElement("input");
       b.type=type;
-      if(b.type==="file"){
+      if(b.type==="checkbox"){
+        var id=Math.floor(Math.random()*100000000);
+        b.id="checkbox-"+id;
+        var wrapper=document.createElement("span");
+        wrapper.style="display: inline-block; text-align: center";
+        wrapper.appendChild(b);
+        wrapper.box=b;
+        var label=document.createElement("label");
+        label.htmlFor=b.id;
+        label.innerHTML=placeholdertext;
+        wrapper.appendChild(label);
+        b=wrapper;
+        b.type="checkbox";
+        b.appJSData=b.box.appJSData;
+      }else if(b.type==="file"){
         //b.name="files[]";
         b.fr=new FileReader();
         b.fr.onload=(ev)=>{
@@ -3282,21 +3541,26 @@ window.appJScode=function(){
           }
           
         };
-        Object.defineProperty(b,"value",{
-          get: function(){
-            if(b.type==="file"){
-              return b.files[0];
-            }
-            var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
-            var v=valueProp.get.call(b);
-            if(b.type==="number"||b.type==="range"){
-              return v*1;
-            }else{
-              return v;
-            }
-          }
-        })  
       }
+      Object.defineProperty(b,"value",{
+        get: function(){
+          if(b.type==="file"){
+            return b.files[0];
+          }
+          if(b.type==="checkbox"){
+            var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"checked");
+            var v=valueProp.get.call(b.box);
+            return v;
+          }
+          var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
+          var v=valueProp.get.call(b);
+          if(b.type==="number"||b.type==="range"){
+            return v*1;
+          }else{
+            return v;
+          }
+        }
+      });
       b.placeholder=placeholdertext;
       $App.canvas.addElement(b,cx,cy,width,height);
       return b;
@@ -3327,6 +3591,12 @@ window.appJScode=function(){
       returnType: 'JButton',
       args: [{name: 'text', type: 'String', info: 'Aufschrift des Buttons'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}, {name: 'height', type: 'double', info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}],
       info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert den Button zurück.'
+    },
+    {
+      name: 'image', 
+      returnType: 'JImage',
+      args: [{name: 'url', type: 'String', info: 'URL zum Bild'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}, {name: 'height', type: 'double', info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}],
+      info: 'Erzeugt ein neues Bild von der URL <code>url</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Bild zurück.'
     },
     {
       name: 'input',
@@ -3511,8 +3781,12 @@ window.appJScode=function(){
     replaceTypes: function(oldType,newType){
       $App.world.replaceTypes(oldType,newType);
     },
-    draw: function(){
-      $App.world.draw();
+    draw: async function(){
+      if($App.debug.enabled){
+        await $App.world.drawAsync();
+      }else{
+        $App.world.draw();
+      }
     },
     scroll(cx,cy){
       $App.world.setCenter(cx,cy);
@@ -3804,13 +4078,14 @@ window.appJScode=function(){
   
   $App.setup(true);
   
-  /**Vordefinierte Variablennamen speichern:*/
-  $App.systemVariables={};
-  (function(){
-    for(var a in window){
-      $App.systemVariables[a]=true;
-    }
-  })();
-
+  if($App.language==="js"){
+    /**Vordefinierte Variablennamen speichern:*/
+    $App.systemVariables={};
+    (function(){
+      for(var a in window){
+        $App.systemVariables[a]=true;
+      }
+    })();
+  }
 
 }
