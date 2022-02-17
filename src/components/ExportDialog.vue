@@ -1,7 +1,7 @@
 <template>
   <Dialog header="Exportierte App" v-model:visible="show" :style="{width: '50vw'}" :maximizable="true" :modal="true">
       <p class="p-m-0">
-        Dieser Programmcode kann in einem modernen Browser ausgeführt werden. Du kannst ihn z. B. in Glitch in die index.html kopieren.
+        Dieser Programmcode kann in einem modernen Browser ausgeführt werden. Du kannst ihn z. B. in <a href="https://glitch.com" target="_blank">Glitch</a> in die index.html kopieren.
       </p>
       <textarea id="exportarea" style="width: 100%; min-height: 50vh" :value="code"></textarea>
       <template #footer>

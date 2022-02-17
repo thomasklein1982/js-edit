@@ -47,7 +47,7 @@ export default {
       let code=app.sourceCode.trim();
       let text=[];
       let codeStart=code.substring(0,100).split('\n');
-      codeStart.splice(0,0,"JSEdit v"+this.$root.version)
+      codeStart.splice(0,0,"JSEdit v"+this.$root.version,(new Date())+"");
       codeStart.push("...");
       
       imagifier.toImage(JSON.stringify({type: "JSEdit-App", code: app.sourceCode}),codeStart,10,"white","black","JS-Edit");
