@@ -11,9 +11,8 @@
     ref="projectsDialog"
     @load="loadApp"
   />
-  <SymbolsDialog
-    ref="symbolsDialog"
-    @paste="insertSymbol"
+  <LinksDialog
+    ref="linksDialog"
   />
   <ShareDialog
     ref="shareDialog"
@@ -29,7 +28,7 @@
       @undo="$refs.editor.undo()"
       @redo="$refs.editor.redo()"
       @search="$refs.editor.openSearchPanel()"
-      @unicode="$refs.symbolsDialog.setVisible(true)"
+      @unicode="$refs.linksDialog.setVisible(true)"
       @share="$refs.shareDialog.setVisible(true)"
     />
     <Splitter :style="{flex: 1}" style="overflow: hidden;width: 100%;">
@@ -66,7 +65,7 @@ import ControlArea from "./ControlArea.vue";
 import ExportDialog from "./ExportDialog.vue";
 import SettingsDialog from "./SettingsDialog.vue";
 import ProjectsDialog from './ProjectsDialog.vue';
-import SymbolsDialog from './SymbolsDialog.vue';
+import LinksDialog from './LinksDialog.vue';
 import ShareDialog from './ShareDialog.vue'
 import { upload} from "../lib/helper";
 
@@ -188,7 +187,7 @@ export default {
     ExportDialog,
     SettingsDialog,
     ProjectsDialog,
-    SymbolsDialog,
+    LinksDialog,
     ShareDialog
   }
 }

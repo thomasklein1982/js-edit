@@ -39,6 +39,11 @@ body,html{
   transition: opacity 0.2s ease;
 }
 
+p{
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
