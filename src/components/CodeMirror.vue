@@ -1,10 +1,7 @@
 <template>
   <div id="root">
     <div id="editor" ref="editor" :style="{fontSize: (0.55*fontSize+5)+'px'}"></div>
-    <div v-if="errors || runtimeError" id="errors">
-      <div v-if="errors"><span style="color: red" class="pi pi-exclamation-circle"></span>{{errors}}</div> 
-      <div v-if="runtimeError" @click="runtimeError=null"><span style="color: red" class="pi pi-exclamation-circle"></span>{{runtimeError}}</div>
-    </div>
+    <Message v-for="(e,i) in runtimeError" severity="error" :key="'re'+errorID">Z{{e.line}}: {{e.message}}</Message>
   </div>
   
 </template>
@@ -29,7 +26,7 @@
   import {RangeSet} from "@codemirror/rangeset"
   import {gutter, GutterMarker} from "@codemirror/gutter"
   import {Decoration,ViewPlugin} from "@codemirror/view"
-
+  import { lintGutter, linter, openLintPanel } from "@codemirror/lint";
 
   // function highlightCurrentLine() {
   //   return currentLineHighlighter;
@@ -161,7 +158,8 @@ const breakpointGutter = [
         view: null,
         size: 0,
         errors: null,
-        runtimeError: null,
+        runtimeError: [],
+        errorID: 1,
         isSearchPanelOpen: false
       };
     },
@@ -174,7 +172,19 @@ const breakpointGutter = [
       }else{
         this.$root.sourceCode='setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}';
       }
-
+      const lint = linter((view) => {
+        let errors=[];
+        if(this.errors){
+          let e=this.errors;
+          errors.push({
+            from: e.from,
+            to: e.to,
+            severity: "error",
+            message: e.message
+          });
+        }
+        return errors;
+      });
       editor=new EditorView({
         state: EditorState.create({
           doc: "",
@@ -183,6 +193,8 @@ const breakpointGutter = [
             //highlightActiveLine(),
             breakpointGutter,
             EditorView.lineWrapping,
+            lint,
+            lintGutter(),
             indentUnit.of("  "),
             javascript(),
             autocompletion({override: [createAutocompletion(additionalCompletions)]}),
@@ -251,7 +263,8 @@ const breakpointGutter = [
         var code=this.$root.sourceCode;
         code=js_beautify(code,{
           "indent_size": 2,
-          "preserve_newlines": false,
+          "max_preserve_newlines": 2,
+          "indent_empty_lines": true,
           "space_in_paren": true,
           "space_in_empty_paren": true
         });
@@ -284,7 +297,7 @@ const breakpointGutter = [
         return this.state.doc.lineAt(pos);
       },
       reset: function(sourceCode){
-        this.runtimeError=null;
+        this.runtimeError=[];
         this.$root.sourceCode=sourceCode;
         editor.dispatch({
           changes: {from: 0, to: this.size, insert: this.$root.sourceCode}
@@ -298,7 +311,11 @@ const breakpointGutter = [
         redo({state: editor.viewState.state, dispatch: editor.dispatch});
       },
       setRuntimeError: function(error){
-        this.runtimeError=error;
+        this.runtimeError.pop();
+        if(error){
+          this.errorID++;
+          this.runtimeError.push(error);
+        }
       },
       insert(text){
         let pos=editor.state.selection.ranges[0].from;
@@ -351,18 +368,26 @@ const breakpointGutter = [
           }
         }).then((errors)=>{
           if(errors){
-            let t="Zeile "+errors.loc.line+": ";
-            if(errors.message.startsWith("Unexpected token")){
-              if(errors.pos>=this.$root.sourceCode.length){
-                t+="Unerwartes Ende des Codes. Fehlt eine '}'?"
-              }else{
-                t+="Unerwartetes Zeichen";
-              }
+            let line=this.getLineByNumber(errors.loc.line);
+            this.errors={
+              isError: true,
+              message: errors.message,
+              from: line.from,
+              to: line.to
+            };
+
+            // let t="Zeile "+errors.loc.line+": ";
+            // if(errors.message.startsWith("Unexpected token")){
+            //   if(errors.pos>=this.$root.sourceCode.length){
+            //     t+="Unerwartes Ende des Codes. Fehlt eine '}'?"
+            //   }else{
+            //     t+="Unerwartetes Zeichen";
+            //   }
               
-            }else{
-              t+=errors.message;
-            }
-            this.errors=t;
+            // }else{
+            //   t+=errors.message;
+            // }
+            // this.errors=t;
           }else{
             this.errors=null;
           }

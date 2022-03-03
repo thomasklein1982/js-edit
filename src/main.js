@@ -27,6 +27,7 @@ import SelectButton from 'primevue/selectbutton';
 import ToggleButton from 'primevue/togglebutton';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
+import Message from "primevue/message";
 
 import 'primevue/resources/themes/saga-blue/theme.css';
 import 'primevue/resources/primevue.min.css';
@@ -80,6 +81,7 @@ app.component('Dropdown',Dropdown);
 app.component('ToggleButton',ToggleButton);
 app.component('TabPanel',TabPanel);
 app.component('TabView',TabView);
+app.component('Message',Message);
 window.app=app.mount('#app');
 
 window.onmessage=function(message){
@@ -87,7 +89,7 @@ window.onmessage=function(message){
   let app=window.app;
   if(data.type==="error"){
     data=data.data;
-    app.$refs.editor.$refs.editor.setRuntimeError(data.completeMessage);
+    app.$refs.editor.$refs.editor.setRuntimeError(data);
   }else if(data.type==="debug-pause"){
     app.paused=true;
     app.currentLine=data.line;

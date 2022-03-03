@@ -51,6 +51,9 @@ import Outline from './Outline.vue'
       updateOutline(outline){
         this.$refs.outline.update(outline);
       },
+      setVariables(variables){
+        this.$refs.preview.setVariables(variables);
+      },
       focusPreview(){
         this.$refs.preview.focus();
       }

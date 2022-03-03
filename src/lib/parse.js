@@ -62,7 +62,8 @@ function createError(message,node){
   return {
     isError: true,
     message: message,
-    pos: node.from
+    from: node.from,
+    to: node.to
   };
 }
 
@@ -87,7 +88,7 @@ function parseFunction(src,node,parsingInfos){
       param=param.nextSibling;
     }
   }else{
-    throw createError("Es fehlt '()' hinter dem Funktionsnamen.");
+    throw createError("Es fehlt '()' hinter dem Funktionsnamen.",node);
   }
   while(node && node.type.name!=="Block"){
     node=node.nextSibling;

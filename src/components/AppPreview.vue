@@ -28,13 +28,20 @@
     },
     data: function(){
       return {
-        frame: null
+        frame: null,
+        variables: {}
       }
     },
     methods: {
       focus(){
         if(this.frame){
           this.frame.focus();
+        }
+      },
+      setVariables(variables){
+        this.variables=[];
+        for(var a in variables){
+          this.variables.push(a);
         }
       },
       resume(){
@@ -65,6 +72,7 @@
         this.$refs.wrapper.appendChild(frame);
         let bp=this.breakpoints;
         let src="$App.debug.setBreakpoints("+JSON.stringify(bp)+");";
+        src+="$App.console.addWatchedVariables("+JSON.stringify(this.variables)+");";
         if(debugging){
           src+=this.$root.sourceCodeDebugging;
         }else{

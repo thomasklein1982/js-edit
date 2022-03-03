@@ -49,6 +49,15 @@ p{
   opacity: 0;
 }
 
+.ͼ1 .cm-lint-marker-error:before {
+  content: '⚠';
+  color: red;
+}
+
+.cm-diagnostic{
+  font-family: monospace;
+}
+
 .panel-full{
   height: 100%;
   display: flex;
