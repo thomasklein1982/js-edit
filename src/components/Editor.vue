@@ -155,7 +155,7 @@ export default {
       }
     },
     updateOutline(infos){
-      this.$refs.controlArea.updateOutline(infos.outline);
+      this.$refs.controlArea.updateOutline(infos.outline,infos.clazzes);
       this.$refs.editor.updateAutocompletionSnippets(infos);
       this.$refs.controlArea.setVariables(infos.variables);
     },

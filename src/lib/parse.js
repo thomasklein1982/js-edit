@@ -2,6 +2,7 @@ export const parse=async function(src,tree,options,state){
   let p=new Promise(function(resolve,reject){
     let infos={
       outline: [],
+      clazzes: [],
       variables: null,
       codeDebugging: null,
       error: null
@@ -34,6 +35,7 @@ export const parse=async function(src,tree,options,state){
             code+=codeFuncEnd;
           }
           let clazz=parseClass(src,node,parsingInfos);
+          infos.clazzes.push(clazz);
           code+=clazz.code;
         }else{
           code+=parseStatement(src,node,parsingInfos);
@@ -98,7 +100,7 @@ function parseFunction(src,node,parsingInfos){
     code="async function "+fname+src.substring(paramList.from,paramList.to);
     code+=parseCodeBlock(src,node,parsingInfos);   
   }else{
-    code+=src.substring(from,to);
+    code=src.substring(from,to);
   }
   let func={
     type: "function",
@@ -141,10 +143,26 @@ function extractLineBreaks(src,node,parsingInfos){
 }
 
 function parseClass(src,node,parsingInfos){
-  let code=src.substring(node.from,node.to);
-  return {
-    code: code
-  };
+  let from=node.from;
+  let to=node.to;
+  
+  node=node.firstChild;
+  while(node && node.type.name!=="VariableDefinition"){
+    node=node.nextSibling;
+  }
+  let cname=src.substring(node.from,node.to);
+  
+  let code=src.substring(from,to);
+  let clazz={
+    from: from,
+    to: to,
+    params: [],
+    name: cname,
+    code: code,
+    alreadyDefined: parsingInfos.usedNames[cname]!==undefined
+  }
+  parsingInfos.usedNames[cname]=true;
+  return clazz;
 }
 
 function parseStatement(src,node,parsingInfos){

@@ -48,8 +48,8 @@ import Outline from './Outline.vue'
       outlineClick(item){
         this.$emit('outlineclick',item);
       },
-      updateOutline(outline){
-        this.$refs.outline.update(outline);
+      updateOutline(outline,clazzes){
+        this.$refs.outline.update(outline,clazzes);
       },
       setVariables(variables){
         this.$refs.preview.setVariables(variables);

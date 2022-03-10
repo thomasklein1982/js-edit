@@ -210,6 +210,11 @@ const breakpointGutter = [
               timer = setTimeout(() => {
                 if (changed) {
                   this.update(v);
+                  let lintPlugin=editor.plugins[12];
+                  console.log(lintPlugin);
+                  if(lintPlugin && lintPlugin.value && lintPlugin.value.lintTime){
+                    lintPlugin.value.run()
+                  }
                   changed=false;
                 }
               }, 500 );
@@ -255,6 +260,16 @@ const breakpointGutter = [
             label: a,
             info: "Eine Variable aus deinem Programm.",
             type: "variable"
+          });
+          additionalCompletions.push(s);
+        }
+        /*Objekt-Instanziierung*/
+        for(let i=0;i<infos.clazzes.length;i++){
+          let c=infos.clazzes[i];
+          let s=autocomplete.snippetCompletion("new "+c.name+createParamsString(c.params,true), {
+            label: "new "+c.name+"("+c.params.join(",")+")",
+            info: "Erzeugt ein neues Objekt der Klasse '"+c.name+"'.",
+            type: "function"
           });
           additionalCompletions.push(s);
         }

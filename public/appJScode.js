@@ -812,6 +812,20 @@ window.appJScode=function(){
         audio.src=fullurl;
   
         asset=audio;
+      }else if(url.endsWith("txt")){
+        try{
+          var r=await fetch(fullurl);
+          var text=await r.text();
+          asset.lines=text.split("\n");
+          asset.currentLine=0;
+          asset.lineCount=asset.lines.length;
+          asset.nextLine=function(){
+            this.currentLine++;
+            return this.lines[this.currentLine-1];
+          }
+        }catch(e){
+          console.log("Asset '"+fullurl+"' konnte nicht geladen werden.");
+        }
       }else{
         let image=new Image();
         p=new Promise((resolve,reject)=>{
@@ -3606,6 +3620,8 @@ window.appJScode=function(){
           b.text=ev.target.result;
           b.lines=b.text.split("\n");
           b.files[0].lineCount=b.lines.length;
+          b.files[0].lines=b.lines;
+          b.lineCount=b.files[0].lineCount;
         };
         b.onchange=function(ev){
           if(!this.files) return;
@@ -3615,12 +3631,14 @@ window.appJScode=function(){
           this.fr.readAsText(f);
           f.nextLine=function(){
             let lines=this.input.lines;
-            if(!lines||lines.length===0){
+            if(!lines||this.currentLine>=lines.length){
               return null;
             }
-            return lines.splice(0,1)[0];
+            this.currentLine++;
+            return lines[this.currentLine-1];
           }
-          
+          this.currentLine=0;
+          this.nextLine=f.nextLine;
         };
       }
       Object.defineProperty(b,"value",{

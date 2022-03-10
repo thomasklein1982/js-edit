@@ -209,15 +209,46 @@ function createSnippets(data){
   }));
 
   
+  array.push(autocomplete.snippetCompletion("//😀😁😆😈😉😌😍😎😐😒😖😘😡😢😧😩😭😱", {
+    label: "unicode smileys",
+    info: "Fügt eine Auswahl von Unicode-Smileys ein.",
+    type: "macro"
+  }));
+
+  array.push(autocomplete.snippetCompletion("//😾👸👹👻👼👽👾👿💀💃🧚🧛🧜🧝🧞", {
+    label: "unicode kreaturen",
+    info: "Fügt eine Auswahl von Unicode-Kreaturen ein.",
+    type: "macro"
+  }));
+
+  array.push(autocomplete.snippetCompletion("//🚀🚁🚂🚃🚍🚑🚒🚓🚔🚘🚜🚢✈", {
+    label: "unicode fahrzeuge",
+    info: "Fügt eine Auswahl von Unicode-Fahrzeugen ein.",
+    type: "macro"
+  }));
+
   snippets.topLevel.push(autocomplete.snippetCompletion("function ${name}( ) {\n\t${}\n}", {
     label: "function",
     info: "Definiert eine neue Funktion.",
     type: "keyword"
   }));
+
+  snippets.topLevel.push(autocomplete.snippetCompletion("class ${name} { ${} }", {
+    label: "class",
+    info: "Definiert eine neue Klasse.",
+    type: "keyword"
+  }));
   
+  array.push(autocomplete.snippetCompletion("for ( ${obj} of ${array} ) {\n\t${}\n}", {
+    label: "for-array",
+    boost: 10,
+    info: "Eine for-of-Schleife führt ihren Code für jedes Element eines Arrays aus.",
+    type: "keyword"
+}));
+
   array.push(autocomplete.snippetCompletion("for (let ${i} = 0; ${i} < ${max}; ${i}++) {\n\t${}\n}", {
-      label: "for",
-      info: "Eine for-Schleife wiederholt ihren Inhalt mehrere Male.",
+      label: "for-index",
+      info: "Eine normale for-Schleife wiederholt ihren Inhalt mehrere Male.",
       type: "keyword"
   }));
 
