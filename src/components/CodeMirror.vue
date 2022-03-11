@@ -13,6 +13,7 @@
   import {EditorSelection,Compartment} from "@codemirror/state"
   import {indentWithTab} from "@codemirror/commands"
   import { indentUnit } from "@codemirror/language";
+  import { toggleComment } from "@codemirror/comment"
   import * as acorn from "acorn";
   import {parse} from '../lib/parse'
   import {undo, redo} from '@codemirror/history'
@@ -194,6 +195,7 @@ const breakpointGutter = [
             breakpointGutter,
             EditorView.lineWrapping,
             lint,
+            keymap.of(toggleComment),
             lintGutter(),
             indentUnit.of("  "),
             javascript(),
@@ -211,7 +213,6 @@ const breakpointGutter = [
                 if (changed) {
                   this.update(v);
                   let lintPlugin=editor.plugins[12];
-                  console.log(lintPlugin);
                   if(lintPlugin && lintPlugin.value && lintPlugin.value.lintTime){
                     lintPlugin.value.run()
                   }
@@ -266,8 +267,12 @@ const breakpointGutter = [
         /*Objekt-Instanziierung*/
         for(let i=0;i<infos.clazzes.length;i++){
           let c=infos.clazzes[i];
-          let s=autocomplete.snippetCompletion("new "+c.name+createParamsString(c.params,true), {
-            label: "new "+c.name+"("+c.params.join(",")+")",
+          let ps="";
+          if(c.params && c.params.length>0){
+            ps=createParamsString(c.params,true);
+          }
+          let s=autocomplete.snippetCompletion("new "+c.name+ps, {
+            label: "new "+c.name,
             info: "Erzeugt ein neues Objekt der Klasse '"+c.name+"'.",
             type: "function"
           });

@@ -95,3 +95,12 @@ window.onmessage=function(message){
     app.currentLine=data.line;
   }
 }
+
+document.addEventListener("keydown", function(e) {
+  let platform=window.navigator.userAgentData.platform || window.navigator.platform;
+  let key=e.code||e.keyCode;
+  if ((platform.match("Mac") ? e.metaKey : e.ctrlKey)  && (key === 83 || key==="KeyS")) {
+    e.preventDefault();
+    window.app.$refs.editor.$refs.shareDialog.setVisible(true)
+  }
+}, false);
