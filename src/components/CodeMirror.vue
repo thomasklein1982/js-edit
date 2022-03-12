@@ -8,7 +8,7 @@
 
 <script>
   import { EditorView, basicSetup, EditorState } from "@codemirror/basic-setup";
-  import { javascript, snippets } from "@codemirror/lang-javascript";
+  import { javascript } from "@codemirror/lang-javascript";
   import {keymap} from "@codemirror/view"
   import {EditorSelection,Compartment} from "@codemirror/state"
   import {indentWithTab} from "@codemirror/commands"
@@ -19,7 +19,7 @@
   import {undo, redo} from '@codemirror/history'
   import {openSearchPanel,closeSearchPanel} from '@codemirror/search'
   import { loadLocally, saveLocally } from "../lib/helper";
-  import { createAutocompletion,createParamsString } from "../lib/snippets";
+  import { createAutocompletion,createParamsString,snippets } from "../lib/snippets";
   import  * as autocomplete  from "@codemirror/autocomplete";
   import {CompletionContext} from "@codemirror/autocomplete";
   import {autocompletion} from "@codemirror/autocomplete";
@@ -29,6 +29,70 @@
   import {Decoration,ViewPlugin} from "@codemirror/view"
   import { lintGutter, linter, openLintPanel } from "@codemirror/lint";
 
+  import {hoverTooltip} from "@codemirror/tooltip"
+
+  export const wordHover = hoverTooltip((view, pos, side) => {
+    let {from, to, text} = view.state.doc.lineAt(pos)
+    let start = pos, end = pos
+    let regexp=/[=+\-*\/%&|]/;
+    let c=text[start-from-1];
+    console.log(c);
+    if(c===" "){
+      start++;
+      regexp=/[=+\-*\/%&|]/;
+      c=text[start-from-1];
+    }
+    if(!regexp.test(c)){
+      regexp=/\w|\./;
+    }
+    while (start > from && regexp.test(text[start - from - 1])) start--
+    while (end < to && regexp.test(text[end - from])) end++
+    if (start == pos && side < 0 || end == pos && side > 0){
+      return null
+    }
+    let word=text.slice(start - from, end - from);
+    let tip;
+    if(word==="new"){
+      tip="erzeugt ein neues Objekt";
+    }else if(word==="Object"){
+      tip="ein Objekt fasst mehrere Variablen zu einer zusammen";
+    }else if(word==="=="){
+      tip="vergleicht die beiden Objekte";
+    }else if(word==="+"){
+      tip="addiert die beiden Zahlen oder verkettet die beiden Zeichenketten";
+    }else if(word==="="){
+      tip="weist der Variablen links den Wert rechts zu";
+    }else{
+      for(let i=0;i<snippets.inFunction.length;i++){
+        let s=snippets.inFunction[i];
+        if(s.label===word+"(...)"||s.label===word){
+          tip=s.info;
+          break;
+        }
+      }
+      for(let i=0;i<snippets.everywhere.length;i++){
+        let s=snippets.everywhere[i];
+        if(s.label===word+"(...)"||s.label===word){
+          tip=s.info;
+          break;
+        }
+      }
+    }
+    if(tip){
+      return {
+        pos: start,
+        end,
+        above: true,
+        create(view) {
+          let dom = document.createElement("div");
+          dom.textContent = tip;
+          return {dom};
+        }
+      };
+    }else{
+      return null;
+    }
+  });
   // function highlightCurrentLine() {
   //   return currentLineHighlighter;
   // }
@@ -197,6 +261,7 @@ const breakpointGutter = [
             lint,
             keymap.of(toggleComment),
             lintGutter(),
+            wordHover,
             indentUnit.of("  "),
             javascript(),
             autocompletion({override: [createAutocompletion(additionalCompletions)]}),

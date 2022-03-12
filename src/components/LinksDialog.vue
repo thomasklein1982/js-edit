@@ -1,5 +1,5 @@
 <template>
-  <Dialog header="Nützliche Links und Apps" v-model:visible="show"  :maximizable="true" :modal="true">
+  <Dialog header="Nützliche Links und Apps" v-model:visible="show"  :maximizable="true" :modal="true" :breakpoints="{'960px': '75vw', '640px': '100vw'}" :style="{width: '50vw'}">
     <p>Hier findest du Links zu hilfreichen Seiten und Apps.</p>
     <h2>Veröffentlichen von Apps</h2>
     <p>Melde dich bei <a href="https://glitch.com" target="_blank">glitch.com</a> an. Hier kannst du deine Apps und Assets hochladen und veröffentlichen.</p>

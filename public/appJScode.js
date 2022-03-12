@@ -897,7 +897,9 @@ window.appJScode=function(){
       lineWidth: 0.5,
       fontSize: 5,
       opacity: 1,
-      font: 'monospace'
+      font: 'monospace',
+      mirrored: false,
+      rotation: 0
     };
     this.reset();
   };
@@ -1119,6 +1121,18 @@ window.appJScode=function(){
       }
       this.ctx.font=this.getHeight(this.state.fontSize,true)+"px "+this.state.font;
     },
+    setMirrored: function(mirrored,dontAdd){
+      this.state.mirrored=mirrored;
+      if(!dontAdd){
+        this.addCommand("setMirrored",[mirrored]);
+      }
+    },
+    setRotation: function(angle,dontAdd){
+      this.state.rotation=angle;
+      if(!dontAdd){
+        this.addCommand("setRotation",[angle]);
+      }
+    },
     setFont: function(name,dontAdd){
       this.state.font=name;
       if(!dontAdd){
@@ -1285,6 +1299,16 @@ window.appJScode=function(){
       }
       x=this.getX(x);
       y=this.getY(y);
+      var cx=x;
+      var cy=y;
+      this.ctx.save();
+      this.ctx.translate(cx,cy);
+      if(this.state.mirrored){
+        this.ctx.scale(-1,1);
+        this.ctx.rotate(Math.PI*this.state.rotation/180);
+      }else{
+        this.ctx.rotate(-Math.PI*this.state.rotation/180);
+      }
       if(text.split){
         var lines=text.split("\n");
       }else{
@@ -1295,14 +1319,18 @@ window.appJScode=function(){
       this.ctx.textBaseline=align.v;
       
       if(align.v==="bottom"){
-        y-=lineHeight*(lines.length-1);  
+        y=-lineHeight*(lines.length-1);  
       }else if(align.v==="middle"){
-        y-=lineHeight*((lines.length-1)/2);
-      } 
+        y=-lineHeight*((lines.length-1)/2);
+      }else{
+        y=0;
+      }
+      
       for(var i=0;i<lines.length;i++){
-        this.ctx.fillText(lines[i],x,y);
+        this.ctx.fillText(lines[i],0,y);
         y+=lineHeight;
       }
+      this.ctx.restore();
     },
     $adjustInputPosition: function(){
       var x=this.getRawX(this.input.x);
@@ -3074,6 +3102,14 @@ window.appJScode=function(){
   [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Höhe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
   '');
   
+  $App.addFunction(function setMirrored(m){
+    $App.canvas.setMirrored(m);
+  },null,'Legt für alle nachfolgenden write-Befehle fest, ob der Text gespiegelt werden soll.',[{name: 'm', type: 'boolean', info: 'Wenn true, dann wird der Text aller nachfolgenden write-Befehle vertikal gespiegelt. Wenn false, wird der Text wieder normal geschrieben.'}],'');
+
+  $App.addFunction(function setRotation(angle){
+    $App.canvas.setRotation(angle);
+  },null,'Legt die Drehung für alle nachfolgenden write-Befehle fest.',[{name: 'angle', type: 'double', info: 'Der Winkel um den gedreht werden soll. 0 entspricht keiner Drehung. Es wird gegen den Uhrzeigersinn gedreht.'}],'');
+
   $App.addFunction(function setColor(color){
     $App.canvas.setColor(color);
   },null,'Legt die Farbe für alle nachfolgenden Zeichnungen fest.',[{name: 'color', type: 'String', info: 'Farbe, die ab sofort zum Zeichnen und Füllen verwendet werden soll. Kann eine beliebige Bezeichnung für eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
@@ -4399,7 +4435,9 @@ window.appJScode=function(){
   
   if($App.language==="js"){
     /**Vordefinierte Variablennamen speichern:*/
-    $App.systemVariables={};
+    $App.systemVariables={
+      __VUE_DEVTOOLS_IFRAME__: true
+    };
     (function(){
       for(var a in window){
         $App.systemVariables[a]=true;
