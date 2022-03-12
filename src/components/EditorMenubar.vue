@@ -32,8 +32,8 @@ export default {
           items: [
             {label: 'Hochladen', icon: 'pi pi-fw pi-upload', command:() => {this.$emit("upload")} },
             {label: 'Leeres Programm', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('')} },
-            {label: 'Programm mit Grafik', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('setupApp("Name meiner App", "😀", 100, 100, "aqua");\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}')} },
-            {label: 'Spiel mit Gamepad-Steuerung', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('setupApp("Name meiner App", "🐝", 100, 100, "lime");\n\nfunction onStart(){\n  gamepad.show();\n  biene = new Object\n  biene.x = 20;\n  biene.y = 50;\n}\nfunction onNextFrame(){\n  clear()\n  if( gamepad.left ){\n    biene.x = biene.x - 1\n  }\n  if( gamepad.right ){\n    biene.x = biene.x + 1\n  }\n  if( gamepad.up ){\n    biene.y = biene.y + 1\n  }\n  if( gamepad.down ){\n    biene.y = biene.y - 1\n  }\n  setMirrored( true )\n  write( "🐝", biene.x, biene.y )\n}\n\nfunction onGamepadDown( button ){\n  if( button == "A" ){\n    biene.x = random( 10, 90 )\n  }\n}')} }
+            {label: 'Programm mit Grafik', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('setupApp("Name meiner App", "😀", 100, 100, "aqua")\n\nfunction onStart(){\n  drawCircle(50,50,20)\n  write("Hallo 😀",50,50)\n}')} },
+            {label: 'Spiel mit Gamepad-Steuerung', icon: 'pi pi-fw pi-plus', command:() => {this.newProgram('setupApp("Name meiner App", "🐝", 100, 100, "lime")\n\nfunction onStart(){\n  gamepad.show()\n  setFontsize(8)\n  biene = new Object\n  biene.x = 20\n  biene.y = 50\n}\n\nfunction onNextFrame(){\n  clear()\n  if( gamepad.left ){\n    biene.x = biene.x - 1\n  }\n  if( gamepad.right ){\n    biene.x = biene.x + 1\n  }\n  if( gamepad.up ){\n    biene.y = biene.y + 1\n  }\n  if( gamepad.down ){\n    biene.y = biene.y - 1\n  }\n  setMirrored( true )\n  write( "🐝", biene.x, biene.y )\n}\n\nfunction onGamepadDown( button ){\n  if( button == "A" ){\n    biene.x = random( 10, 90 )\n  }\n}')} }
           ]
         },
         {

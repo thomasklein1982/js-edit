@@ -26,8 +26,37 @@ export function createAutocompletion(additional){
     }
     options=options.concat(additional);
     let word = context.matchBefore(/[.A-Za-z$_0-9]*/)
-    if (word.from == word.to && !context.explicit)
-      return null
+    if (word.from == word.to && !context.explicit){
+      return null;
+    }
+    let showObjectOnly=false;
+    let line=context.state.doc.lineAt(context.pos)
+    let posInLine=context.pos-line.from;
+    let posOfWordInLine=word.from-line.from;
+    line=line.text;
+    posInLine=posOfWordInLine-1;
+    while(posInLine>0 && /\s/.test(line.charAt(posInLine))){
+      posInLine--;
+    }
+    if(posInLine>2){
+      let wordBefore=line.substring(posInLine-2,posInLine+1);
+      if(wordBefore==="new" && (posInLine===3 ||/\W/.test(line.charAt(posInLine-3)))){
+        options.push(autocomplete.snippetCompletion("Object", {
+          label: "Object",
+          info: "Ein Objekt fasst mehrere Variablen zusammen.",
+          type: "keyword"
+        }));
+        showObjectOnly=true;
+      }
+    }
+    if(!showObjectOnly){
+      options.push(autocomplete.snippetCompletion("new Object", {
+        label: "new Object",
+        info: "Erzeugt ein neues Objekt.",
+        type: "keyword"
+      }));
+    }
+    //let ws=context.matchBefore(/\s+/)
     return {
       from: word.from,
       options,
@@ -167,12 +196,6 @@ function createSnippets(data){
     label: "Math.pow",
     info: "Berechnet basis hoch exp.",
     type: "function"
-  }));
-
-  array.push(autocomplete.snippetCompletion("new Object", {
-    label: "new Object",
-    info: "Erzeugt ein neues Objekt.",
-    type: "keyword"
   }));
 
   let unicode="😀😁😆😈😉😌😍😎😐😒😖😘😡😢😧😩😭😱"
