@@ -225,7 +225,7 @@ window.appJScode=function(){
     //el.style.position="absolute";
     this.implementStyleGetterAndSetter(el);
     el.appJSData={
-      oldDisplayValue: undefined,
+      oldDisplayValue: el.style.display,
       cx: null,
       cy: null,
       width: null,
@@ -375,10 +375,10 @@ window.appJScode=function(){
       //   }
       // });
     }
+    
     Object.defineProperty(el, 'visible', {
       set: function(v) {
         if(!v){
-          this.appJSData.oldDisplayValue=this.style.display;
           this.style.display="none";
         }else{
           this.style.display=this.appJSData.oldDisplayValue;

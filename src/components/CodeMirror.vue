@@ -81,7 +81,6 @@
     if(tip){
       return {
         pos: start,
-        end,
         above: true,
         create(view) {
           let dom = document.createElement("div");
