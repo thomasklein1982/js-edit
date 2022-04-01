@@ -225,7 +225,7 @@ window.appJScode=function(){
     //el.style.position="absolute";
     this.implementStyleGetterAndSetter(el);
     el.appJSData={
-      oldDisplayValue: el.style.display,
+      oldDisplayValue: undefined,
       cx: null,
       cy: null,
       width: null,
@@ -375,10 +375,10 @@ window.appJScode=function(){
       //   }
       // });
     }
-    
     Object.defineProperty(el, 'visible', {
       set: function(v) {
         if(!v){
+          this.appJSData.oldDisplayValue=this.style.display;
           this.style.display="none";
         }else{
           this.style.display=this.appJSData.oldDisplayValue;
@@ -1268,6 +1268,16 @@ window.appJScode=function(){
       this.lastPoint.y-=dy;
       this.ctx.lineTo(this.lastPoint.x,this.lastPoint.y);
     },
+    lineTo: function(x,y,dontAdd){
+      if(!dontAdd){
+        this.addCommand("line",[x,y]);
+      }
+      x=this.getX(x);
+      y=this.getY(y);
+      this.lastPoint.x=x;
+      this.lastPoint.y=y;
+      this.ctx.lineTo(this.lastPoint.x,this.lastPoint.y);
+    },
     arcTo: function(x1,y1,x2,y2,r){
       this.ctx.arcTo(x1*this.dpr,y1*this.dpr,x2*this.dpr,y2*this.dpr,r*this.dpr);
     },
@@ -1842,9 +1852,14 @@ window.appJScode=function(){
           var x=j+1;
           var y=i+1;
           var tile=this.getTile(x,y);
+          var drawRects=true;
           if(window.onTileDraw){
-            await window.onTileDraw(x,y,tile.type,tile.info);
-          }else{
+            drawRects=await window.onTileDraw(x,y,tile.type,tile.info);
+            if(drawRects===false){
+              drawRects=true;
+            }
+          }
+          if(drawRects){
             this.paintRect(x,y,1,1,false);
             this.write(tile.type,x,y);
           }
@@ -1859,9 +1874,18 @@ window.appJScode=function(){
           var x=j+1;
           var y=i+1;
           var tile=this.getTile(x,y);
+          var drawRects=true;
           if(window.onTileDraw){
-            window.onTileDraw(x,y,tile.type,tile.info);
-          }else{
+            drawRects=window.onTileDraw(x,y,tile.type,tile.info);
+            if(drawRects===true){
+              drawRects=false;
+            }else if(drawRects===false){
+              drawRects=true;
+            }else{
+              drawRects=false;
+            }
+          }
+          if(drawRects){
             this.paintRect(x,y,1,1,false);
             this.write(tile.type,x,y);
           }
@@ -3168,7 +3192,11 @@ window.appJScode=function(){
         step=1;
         text+=stop;
       }else{
-        step=1;
+        if(start>stop){
+          step=-1;
+        }else{
+          step=1;
+        }
         text+=start+","+stop
       }
     }else{
@@ -3587,6 +3615,10 @@ window.appJScode=function(){
       $App.canvas.line(dx,dy);
       return this;
     },
+    lineTo: function(x,y){
+      $App.canvas.lineTo(x,y);
+      return this;
+    },
     close: function(){
       $App.canvas.closePath();
       return this;
@@ -3635,7 +3667,13 @@ window.appJScode=function(){
       returnType: 'Path',
       args: [{name: 'dx', type: 'double', info: 'Unterschied in x-Richtung'}, {name: 'dy', type: 'double', info: 'Unterschied in y-Richtung'}], 
       info: 'Zeichnet eine gerade Linie von der aktuellen Position um <code>dx</code> nach rechts und um <code>dy</code> nach oben.'
-    }, 
+    },
+    {
+      name: 'lineTo',
+      returnType: 'Path',
+      args: [{name: 'x', type: 'double', info: 'x-Koordinate'}, {name: 'y', type: 'double', info: 'y-Koordinate'}], 
+      info: 'Zeichnet eine gerade Linie von der aktuellen Position zum Punkt <code>(x|y)</code>.'
+    },    
     {
       name: 'close',
       returnType: 'Path', 
