@@ -227,7 +227,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
     //el.style.position="absolute";
     this.implementStyleGetterAndSetter(el);
     el.appJSData={
-      oldDisplayValue: undefined,
+      oldDisplayValue: null,
       cx: null,
       cy: null,
       width: null,
@@ -379,8 +379,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
     }
     Object.defineProperty(el, 'visible', {
       set: function(v) {
+        if(this.appJSData.oldDisplayValue===null){
+          var d=this.style.display;
+          if(d==="none"){
+            d="";
+          }
+          this.appJSData.oldDisplayValue=d;
+        }
         if(!v){
-          this.appJSData.oldDisplayValue=this.style.display;
           this.style.display="none";
         }else{
           this.style.display=this.appJSData.oldDisplayValue;
@@ -2254,7 +2260,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
       if(this.element) return;
       var div=document.createElement("div");
       this.element=div;
-      div.style="position: absolute; left: 0.5cm; bottom: 0.5cm; width: 2cm; height: 2cm; z-index: 10;";
+      div.style="position: absolute; left: 0.5cm; bottom: 0.5cm; width: 2cm; height: 2cm; z-index: 1000;";
       div.onmouseleave=function(){
   
       };
@@ -2380,10 +2386,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
   
   /*****Array */
   $App.Array=function(type, dim, values){
-    this.type=type;
+    this.type=type.name;
     if(Array.isArray(dim)){
       this.dim=dim;
-      this.values=$App.Array.createArrayValues(type,null,dim,0);
+      console.log("new Array",type);
+      this.values=$App.Array.createArrayValues(type,dim,0);
     }else{
       this.values=values;
       var a=values;
@@ -2417,11 +2424,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
     }
   };
 
-  $App.Array.createArrayValues=function(type,value,dim){
+  $App.Array.createArrayValues=function(type,dim){
     if(dim.length===1){
       var array=[];
       for(var i=0;i<dim[0];i++){
-        array.push(value);
+        array.push(type.initialValue!==undefined? type.initialValue:null);
       }
       return array;
     }else{
@@ -2517,6 +2524,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
     },
     log: function(){
       let div=document.createElement("div");
+      div.style.whiteSpace="pre";
       let args=[]
       for(let i=0;i<arguments.length;i++){
         args.push(arguments[i]);
@@ -2555,6 +2563,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
         sublist: document.createElement("div"),
         object: undefined
       };
+      item.element.style.whiteSpace="noWrap";
+      item.value.style.whiteSpace="pre";
       item.sublist.style.marginLeft="1em";
       item.button.style="text-align: center; display: inline-block; width: 1em; border-radius: 3px";
       item.element.appendChild(item.line);
@@ -3031,7 +3041,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
   
   $App.alert=window.alert;
   $App.confirm=window.confirm;
-  $App.promt=window.prompt;
+  $App.prompt=window.prompt;
 
   $App.handleModalDialog=function(){
     $App.gamepad.resetAllButtons();
@@ -3045,7 +3055,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
   
   $App.addFunction(function prompt(text){
     $App.handleModalDialog();
-    return $App.prompt(text);
+    return $App.prompt.call(window,text);
   },'String','Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurück.',[{name: 'text', type: 'String',info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
   
   $App.addFunction(function promptNumber(text){
@@ -3880,6 +3890,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
           }else{
             return v;
           }
+        },
+        set: function(v){
+          var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
+          var v=valueProp.set.call(b,v);
         }
       });
       b.placeholder=placeholdertext;
@@ -3916,11 +3930,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
             array=array.values;
           } 
           while(this.table.firstChild){
-            this.table.removeChild(this.firstChild);
+            this.table.removeChild(this.table.firstChild);
           }
           b._rows=[];
-          if(array.length===0) return;
+          if(!array || array.length===0) return;
           let obj=array[0];
+          if($App.language==="java" && "data" in obj){
+            obj=obj.data;
+          }
           let captions=document.createElement("tr");
           let th=document.createElement("th");
           th.textContent="INDEX";
@@ -3928,6 +3945,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
           this.table.appendChild(captions);
           for(let i=0;i<array.length;i++){
             let obj=array[i];
+            if($App.language==="java" && "data" in obj){
+              obj=obj.data;
+            }
             let tr=document.createElement("tr");
             b._rows.push(tr);
             tr.index=i;
