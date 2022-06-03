@@ -236,6 +236,13 @@ window.appJScode=function(){
         alignContent: $App.Canvas.$getAlignment("center")
       };
       el.updatePosition=function(cx,cy,width,height,align){
+        if(cx===undefined){
+          cx=this.appJSData.cx;
+          cy=this.appJSData.cy;
+          width=this.appJSData.width;
+          height=this.appJSData.height;
+          align=this.appJSData.align;
+        }
         $App.canvas.updateElementPosition(this,cx,cy,width,height,align);
       };
       el.updateAlignContent=function(v){
@@ -1012,6 +1019,12 @@ window.appJScode=function(){
       },
       redraw: function(){
         this.reset();
+        for(var i=0;i<this.container.children.length;i++){
+          var c=this.container.children[i];
+          if(c.updatePosition){
+            c.updatePosition();
+          }
+        }
         for(var i=0;i<this.commands.length;i++){
           var c=this.commands[i];
           var f=this[c.cmd];
@@ -2524,19 +2537,62 @@ window.appJScode=function(){
     /**Console */
     $App.Console=function(){
       this.element=document.createElement("div");
-      this.element.style="width: 100%; height: 100%; background-color: #121212; color: white";
+      this.element.style="width: 100%; height: 100%; background-color: #222222; color: white";
       this.element.className="console";
       this.items={};
       this.localItems={};
       this.watchedVariables=[];
       this.visible=false;
       this.variablesDiv=document.createElement("div");
-      this.variablesDiv.style="height: 70%; overflow: auto";
+      this.variablesDiv.style="height: calc(70% - 0.4cm); overflow: auto";
       this.element.appendChild(this.variablesDiv);
       this.outputDiv=document.createElement("div");
-      this.outputDiv.style="height: 30%; overflow: auto";
+      this.outputDiv.style="height: calc(30% - 0.4cm); overflow: auto";
       this.element.appendChild(this.outputDiv);
+      this.input=document.createElement("input");
+      this.input.style="width: 100%; height: 0.8cm; background-color: #222222; outline: none;border: none; color: white";
+      this.input.currentPosition=-1;
+      this.input.placeholder="gib einen Befehl ein..."
+      this.input.onchange=()=>{
+        var v=this.input.value;
+        if(v.trim().length===0) return;
+        if(!(this.history.length>0 && this.history[this.history.length-1]===v)){
+          this.history.push(v);
+        }
+        var w;
+        eval("w="+v);
+        console.log(">",v);
+        if(w!==undefined){
+          console.log("<",w);
+        }
+        this.input.value="";
+        this.input.currentPosition=-1;
+      };
+      this.input.onkeydown=(ev)=>{
+        if(ev.keyCode===40 || ev.keyCode===38 || ev.keyCode===13){
+          ev.preventDefault();
+          if(ev.keyCode===13){
+            this.input.onchange();
+          }else if(ev.keyCode===38){
+            
+            if(this.input.currentPosition<this.history.length-1){
+              this.input.currentPosition++;
+            }
+          }else if(ev.keyCode===40){
+            if(this.input.currentPosition>=0){
+              this.input.currentPosition--;
+            }
+          }
+          if(this.input.currentPosition>=0){
+            this.input.value=this.history[this.history.length-this.input.currentPosition-1];
+          }else{
+            this.input.value="";
+          }
+        }
+      };
+      this.element.appendChild(this.input);
       this.localVariables=null;
+      this.history=[];
     };
     
     $App.Console.prototype={
@@ -2557,8 +2613,8 @@ window.appJScode=function(){
       clear: function(){
         this.element.removeChild(this.outputDiv);
         this.outputDiv=document.createElement("div");
-        this.outputDiv.style="height: 50%; overflow: auto";
-        this.element.appendChild(this.outputDiv);
+        this.outputDiv.style="height: calc(30% - 0.4cm); overflow: auto";
+        this.element.insertBefore(this.outputDiv,this.input);
       },
       update: function(){
         if($App.language==="js"){
@@ -2591,6 +2647,7 @@ window.appJScode=function(){
         item.element.appendChild(item.line);
         item.line.appendChild(item.button);
         var el=document.createElement("span");
+        el.style.whiteSpace="pre";
         el.textContent=name+": ";
         item.line.appendChild(el);
         item.line.appendChild(item.value);
@@ -2611,7 +2668,7 @@ window.appJScode=function(){
               if(typeof obj==="function"){
                 continue;
               }
-              if(a in this.subItems){
+              if(this.subItems.length>0 && (a in this.subItems)){
                 item=this.subItems[a];
               }else{
                 item=$App.console.createConsoleItem(a)
