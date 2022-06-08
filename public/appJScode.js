@@ -13,7 +13,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 23,
+      version: 24,
       language: window.language? window.language:'js',
       setupData: null,
       debug: {
@@ -2636,7 +2636,8 @@ window.appJScode=function(){
           button: document.createElement("span"),
           line: document.createElement("div"),
           expandable: false,
-          subItems: [],
+          subItems: {},
+          hasSubItems: false,
           sublist: document.createElement("div"),
           object: undefined
         };
@@ -2662,13 +2663,14 @@ window.appJScode=function(){
             this.sublist.style.display="none";
           }else{
             var newItems={};
+            var hasNewItems=false;
             for(var a in this.object){
               var item;
               var obj=this.object[a];
               if(typeof obj==="function"){
                 continue;
               }
-              if(this.subItems.length>0 && (a in this.subItems)){
+              if(this.hasSubItems && (a in this.subItems)){
                 item=this.subItems[a];
               }else{
                 item=$App.console.createConsoleItem(a)
@@ -2676,6 +2678,7 @@ window.appJScode=function(){
               }
               item.update(obj);
               newItems[a]=item;
+              hasNewItems=true;
             }
             this.sublist.style.display="";
             for(var a in this.subItems){
@@ -2684,6 +2687,7 @@ window.appJScode=function(){
               }
             }
             this.subItems=newItems;
+            this.hasSubItems=hasNewItems;
           }
         };
         item.update=function(obj){
@@ -4679,5 +4683,6 @@ window.appJScode=function(){
     }else{
       $main=null;
     }
+  
   
 }
