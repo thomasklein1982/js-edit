@@ -13,7 +13,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 24,
+      version: 25,
       language: window.language? window.language:'js',
       setupData: null,
       debug: {
@@ -2442,7 +2442,7 @@ window.appJScode=function(){
       },
       checkBounds: function(index){
         if(index>=this.length || index<0){
-          var m="Index "+index+" liegt außerhalb der Array-Grenzen von 0 bis "+(this.length-1);
+          var m="Index "+index+" liegt auÃŸerhalb der Array-Grenzen von 0 bis "+(this.length-1);
           console.error(m);
           throw m;
         }
@@ -2830,14 +2830,14 @@ window.appJScode=function(){
       this.element.style="overflow-x: hidden; overflow-y: auto;tab-size: 2; padding: 0.5em;background-color: white;position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 100";
       this.element.innerHTML="<h1>Willkommen bei AppJS</h1>"
       +"\n<p>Version "+$App.version+"</p>"
-      +"\n<p>Mit AppJS kannst du deine eigenen Apps in der Sprache JavaScript programmieren. AppJS stellt dir einige zusätzliche Befehle zur Verfügung, die dir das Leben etwas einfacher machen.</p>"
+      +"\n<p>Mit AppJS kannst du deine eigenen Apps in der Sprache JavaScript programmieren. AppJS stellt dir einige zusÃ¤tzliche Befehle zur VerfÃ¼gung, die dir das Leben etwas einfacher machen.</p>"
       +"\n<p><a href=\"https://thomaskl.uber.space/Webapps/AppJS/help.html\" target=\"_blank\">Link zu dieser Hilfe</a></p>"
       +"\n<h2>Grundaufbau einer App</h2>"
-      +"\n<details><summary>Eine App mit AppJS sollte folgendermaßen aussehen:</summary>"
+      +"\n<details><summary>Eine App mit AppJS sollte folgendermaÃŸen aussehen:</summary>"
       +"\n<p><code><pre>&lt;script src=\"https://thomaskl.uber.space/Webapps/AppJS/app.js\"&gt;&lt;/script&gt;"
     +"\n&lt;script&gt;"
     +"\n"
-    +"\nsetupApp(\"Name meiner App\", \"😀\", 100, 100, \"blue\");"
+    +"\nsetupApp(\"Name meiner App\", \"ðŸ˜€\", 100, 100, \"blue\");"
     +"\n"
     +"\nfunction onStart(){"
     +"\n  drawCircle(50,50,10);"
@@ -2917,7 +2917,7 @@ window.appJScode=function(){
         let el;
     
         el=document.createElement('div');
-        el.innerHTML='<h2 style="border-bottom: 1pt solid black">Ereignis-Routinen</h2><p>Eine Ereignis-Routine ist eine Funktion, die aufgerufen wird, wenn ein bestimmtes Ereignis eintritt. Füge deinem Programm diese Funktionen hinzu, um auf verschiedenste Ereignisse (Programmstart, Druck auf einen Button des Gamepad, Mausklick usw.) zu reagieren.</p>';
+        el.innerHTML='<h2 style="border-bottom: 1pt solid black">Ereignis-Routinen</h2><p>Eine Ereignis-Routine ist eine Funktion, die aufgerufen wird, wenn ein bestimmtes Ereignis eintritt. FÃ¼ge deinem Programm diese Funktionen hinzu, um auf verschiedenste Ereignisse (Programmstart, Druck auf einen Button des Gamepad, Mausklick usw.) zu reagieren.</p>';
         this.element.appendChild(el);
         for(let i=0;i<this.eventHandlers.length;i++){
           let e=this.eventHandlers[i];
@@ -3057,32 +3057,32 @@ window.appJScode=function(){
     
     /**API */
     
-    $App.addEventHandler("onStart",[],'Wird einmalig ausgeführt, wenn das Programm startet.','');
-    $App.addEventHandler("onResize",[],'Wird ausgeführt, wenn sich die Abmessungen des Bildschirms verändern, z. B. wenn das Fenster kleiner oder größer gemacht wird.','');
+    $App.addEventHandler("onStart",[],'Wird einmalig ausgefÃ¼hrt, wenn das Programm startet.','');
+    $App.addEventHandler("onResize",[],'Wird ausgefÃ¼hrt, wenn sich die Abmessungen des Bildschirms verÃ¤ndern, z. B. wenn das Fenster kleiner oder grÃ¶ÃŸer gemacht wird.','');
     $App.addEventHandler("onTileDraw",[
       {name: 'x', type: 'double', info: 'x-Koordinate des Mittelpunkts des Feldes.'},
       {name: 'y', type: 'double', info: 'y-Koordinate des Mittelpunkts des Feldes.'},
       {name: 'type', type: 'String', info: 'Typ des Feldes (das Zeichen).'},
       {name: 'info', type: 'String', info: 'Information des Feldes.'},
-    ],'Wird für jedes Feld der Spielwelt ausgeführt, wenn diese gezeichnet wird.','');
-    $App.addEventHandler("onNextFrame",[],'Wird ca. 60 mal pro Sekunde ausgeführt.','');
-    $App.addEventHandler("onKeyDown",[{name: 'keycode', type: 'int', info: 'Der Code der gedrückten Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur gedrückt wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
-    $App.addEventHandler("onKeyUp",[{name: 'keycode', type: 'int', info: 'Der Code der losgelassenen Taste, z. B. 65 für "A" oder 32 für die Leertaste.'}],'Wird ausgeführt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei Geräten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
-    $App.addEventHandler("onMouseDown",[],'Wird ausgeführt, wenn der Benutzer eine Maustaste drückt oder mit dem Finger den Touchscreen berührt.','');
-    $App.addEventHandler("onMouseMove",[],'Wird ausgeführt, wenn der Benutzer die Maus bewegt oder mit dem Finger über den Touchscreen streicht.','');
-    $App.addEventHandler("onMouseUp",[],'Wird ausgeführt, wenn der Benutzer die Maustaste loslässt oder die Berührung des Touchscreens mit dem Finger beendet.','');
-    $App.addEventHandler("onGamepadDown",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der gedrückt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer einen Teil des Gamepads berührt oder die zugeordnete Taste auf der Tastatur drückt.','');
-    $App.addEventHandler("onGamepadUp",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgeführt, wenn der Benutzer die Berührung des Gamepads beendet oder aufhört, die zugeordnete Taste auf der Tastatur zu drücken.','');
-    $App.addEventHandler("onTimeout",[{name: 'name',type: 'String', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgeführt, wenn ein Timer abläuft. Du kannst mit time.start einen Timer starten.','');
-    $App.addEventHandler("onAction",[{name: 'trigger', type: 'JComponent', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgeführt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
+    ],'Wird fÃ¼r jedes Feld der Spielwelt ausgefÃ¼hrt, wenn diese gezeichnet wird.','');
+    $App.addEventHandler("onNextFrame",[],'Wird ca. 60 mal pro Sekunde ausgefÃ¼hrt.','');
+    $App.addEventHandler("onKeyDown",[{name: 'keycode', type: 'int', info: 'Der Code der gedrÃ¼ckten Taste, z. B. 65 fÃ¼r "A" oder 32 fÃ¼r die Leertaste.'}],'Wird ausgefÃ¼hrt, wenn eine Taste auf der Tastatur gedrÃ¼ckt wird. ACHTUNG: Funktioniert nicht bei GerÃ¤ten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
+    $App.addEventHandler("onKeyUp",[{name: 'keycode', type: 'int', info: 'Der Code der losgelassenen Taste, z. B. 65 fÃ¼r "A" oder 32 fÃ¼r die Leertaste.'}],'Wird ausgefÃ¼hrt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei GerÃ¤ten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
+    $App.addEventHandler("onMouseDown",[],'Wird ausgefÃ¼hrt, wenn der Benutzer eine Maustaste drÃ¼ckt oder mit dem Finger den Touchscreen berÃ¼hrt.','');
+    $App.addEventHandler("onMouseMove",[],'Wird ausgefÃ¼hrt, wenn der Benutzer die Maus bewegt oder mit dem Finger Ã¼ber den Touchscreen streicht.','');
+    $App.addEventHandler("onMouseUp",[],'Wird ausgefÃ¼hrt, wenn der Benutzer die Maustaste loslÃ¤sst oder die BerÃ¼hrung des Touchscreens mit dem Finger beendet.','');
+    $App.addEventHandler("onGamepadDown",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der gedrÃ¼ckt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgefÃ¼hrt, wenn der Benutzer einen Teil des Gamepads berÃ¼hrt oder die zugeordnete Taste auf der Tastatur drÃ¼ckt.','');
+    $App.addEventHandler("onGamepadUp",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgefÃ¼hrt, wenn der Benutzer die BerÃ¼hrung des Gamepads beendet oder aufhÃ¶rt, die zugeordnete Taste auf der Tastatur zu drÃ¼cken.','');
+    $App.addEventHandler("onTimeout",[{name: 'name',type: 'String', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgefÃ¼hrt, wenn ein Timer ablÃ¤uft. Du kannst mit time.start einen Timer starten.','');
+    $App.addEventHandler("onAction",[{name: 'trigger', type: 'JComponent', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgefÃ¼hrt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
     
     $App.addFunction(function setupApp(title,favicon,width,height,backgroundColor){
       $App.setupApp(title,favicon,width,height,backgroundColor);
     },
     null,
-    "Legt die Grundeigenschaften der App fest: Den Titel, das Icon, die Breite und die Höhe sowie die Hintergrundfarbe.",
-    [{name: 'title', type: 'String', info: 'Der Name der App, der im Browser-Tab angezeigt wird.'}, {name: 'favicon', type: 'String', info: 'Ein beliebiges Unicode-Symbol, das als Icon für die App verwendet wird. Du findest viele Unicode-Symbole, wenn du direkt nach z. B. "unicode drache" googelst oder unter <a href="https://www.compart.com/de/unicode/" target="_blank">compart.com/de/unicode</a>.'}, {name: 'width', type: 'int', info: 'Die Breite der App.'}, {name: 'height', type: 'int', info: 'Die Höhe der App.'}, {name: 'backgroundColor', type: 'String', info: 'Die Hintergrundfarbe der App.'}],
-    'Verwende diesen Befehl zu Beginn der <code>onStart</code>-Funktion.<code><pre>onStart(){\n\tsetupApp("Meine App","🚀",100,100,"black");\n\t//weitere Befehle\n}</pre></code><p></p>',
+    "Legt die Grundeigenschaften der App fest: Den Titel, das Icon, die Breite und die HÃ¶he sowie die Hintergrundfarbe.",
+    [{name: 'title', type: 'String', info: 'Der Name der App, der im Browser-Tab angezeigt wird.'}, {name: 'favicon', type: 'String', info: 'Ein beliebiges Unicode-Symbol, das als Icon fÃ¼r die App verwendet wird. Du findest viele Unicode-Symbole, wenn du direkt nach z. B. "unicode drache" googelst oder unter <a href="https://www.compart.com/de/unicode/" target="_blank">compart.com/de/unicode</a>.'}, {name: 'width', type: 'int', info: 'Die Breite der App.'}, {name: 'height', type: 'int', info: 'Die HÃ¶he der App.'}, {name: 'backgroundColor', type: 'String', info: 'Die Hintergrundfarbe der App.'}],
+    'Verwende diesen Befehl zu Beginn der <code>onStart</code>-Funktion.<code><pre>onStart(){\n\tsetupApp("Meine App","ðŸš€",100,100,"black");\n\t//weitere Befehle\n}</pre></code><p></p>',
     true);
     
     $App.addFunction(function distance(x1,y1,x2,y2){
@@ -3091,24 +3091,24 @@ window.appJScode=function(){
     
     $App.addFunction(function clear(){
       $App.canvas.clear();
-    },null,'Löscht den Inhalt der Zeichenfläche.',[],'Verwende diesen Befehl zu Beginn der Funktion <a href="#help-onNextFrame"><code>onNextFrame</code></a>, damit du danach alles neu zeichnen kannst.');
+    },null,'LÃ¶scht den Inhalt der ZeichenflÃ¤che.',[],'Verwende diesen Befehl zu Beginn der Funktion <a href="#help-onNextFrame"><code>onNextFrame</code></a>, damit du danach alles neu zeichnen kannst.');
   
     $App.addFunction(function fillOutside(){
       $App.canvas.fillOutside();
-    },null,'Füllt alle Bereiche, die außerhalb des Koordinatensystems liegen, mit der aktuellen Farbe.',[],'');
+    },null,'FÃ¼llt alle Bereiche, die auÃŸerhalb des Koordinatensystems liegen, mit der aktuellen Farbe.',[],'');
   
     $App.addFunction(function getMinX(){
       return $App.canvas.getCanvasMinX();
     },'double','Liefert den kleinsten x-Wert, der aktuell noch sichtbar ist.',[],'');
     $App.addFunction(function getMaxX(){
       return $App.canvas.getCanvasMaxX();
-    },'double','Liefert den größten x-Wert, der aktuell noch sichtbar ist.',[],'');
+    },'double','Liefert den grÃ¶ÃŸten x-Wert, der aktuell noch sichtbar ist.',[],'');
     $App.addFunction(function getMinY(){
       return $App.canvas.getCanvasMinY();
     },'double','Liefert den kleinsten y-Wert, der aktuell noch sichtbar ist.',[],'');
     $App.addFunction(function getMaxY(){
       return $App.canvas.getCanvasMaxY();
-    },'double','Liefert den größten y-Wert, der aktuell noch sichtbar ist.',[],'');
+    },'double','Liefert den grÃ¶ÃŸten y-Wert, der aktuell noch sichtbar ist.',[],'');
   
     $App.addFunction(async function sleep(millis){
       var p=new Promise((resolve,reject)=>{
@@ -3117,7 +3117,7 @@ window.appJScode=function(){
         },millis);
       });
       return await p;
-    },null,'Unterbricht den Programmablauf für eine gewisse Zeit.',[
+    },null,'Unterbricht den Programmablauf fÃ¼r eine gewisse Zeit.',[
       {name: "millis", type: 'int', info: 'Anzahl Millisekunden, die das Programm abwarten soll.'}
     ],'Dieser Befehl funktioniert nur zusammen mit async/await.');
     
@@ -3138,10 +3138,10 @@ window.appJScode=function(){
     $App.addFunction(function prompt(text){
       $App.handleModalDialog();
       return $App.prompt.call(window,text);
-    },'String','Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurück.',[{name: 'text', type: 'String',info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+    },'String','Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurÃ¼ck.',[{name: 'text', type: 'String',info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
     
     $App.addFunction(function promptNumber(text){
-      Application.handleModalDialog();
+      $App.handleModalDialog();
       let a;
       let zusatz="";
       do{
@@ -3149,16 +3149,16 @@ window.appJScode=function(){
         zusatz="\n\nBitte eine Zahl eingeben.";
       }while(isNaN(a));
       return a;
-    },'double','Zeigt eine Messagebox mit einer Nachricht und einem Eingabefeld. Liefert die eingegebene Zahl zurück.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+    },'double','Zeigt eine Messagebox mit einer Nachricht und einem Eingabefeld. Liefert die eingegebene Zahl zurÃ¼ck.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
     
     $App.addFunction(function confirm(text){
       $App.handleModalDialog();
-      return $App.confirm(text);
-    },'boolean','Zeigt eine Messagebox mit einer Nachricht. Der Benutzer muss zwischen OK und Abbrechen wählen. Die Auswahl wird als <code>true</code> oder <code>false</code> zurückgegeben.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+      return $App.confirm.call(window,text);
+    },'boolean','Zeigt eine Messagebox mit einer Nachricht. Der Benutzer muss zwischen OK und Abbrechen wÃ¤hlen. Die Auswahl wird als <code>true</code> oder <code>false</code> zurÃ¼ckgegeben.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
     
     $App.addFunction(function toast(text,position,duration){
       $App.toast.show(text,position,duration);
-    },null,'Zeigt eine Nachricht für einen gewissen Zeitraum an.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', type: 'String', info: 'Optional: Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wo der Text erscheinen soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', type: 'int', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
+    },null,'Zeigt eine Nachricht fÃ¼r einen gewissen Zeitraum an.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', type: 'String', info: 'Optional: Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wo der Text erscheinen soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', type: 'int', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
     
     $App.addFunction(function sound(asset){
       $App.audio.play(asset);
@@ -3172,26 +3172,26 @@ window.appJScode=function(){
     
     $App.addFunction(function drawCircle(cx,cy,r){
       return $App.canvas.paintCircle(cx,cy,r,false);
-    },'Path','Zeichnet einen Kreis und gibt diesen zurück',
+    },'Path','Zeichnet einen Kreis und gibt diesen zurÃ¼ck',
     [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
     '');
     
     $App.addFunction(function fillCircle(cx,cy,r){
       return $App.canvas.paintCircle(cx,cy,r,true);
-    },'Path','Zeichnet einen ausgefüllten Kreis und gibt diesen zurück.',
+    },'Path','Zeichnet einen ausgefÃ¼llten Kreis und gibt diesen zurÃ¼ck.',
     [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
     '');
     
     $App.addFunction(function drawRect(cx,cy,width,height){
       return $App.canvas.paintRect(cx,cy,width,height,false);
-    },'Path','Zeichnet ein Rechteck und gibt dieses zurück.',
-    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
+    },'Path','Zeichnet ein Rechteck und gibt dieses zurÃ¼ck.',
+    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
     '');
     
     $App.addFunction(function fillRect(cx,cy,width,height){
       return $App.canvas.paintRect(cx,cy,width,height,true);
-    },'Path','Zeichnet ein ausgefülltes Rechteck und gibt dieses zurück.',
-    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
+    },'Path','Zeichnet ein ausgefÃ¼lltes Rechteck und gibt dieses zurÃ¼ck.',
+    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
     '');
     
     $App.addFunction(function rotate(angle,cx,cy){
@@ -3226,25 +3226,25 @@ window.appJScode=function(){
   
     $App.addFunction(async function loadAsset(url, name){
       $App.registerAsset.call($App,url, name);
-    },null,'Lädt ein sog. "Asset" (ein Bild oder ein Sound) und speichert es unter dem angegebenen Namen im Objekt "assets". Muss vor onStart aufgerufen werden.',
+    },null,'LÃ¤dt ein sog. "Asset" (ein Bild oder ein Sound) und speichert es unter dem angegebenen Namen im Objekt "assets". Muss vor onStart aufgerufen werden.',
     [{name: 'url', type: 'String', info: 'URL der Datei'}, {name: 'name', type: 'String', info: 'Name, unter dem das Asset gespeichert wird.'}],
     '',"topLevel");
   
     $App.addFunction(async function loadScript(url){
       $App.registerScript.call($App,url);
-    },null,'Lädt ein JavaScript. Muss vor onStart aufgerufen werden.',
+    },null,'LÃ¤dt ein JavaScript. Muss vor onStart aufgerufen werden.',
     [{name: 'url', type: 'String', info: 'URL des Scripts'}],
     '',"topLevel");
   
     $App.addFunction(function drawImage(image,cx,cy,width,height,rotation,mirrored){
       $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored);
     },null,'Zeichnet ein Bild. Dieses musst du vorher mittels loadAsset laden.',
-    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
     '');
     $App.addFunction(function drawImagePart(image,cx,cy,width,height,scx,scy,swidth,sheight,rotation,mirrored){
       $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored,{cx: scx, cy: scy, w: swidth, h: sheight});
     },null,'Zeichnet einen rechteckigen Ausschnitt eines Bildes. Dieses musst du vorher mittels "loadAsset" laden.',
-    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Höhe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'HÃ¶he des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
     '');
     
     $App.addFunction(function setCoordinatesystem(width,height,originX,originY){
@@ -3252,7 +3252,7 @@ window.appJScode=function(){
         $App.canvas.setOrigin(originX,originY);
       }
       $App.canvas.setSize(width,height,$App.body.width,$App.body.height);
-    },null,'Legt das Koordiantensystem der App fest.',[{name: 'width', type: 'double', info: 'Breite des Koordinatensystems'}, {name: 'height', type: 'double', info: 'Höhe des Koordinatensystems'}, {name: 'originX', type: 'double', info: 'x-Koordinate des Koordinatenursprungs', optional: true}, {name: 'originY', type: 'double', info: 'y-Koordinate des Koordinatenursprungs'}],'');
+    },null,'Legt das Koordiantensystem der App fest.',[{name: 'width', type: 'double', info: 'Breite des Koordinatensystems'}, {name: 'height', type: 'double', info: 'HÃ¶he des Koordinatensystems'}, {name: 'originX', type: 'double', info: 'x-Koordinate des Koordinatenursprungs', optional: true}, {name: 'originY', type: 'double', info: 'y-Koordinate des Koordinatenursprungs'}],'');
   
     $App.addFunction(function getWidth(){
       return $App.body.width;
@@ -3260,19 +3260,19 @@ window.appJScode=function(){
   
     $App.addFunction(function getHeight(){
       return $App.body.height;
-    },'double','Liefert die aktuelle Höhe des Bildschirms in Pixeln.',[],'');
+    },'double','Liefert die aktuelle HÃ¶he des Bildschirms in Pixeln.',[],'');
   
     $App.addFunction(function setMirrored(m){
       $App.canvas.setMirrored(m);
-    },null,'Legt für alle nachfolgenden write-Befehle fest, ob der Text gespiegelt werden soll.',[{name: 'm', type: 'boolean', info: 'Wenn true, dann wird der Text aller nachfolgenden write-Befehle vertikal gespiegelt. Wenn false, wird der Text wieder normal geschrieben.'}],'');
+    },null,'Legt fÃ¼r alle nachfolgenden write-Befehle fest, ob der Text gespiegelt werden soll.',[{name: 'm', type: 'boolean', info: 'Wenn true, dann wird der Text aller nachfolgenden write-Befehle vertikal gespiegelt. Wenn false, wird der Text wieder normal geschrieben.'}],'');
   
     $App.addFunction(function setRotation(angle){
       $App.canvas.setRotation(angle);
-    },null,'Legt die Drehung für alle nachfolgenden write-Befehle fest.',[{name: 'angle', type: 'double', info: 'Der Winkel um den gedreht werden soll. 0 entspricht keiner Drehung. Es wird gegen den Uhrzeigersinn gedreht.'}],'');
+    },null,'Legt die Drehung fÃ¼r alle nachfolgenden write-Befehle fest.',[{name: 'angle', type: 'double', info: 'Der Winkel um den gedreht werden soll. 0 entspricht keiner Drehung. Es wird gegen den Uhrzeigersinn gedreht.'}],'');
   
     $App.addFunction(function setColor(color){
       $App.canvas.setColor(color);
-    },null,'Legt die Farbe für alle nachfolgenden Zeichnungen fest.',[{name: 'color', type: 'String', info: 'Farbe, die ab sofort zum Zeichnen und Füllen verwendet werden soll. Kann eine beliebige Bezeichnung für eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
+    },null,'Legt die Farbe fÃ¼r alle nachfolgenden Zeichnungen fest.',[{name: 'color', type: 'String', info: 'Farbe, die ab sofort zum Zeichnen und FÃ¼llen verwendet werden soll. Kann eine beliebige Bezeichnung fÃ¼r eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
     
     $App.addFunction(function setOpacity(value){
       $App.canvas.setOpacity(value);
@@ -3280,40 +3280,40 @@ window.appJScode=function(){
     
     $App.addFunction(function setFontsize(size){
       $App.canvas.setFontsize(size);
-    },null,'Legt die Schriftgröße für alle nachfolgenden write-Befehle fest.',[{name: 'size', type: 'double', info: 'Schriftgröße, die ab sofort zum Schreiben verwendet werden soll.'}],'');
+    },null,'Legt die SchriftgrÃ¶ÃŸe fÃ¼r alle nachfolgenden write-Befehle fest.',[{name: 'size', type: 'double', info: 'SchriftgrÃ¶ÃŸe, die ab sofort zum Schreiben verwendet werden soll.'}],'');
   
     $App.addFunction(function setFont(name){
       $App.canvas.setFont(name);
-    },null,'Legt die Schriftart für alle nachfolgenden write-Befehle fest.',[{name: 'name', type: 'String', info: 'Schriftart, z. B. Arial.'}],'');
+    },null,'Legt die Schriftart fÃ¼r alle nachfolgenden write-Befehle fest.',[{name: 'name', type: 'String', info: 'Schriftart, z. B. Arial.'}],'');
     
     $App.addFunction(function setLinewidth(size){
       $App.canvas.setLinewidth(size);
-    },null,'Legt die Breite der Linien für alle nachfolgenden Zeichnungen fest.',[{name: 'size', type: 'double', info: 'Die Dicke der Linien, die ab sofort verwendet werden soll.'}],'');
+    },null,'Legt die Breite der Linien fÃ¼r alle nachfolgenden Zeichnungen fest.',[{name: 'size', type: 'double', info: 'Die Dicke der Linien, die ab sofort verwendet werden soll.'}],'');
     
     $App.addFunction(function write(text,x,y,align){
       $App.canvas.write(text,x,y,align);
     },null,'Schreibt Text auf den Bildschirm.',
-    [{name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> für Zeilenumbrüche.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}],
+    [{name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> fÃ¼r ZeilenumbrÃ¼che.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}],
     '');
     
     /*$App.addFunction(async function read(placeholdertext,x,y,width,align){
       return await $App.canvas.read(placeholdertext,x,y,width,align,"text");
-    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die Höhe entspricht automatisch der aktuellen Schriftgröße.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');
+    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die HÃ¶he entspricht automatisch der aktuellen SchriftgrÃ¶ÃŸe.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');
     
     $App.addFunction(async function readNumber(placeholdertext,x,y,width,alignment){
       return await $App.canvas.read(placeholdertext,x,y,width,alignment,"number");
-    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die Höhe entspricht automatisch der aktuellen Schriftgröße.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');*/
+    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die HÃ¶he entspricht automatisch der aktuellen SchriftgrÃ¶ÃŸe.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');*/
     
     $App.addFunction(function random(min,max){
       return Math.floor(Math.random()*(max-min+1)+min);
-    },'int','Liefert eine ganze Zufallszahl zwischen <code>min</code> und <code>max</code> (jeweils einschließlich).',[{name: 'min', type: 'int', info: 'Mindestwert für die Zufallszahl.'}, {name: 'max', type: 'int', info: 'Maximalwert für die Zufallszahl.'}],'',"everywhere");
+    },'int','Liefert eine ganze Zufallszahl zwischen <code>min</code> und <code>max</code> (jeweils einschlieÃŸlich).',[{name: 'min', type: 'int', info: 'Mindestwert fÃ¼r die Zufallszahl.'}, {name: 'max', type: 'int', info: 'Maximalwert fÃ¼r die Zufallszahl.'}],'',"everywhere");
     
     $App.addFunction(function isKeyDown(key){
       if(typeof key==="string"){
         key=key.toLowerCase().codePointAt(0);
       }
       return $App.keyboard.down[key]===true;
-    },'boolean','Prüft, ob eine bestimmte Taste auf der Tastatur gedrückt wird.',[{name: 'key', type: 'String', info: 'Das Zeichen, von dem geprüft werden soll, ob die zugehörige Taste gedrückt wird; bspw. "W", " " oder "4".'}],'');
+    },'boolean','PrÃ¼ft, ob eine bestimmte Taste auf der Tastatur gedrÃ¼ckt wird.',[{name: 'key', type: 'String', info: 'Das Zeichen, von dem geprÃ¼ft werden soll, ob die zugehÃ¶rige Taste gedrÃ¼ckt wird; bspw. "W", " " oder "4".'}],'');
     
     $App.addFunction(function hideHelp(){
       $App.help.setButtonVisible(false);
@@ -3345,7 +3345,7 @@ window.appJScode=function(){
       }
       if(step>0){
         if(start>stop){
-          console.log(text+"Der Startwert darf nicht größer als der Endwert sein.");
+          console.log(text+"Der Startwert darf nicht grÃ¶ÃŸer als der Endwert sein.");
           return [];
         }
       }else if(step<0){
@@ -3404,22 +3404,22 @@ window.appJScode=function(){
         let y=this.y;
         return ((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r*r);
       }
-    },'Liefert dir Informationen über den Mauszeiger / den Finger (bei Touchscreens).',
+    },'Liefert dir Informationen Ã¼ber den Mauszeiger / den Finger (bei Touchscreens).',
     [
       {name: 'x', type: 'double', info: 'Die aktuelle x-Koordinate der Maus.'},
       {name: 'y', type: 'double', info: 'Die aktuelle y-Koordinate der Maus.'},
-      {name: 'down', type: 'boolean', info: 'Ist gerade die Maustaste gedrückt / berührt der Finger gerade den Bildschirm?'}, 
+      {name: 'down', type: 'boolean', info: 'Ist gerade die Maustaste gedrÃ¼ckt / berÃ¼hrt der Finger gerade den Bildschirm?'}, 
       {
         name: 'inRect', 
         returnType: 'boolean',
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'cx', type: 'double', info: 'Höhe des Rechtecks'}],
-        info: 'Prüft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und Höhe height befindet.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'cx', type: 'double', info: 'HÃ¶he des Rechtecks'}],
+        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und HÃ¶he height befindet.'
       }, 
       {
         name: 'inCircle',
         returnType: 'boolean',
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Kreises'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Kreises'}, {name: 'r', type: 'double', info: 'Radius des Kreises'}],
-        info: 'Prüft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'
+        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'
       }
     ]);
     
@@ -3495,7 +3495,7 @@ window.appJScode=function(){
               return;
             }
           }
-          console.log("Es gibt keinen Timer mit dem Namen '"+name+"', den du stoppen könntest.");
+          console.log("Es gibt keinen Timer mit dem Namen '"+name+"', den du stoppen kÃ¶nntest.");
         }else{
           /**Stoppe alle Timer */
           for(var i=0; i<$App.timer.length;i++){
@@ -3505,7 +3505,7 @@ window.appJScode=function(){
           $App.timer=[];
         }
       }
-    },'Liefert dir Informationen über die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',
+    },'Liefert dir Informationen Ã¼ber die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',
     [
       {name: 'now', info: 'Die aktuelle Zeit in Millisekunden seit dem 1.1.1970.', type: 'int'},
       {name: 'sec', info: 'Die Sekundenzahl der aktuellen Uhrzeit.', type: 'int'},
@@ -3516,8 +3516,8 @@ window.appJScode=function(){
       {
         name: 'start', 
         returnType: null, 
-        args: [{name: 'millis', type: 'int', info: 'Anzahl Millisekunden bis der Timer auslöst.'}, {name: 'name', type: 'String', info: "Name des Timers, mit dem onTimeout aufgerufen wird."}], 
-        info: 'Startet einen Timer, der millis Millisekunden lang läuft. Wenn er abläuft, löst er die Funktion <code>onTimeout</code> aus.'
+        args: [{name: 'millis', type: 'int', info: 'Anzahl Millisekunden bis der Timer auslÃ¶st.'}, {name: 'name', type: 'String', info: "Name des Timers, mit dem onTimeout aufgerufen wird."}], 
+        info: 'Startet einen Timer, der millis Millisekunden lang lÃ¤uft. Wenn er ablÃ¤uft, lÃ¶st er die Funktion <code>onTimeout</code> aus.'
       }, 
       {
         name: 'stop', 
@@ -3664,7 +3664,7 @@ window.appJScode=function(){
       {
         name: 'A',
         type: 'boolean',
-        info: 'Wird gerade die Taste "A" gedrückt?'
+        info: 'Wird gerade die Taste "A" gedrÃ¼ckt?'
       }, 
       {
         name: 'setA',
@@ -3676,7 +3676,7 @@ window.appJScode=function(){
       {
         name: 'B',
         type: 'boolean',
-        info: 'Wird gerade die Taste "B" gedrückt?'
+        info: 'Wird gerade die Taste "B" gedrÃ¼ckt?'
       },
       {
         name: 'setB',
@@ -3688,7 +3688,7 @@ window.appJScode=function(){
       {
         name: 'X',
         type: 'boolean',
-        info: 'Wird gerade die Taste "X" gedrückt?'
+        info: 'Wird gerade die Taste "X" gedrÃ¼ckt?'
       }, 
       {
         name: 'setX',
@@ -3700,7 +3700,7 @@ window.appJScode=function(){
       {
         name: 'Y',
         type: 'boolean',
-        info: 'Wird gerade die Taste "Y" gedrückt?'
+        info: 'Wird gerade die Taste "Y" gedrÃ¼ckt?'
       }, 
       {
         name: 'setY',
@@ -3712,7 +3712,7 @@ window.appJScode=function(){
       {
         name: 'E',
         type: 'boolean',
-        info: 'Wird gerade die Taste "E" gedrückt?'
+        info: 'Wird gerade die Taste "E" gedrÃ¼ckt?'
       }, 
       {
         name: 'setE',
@@ -3724,7 +3724,7 @@ window.appJScode=function(){
       {
         name: 'F',
         type: 'boolean',
-        info: 'Wird gerade die Taste "F" gedrückt?'
+        info: 'Wird gerade die Taste "F" gedrÃ¼ckt?'
       },
       {
         name: 'setF',
@@ -3814,7 +3814,7 @@ window.appJScode=function(){
       {
         name: 'close',
         returnType: 'Path', 
-        info: 'Zeichnet eine gerade Linie vom aktuellen Punkt zurück zum Startpunkt des Pfades.'
+        info: 'Zeichnet eine gerade Linie vom aktuellen Punkt zurÃ¼ck zum Startpunkt des Pfades.'
       }, 
       {
         name: 'draw',
@@ -3824,19 +3824,19 @@ window.appJScode=function(){
       {
         name: 'fill', 
         returnType: 'Path',
-        info: 'Füllt den Pfad.'
+        info: 'FÃ¼llt den Pfad.'
       }, 
       {
         name: 'contains',
         returnType: 'boolean',
         args: [{name: 'x', type: 'double', info: 'x-Koordinate'}, {name: 'y', type: 'double', info: 'y-Koordinate'}], 
-        info: 'Prüft, ob sich der Punkt (<code>x</code>|<code>y</code>) innerhalb des aktuellen Pfades befindet.'
+        info: 'PrÃ¼ft, ob sich der Punkt (<code>x</code>|<code>y</code>) innerhalb des aktuellen Pfades befindet.'
       }, 
       {
         name: 'rect', 
         returnType: 'Path',
-        args: [{name: 'w', type: 'double', info: 'Breite'}, {name: 'h', type: 'double', info: 'Höhe'}],
-        info: 'Zeichnet ein Rechteck mit dem aktuellen Punkt als Mittelpunkt und Breite w und Höhe h.'
+        args: [{name: 'w', type: 'double', info: 'Breite'}, {name: 'h', type: 'double', info: 'HÃ¶he'}],
+        info: 'Zeichnet ein Rechteck mit dem aktuellen Punkt als Mittelpunkt und Breite w und HÃ¶he h.'
       }, 
       {
         name: 'circle(r,[start,stop])',
@@ -3861,7 +3861,7 @@ window.appJScode=function(){
           for(var i=0;i<teile.length;i++){
             var t=teile[i].trim();
             if(/^\d+$/.test(t)){
-              teile[i]="repeat("+t+",1fr)";
+              teile[i]="repeat("+t+",minmax(0,1fr))";
             }
           }
           if(teile.length===2){
@@ -3870,6 +3870,7 @@ window.appJScode=function(){
           }else{
             b.style.gridTemplateColumns=teile[0];
           }
+          b.style.gridAutoRows="minmax(0,1fr)";
           b.style.display="grid"; 
           b.style.alignItems="stretch";
           b.style.justifyContent="stretch";
@@ -4121,24 +4122,24 @@ window.appJScode=function(){
         b.value=text;
         return b;
       }
-    },'Erlaubt das Hinzufügen und Manipulieren der grafischen Benutzeroberfläche (UI).',[
+    },'Erlaubt das HinzufÃ¼gen und Manipulieren der grafischen BenutzeroberflÃ¤che (UI).',[
       {
         name: 'button', 
         returnType: 'JButton',
-        args: [{name: 'text', type: 'String', info: 'Aufschrift des Buttons'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}, {name: 'height', type: 'double', info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}],
-        info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert den Button zurück.'
+        args: [{name: 'text', type: 'String', info: 'Aufschrift des Buttons'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}, {name: 'height', type: 'double', info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}],
+        info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert den Button zurÃ¼ck.'
       },
       {
         name: 'panel', 
         returnType: 'JPanel',
-        args: [{name: 'template', type: 'String', info: 'Definition der Zeilen und Spalten des Panels. "" oder null bedeutet, dass es keine Spalten und Zeilen gibt. "3" bedeutet "3 gleich breite Spalten", "2fr 1fr" bedeutet "2 Spalten, die erste doppelt so breit wie die zweite". Hier sind alle Werte möglich, die auch für die CSS-Eigenschaften "grid-template" oder "grid-template-columns" verwendet werden können.'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}, {name: 'height', type: 'double', info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}],
-        info: 'Erzeugt ein neues Panel, ein Container für andere Elemente.'
+        args: [{name: 'template', type: 'String', info: 'Definition der Zeilen und Spalten des Panels. "" oder null bedeutet, dass es keine Spalten und Zeilen gibt. "3" bedeutet "3 gleich breite Spalten", "2fr 1fr" bedeutet "2 Spalten, die erste doppelt so breit wie die zweite". Hier sind alle Werte mÃ¶glich, die auch fÃ¼r die CSS-Eigenschaften "grid-template" oder "grid-template-columns" verwendet werden kÃ¶nnen.'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}, {name: 'height', type: 'double', info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}],
+        info: 'Erzeugt ein neues Panel, ein Container fÃ¼r andere Elemente.'
       },
       {
         name: 'image', 
         returnType: 'JImage',
-        args: [{name: 'url', type: 'String', info: 'URL zum Bild'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}, {name: 'height', type: 'double', info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'}],
-        info: 'Erzeugt ein neues Bild von der URL <code>url</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Bild zurück.'
+        args: [{name: 'url', type: 'String', info: 'URL zum Bild'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}, {name: 'height', type: 'double', info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}],
+        info: 'Erzeugt ein neues Bild von der URL <code>url</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert das Bild zurÃ¼ck.'
       },
       {
         name: 'input',
@@ -4168,15 +4169,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }
         ],
-        info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst außerdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Höhe <code>height</code> festlegen. Liefert das Eingabefeld zurück.'
+        info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst auÃŸerdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die HÃ¶he <code>height</code> festlegen. Liefert das Eingabefeld zurÃ¼ck.'
       },
       {
         name: 'datatable',
@@ -4204,12 +4205,12 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }
         ],
         info: 'Erzeugt eine neue Datatable, mit der du die Elemente eines Arrays anzeigen kannst.'
@@ -4237,15 +4238,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }
         ],
-        info: 'Erzeugt ein neues Eingabefeld, in das der User Text eingeben kann. Du kannst den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Höhe <code>height</code> festlegen. Liefert das Element zurück.'
+        info: 'Erzeugt ein neues Eingabefeld, in das der User Text eingeben kann. Du kannst den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die HÃ¶he <code>height</code> festlegen. Liefert das Element zurÃ¼ck.'
       },
       {
         name: 'textarea', 
@@ -4269,15 +4270,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }
         ],
-        info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert die TextArea zurück.'
+        info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert die TextArea zurÃ¼ck.'
       },
       {
         name: 'select',
@@ -4301,15 +4302,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }
         ],
-        info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Select-Element zurück.'
+        info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert das Select-Element zurÃ¼ck.'
       },
       {
         name: 'label',
@@ -4333,15 +4334,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'Höhe. Bei einem negativen Wert wird das Element in seiner natürlichen Größe gezeichnet.'
+            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
           }
         ], 
-        info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Höhe <code>height</code>. Liefert das Label zurück.'
+        info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert das Label zurÃ¼ck.'
       }
     ],'');
     
@@ -4462,12 +4463,12 @@ window.appJScode=function(){
           {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'}
         ],
-        info: 'Gibt den Typ (das Zeichen) an der angegebenen Position zurück. Falls es an der Position kein eindeutiges Zeichen gibt, wird null zurückgegeben.'
+        info: 'Gibt den Typ (das Zeichen) an der angegebenen Position zurÃ¼ck. Falls es an der Position kein eindeutiges Zeichen gibt, wird null zurÃ¼ckgegeben.'
       },
       {
         name: 'delete',
         returnType: null, 
-        info: 'Löscht die aktuelle Spielwelt, damit z. B. eine neue erschaffen werden kann.'
+        info: 'LÃ¶scht die aktuelle Spielwelt, damit z. B. eine neue erschaffen werden kann.'
       }, 
       {
         name: 'setType', 
@@ -4477,7 +4478,7 @@ window.appJScode=function(){
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'},
           {name: 'newType', type: 'String', info: 'Neuer Typ'}
         ],
-        info: 'Ändert den Typ (das Zeichen) an der angegebenen Position.'
+        info: 'Ã„ndert den Typ (das Zeichen) an der angegebenen Position.'
       },
       {
         name: 'getInfo',
@@ -4486,7 +4487,7 @@ window.appJScode=function(){
           {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'}
         ],
-        info: 'Gibt die Information an der angegebenen Position zurück.'
+        info: 'Gibt die Information an der angegebenen Position zurÃ¼ck.'
       }, 
       {
         name: 'setInfo', 
@@ -4496,7 +4497,7 @@ window.appJScode=function(){
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'},
           {name: 'newInfo', type: 'String', info: 'Neuer Typ'}
         ],
-        info: 'Ändert die Information an der angegebenen Position.'
+        info: 'Ã„ndert die Information an der angegebenen Position.'
       },
       {
         name: 'create',
@@ -4505,13 +4506,13 @@ window.appJScode=function(){
           {name: 'width', type: 'int', info: 'Anzahl Felder nebeneinander'},
           {name: 'height', type: 'int', info: 'Anzahl Felder untereinander'}
         ],
-        info: 'Erschafft eine neue Spielwelt der angegebenen Größe. Alle Typen werden auf " " gesetzt.'
+        info: 'Erschafft eine neue Spielwelt der angegebenen GrÃ¶ÃŸe. Alle Typen werden auf " " gesetzt.'
       },
       {
         name: 'addRow',
         returnType: null,
         args: [{name: 'description', type: 'String', info: 'Dieser Text definiert die Felder der neuen Zeile.'}],
-        info: 'Fügt der Spielwelt eine neue Zeile hinzu.'
+        info: 'FÃ¼gt der Spielwelt eine neue Zeile hinzu.'
       },
       {
         name: 'replaceTypes',
@@ -4520,7 +4521,7 @@ window.appJScode=function(){
           {name: 'oldType', type: 'String', info: 'Felder mit diesem Typ erhalten den neuen Typ.'},
           {name: 'newType', type: 'String', info: 'Der neue Typ, den die Felder erhalten.'}
         ],
-        info: 'Ändert den Typ von allen Felder eines bestimmten Typs.'
+        info: 'Ã„ndert den Typ von allen Felder eines bestimmten Typs.'
       },
       {
         name: 'draw',
@@ -4550,7 +4551,7 @@ window.appJScode=function(){
         name: 'zoom',
         returnType: null, 
         args: [
-          {name: 'factor', type: 'double', info: 'Die Stärke des Zoomens: 1 für Einpassung der Welt in den Bildschirm.'}
+          {name: 'factor', type: 'double', info: 'Die StÃ¤rke des Zoomens: 1 fÃ¼r Einpassung der Welt in den Bildschirm.'}
         ],
         info: 'Legt fest, wie weit in die Welt hinein- bzw. herausgezoomt wird.'
       },
@@ -4558,44 +4559,44 @@ window.appJScode=function(){
         name: 'write',
         returnType: null, 
         args: [
-          {name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> für Zeilenumbrüche.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 Wörtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Mögliche Wörter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}
+          {name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> fÃ¼r ZeilenumbrÃ¼che.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}
         ],
         info: 'Schreibt Text in die Spielwelt.'
       },
       {
         name: 'drawRect',
         returnType: 'Path', 
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
-        info: 'Zeichnet ein Rechteck in die Spielwelt und gibt dieses zurück.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
+        info: 'Zeichnet ein Rechteck in die Spielwelt und gibt dieses zurÃ¼ck.'
       },
       {
         name: 'fillRect',
         returnType: 'Path', 
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
-        info: 'Zeichnet ein ausgefülltes Rechteck in die Spielwelt und gibt dieses zurück.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
+        info: 'Zeichnet ein ausgefÃ¼lltes Rechteck in die Spielwelt und gibt dieses zurÃ¼ck.'
       },
       {
         name: 'drawCircle',
         returnType: 'Path', 
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
-        info: 'Zeichnet einen Kreis in die Spielwelt und gibt dieses zurück.'
+        info: 'Zeichnet einen Kreis in die Spielwelt und gibt dieses zurÃ¼ck.'
       },
       {
         name: 'fillCircle',
         returnType: 'Path', 
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
-        info: 'Zeichnet einen ausgefüllten Kreis in die Spielwelt und gibt dieses zurück.'
+        info: 'Zeichnet einen ausgefÃ¼llten Kreis in die Spielwelt und gibt dieses zurÃ¼ck.'
       },
       {
         name: 'drawImage',
         returnType: null, 
-        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
         info: 'Zeichnet ein Bild in die Spielwelt. Dieses musst du vorher mittels "loadAsset" laden.'
       },
       {
         name: 'drawImagePart',
         returnType: null, 
-        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Höhe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'HÃ¶he des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
         info: 'Zeichnet einen rechteckigen Ausschnitt eines Bild in die Spielwelt. Dieses musst du vorher mittels "loadAsset" laden.'
       },
       {
@@ -4611,19 +4612,19 @@ window.appJScode=function(){
       {
         name: 'mouseDown',
         type: 'boolean',
-        info: 'Ist die Maus aktuell gedrückt oder nicht (entspricht mouse.down).'
+        info: 'Ist die Maus aktuell gedrÃ¼ckt oder nicht (entspricht mouse.down).'
       },
       {
         name: 'mouseInRect',
         returnType: 'boolean', 
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Höhe.'}],
-        info: 'Prüft, ob sich die Maus aktuell innerhalb eines Rechtecks in der Spielwelt befindet.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
+        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb eines Rechtecks in der Spielwelt befindet.'
       },
       {
         name: 'mouseInCircle',
         returnType: 'boolean', 
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
-        info: 'Prüft, ob sich die Maus aktuell innerhalb eines Kreises in der Spielwelt befindet.'
+        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb eines Kreises in der Spielwelt befindet.'
       }
     ],'');
   
@@ -4683,6 +4684,4 @@ window.appJScode=function(){
     }else{
       $main=null;
     }
-  
-  
 }
