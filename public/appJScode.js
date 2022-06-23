@@ -2078,8 +2078,8 @@ window.appJScode=function(){
       };
       this.physicalButtons={
         buttons: {
-          A: {index: 0, down: false},
-          B: {index: 1, down: false},
+          A: {index: 1, down: false},
+          B: {index: 0, down: false},
           E: {index: 9, down: false},
           F: {index: 8, down: false},
           X: {index: 2, down: false},
@@ -2558,9 +2558,14 @@ window.appJScode=function(){
         if(v.trim().length===0) return;
         if(!(this.history.length>0 && this.history[this.history.length-1]===v)){
           this.history.push(v);
+          this.saveHistory();
         }
         var w;
-        eval("w="+v);
+        if($main){
+          eval("with($main){w="+v+"}");
+        }else{
+          eval("w="+v);
+        }
         console.log(">",v);
         if(w!==undefined){
           console.log("<",w);
@@ -2592,10 +2597,27 @@ window.appJScode=function(){
       };
       this.element.appendChild(this.input);
       this.localVariables=null;
-      this.history=[];
+      this.loadHistory();
     };
     
     $App.Console.prototype={
+      saveHistory: function(){
+        localStorage.setItem("appjs-console-history",JSON.stringify(this.history));
+      },
+      loadHistory: function(){
+        this.history=[];
+        var h=localStorage.getItem("appjs-console-history");
+        if(h){
+          try{
+            h=JSON.parse(h);
+            if(h && h.splice && h.length>0){
+              this.history=h;
+            }
+          }catch(e){
+
+          }
+        }
+      },
       addWatchedVariables: function(arrayWithVarNames){
         this.watchedVariables=this.watchedVariables.concat(arrayWithVarNames);
       },
