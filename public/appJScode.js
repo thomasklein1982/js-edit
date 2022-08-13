@@ -13,21 +13,27 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 25,
+      version: 26,
       language: window.language? window.language:'js',
       setupData: null,
       debug: {
         lastLine: -1,
         lastName: true,
+        object: null,
         enabled: window.appJSdebugMode? window.appJSdebugMode: false,
         breakpoints: {},
         breakpointCount: 0,
         paused: false,
         resolve: null,
-        line: async function(line,name){
+        line: async function(line,name, object){
           if(window===window.top) return;
           if(!name){
             name=true;
+          }
+          if(object){
+            this.object=object;
+          }else{
+            this.object=null;
           }
           this.lastLine=line;
           this.lastName=name;
@@ -2423,7 +2429,6 @@ window.appJScode=function(){
       this.type=type.name;
       if(Array.isArray(dim)){
         this.dim=dim;
-        console.log("new Array",type);
         this.values=$App.Array.createArrayValues(type,dim,0);
       }else{
         this.values=values;
@@ -2561,7 +2566,7 @@ window.appJScode=function(){
           this.saveHistory();
         }
         var w;
-        if($main){
+        if(window.$main){
           eval("with($main){w="+v+"}");
         }else{
           eval("w="+v);
@@ -2574,8 +2579,8 @@ window.appJScode=function(){
         this.input.currentPosition=-1;
       };
       this.input.onkeydown=(ev)=>{
+        ev.preventDefault();
         if(ev.keyCode===40 || ev.keyCode===38 || ev.keyCode===13){
-          ev.preventDefault();
           if(ev.keyCode===13){
             this.input.onchange();
           }else if(ev.keyCode===38){
@@ -2602,6 +2607,9 @@ window.appJScode=function(){
     
     $App.Console.prototype={
       saveHistory: function(){
+        if(this.history.length>100){
+          this.history.splice(0,this.history.length-100);
+        }
         localStorage.setItem("appjs-console-history",JSON.stringify(this.history));
       },
       loadHistory: function(){
@@ -2611,6 +2619,7 @@ window.appJScode=function(){
           try{
             h=JSON.parse(h);
             if(h && h.splice && h.length>0){
+
               this.history=h;
             }
           }catch(e){
@@ -2642,7 +2651,7 @@ window.appJScode=function(){
         if($App.language==="js"){
           this.updateFromObject(window);
         }else if($App.language==="java"){
-          this.updateFromObject($main);
+          this.updateFromObject($App.debug.object? $App.debug.object : $main);
         }
       },
       updateLocalVariables: function(variables){
@@ -4683,7 +4692,7 @@ window.appJScode=function(){
         info: 'Zeigt die Konsole an.'
       }, 
       {
-        name: 'hide()', 
+        name: 'hide', 
         returnType: null,
         info: 'Verbirgt die Konsole.'
       }
