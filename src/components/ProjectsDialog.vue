@@ -1,6 +1,6 @@
 <template>
   <Dialog header="Deine Projekte" v-model:visible="show" :maximizable="true" :modal="true">
-    <app-chooser :apps="projects" :selected="name.toLowerCase()" @open="openProject()" @overwrite="saveProject()" @delete="removeProject" @select="setName"/>
+    <app-chooser :apps="projects" :selected="name.toLowerCase()" @open="openProject()" @overwrite="saveProject()" @delete="removeProject" @select="setName" @download="download"/>
     <div style="margin-top: 0.5rem" :style="{display: 'flex'}">
       <Button @click="downloadAllProjects()" label="Exportieren" class="p-button-secondary" icon="pi pi-download" :style="{flex: 1}"/>
       &nbsp;
@@ -137,6 +137,14 @@ export default {
         }
       }
       return null;
+    },
+    download(app){
+      console.log(app);
+      let js=app.sourceCode;
+      js="\<script\>"+window.appJScode+"\nconsole.hide();\n/*JS-EDIT-START*/"+js+"/*JS-EDIT-END*/\</script\>";
+      let name=app.name;
+      let code='\<!doctype html\>\<html\>\<head\>\<meta charset="utf-8"\>'+js+'\</head\>\</html\>';
+      download(code,name+".htm","text/html");
     },
     setName(name){
       this.name=name;

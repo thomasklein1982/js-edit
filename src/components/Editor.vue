@@ -92,31 +92,51 @@ export default {
     async uploadApp(){
       let img=await upload({dataURL: true});
       if(img){
-        let imagifier=new Imagifier(
-          (data)=>{
-            let error=false;
-            try{
-              data=JSON.parse(data);
-              if(data.type==="JSEdit-App" && data.code!==undefined){
-                data=data.code;
-                this.$refs.editor.reset(data);
-              }else{
-                error=true;
-              }
-            }catch(e){
-              error=true;
-            }
-            if(error){
-              this.$root.toast({summary: 'Fehler', detail: 'Dies ist kein JSEdit-Programm!', life: 4000, severity: 'error'});
+        if(img.mime.indexOf("text")>=0){
+          let code=img.code.substring(22);
+          try{
+            code=atob(code);
+            let startToken="/*JS-EDIT-START*/";
+            let stopToken="/*JS-EDIT-END*/";
+            let start=code.indexOf(startToken);
+            let stop=code.indexOf(stopToken);
+            if(start>=0 && stop>=start){
+              let js=code.substring(start+startToken.length,stop);
+              this.$refs.editor.reset(js);
             }else{
-              this.$root.toast({summary: 'App hochgeladen', detail: '', life: 4000, severity: 'success'});
+              throw "kein JSEdit-Programm";
             }
-          },
-          ()=>{
+          }catch(e){
             this.$root.toast({summary: 'Fehler', detail: 'Dies ist kein JSEdit-Programm!', life: 4000, severity: 'error'});
           }
-        );
-        imagifier.toTextFromDataURL(img.code);
+          console.log(code);
+        }else{
+          let imagifier=new Imagifier(
+            (data)=>{
+              let error=false;
+              try{
+                data=JSON.parse(data);
+                if(data.type==="JSEdit-App" && data.code!==undefined){
+                  data=data.code;
+                  this.$refs.editor.reset(data);
+                }else{
+                  error=true;
+                }
+              }catch(e){
+                error=true;
+              }
+              if(error){
+                this.$root.toast({summary: 'Fehler', detail: 'Dies ist kein JSEdit-Programm!', life: 4000, severity: 'error'});
+              }else{
+                this.$root.toast({summary: 'App hochgeladen', detail: '', life: 4000, severity: 'success'});
+              }
+            },
+            ()=>{
+              this.$root.toast({summary: 'Fehler', detail: 'Dies ist kein JSEdit-Programm!', life: 4000, severity: 'error'});
+            }
+          );
+          imagifier.toTextFromDataURL(img.code);
+        }
       }
     },
     loadApp(sourceCode){

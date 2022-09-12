@@ -10,6 +10,7 @@
       <ConfirmPopup/>
       <Button icon="pi pi-trash" label="Löschen" @click="remove($event)"></Button>
       <Button icon="pi pi-external-link" label="Öffnen" @click="open($event)"></Button>
+      <Button icon="pi pi-download" label="Herunterladen" @click="$emit('download',app)"></Button>
     </template>
   </Card>
   

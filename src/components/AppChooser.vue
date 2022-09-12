@@ -7,7 +7,7 @@
         </template>
       </SelectButton>
     </div>
-    <AppButton :ref="setAppRef" :key="'app-'+a.name" @open="$emit('open',a)" @overwrite="$emit('overwrite',a)" @delete="$emit('delete',a)" @select="$emit('select',a.name)" :selected="selectedApp===a" v-for="(a,i) in listedApps" :app="a"/>
+    <AppButton :ref="setAppRef" :key="'app-'+a.name" @open="$emit('open',a)" @overwrite="$emit('overwrite',a)" @delete="$emit('delete',a)" @select="$emit('select',a.name)" @download="download" :selected="selectedApp===a" v-for="(a,i) in listedApps" :app="a"/>
     
   </div>
 </template>
@@ -78,6 +78,9 @@ export default {
     }
   },
   methods: {
+    download: function(app){
+      this.$emit('download',app);
+    },
     setAppRef(el){
       if(el){
         this.appRefs[el.app.id]=el;

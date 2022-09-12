@@ -230,9 +230,9 @@ function parseCode(src,node,parsingInfos){
   }
 }
 
-function getAllVariables(src,node,variables,started){
+function getAllVariables(src,node,variables){
   //console.log(src.substring(node.from,node.to));
-  if(!started && node.type.name.indexOf("Expression")>=0){
+  if(node.type.name.indexOf("Expression")>=0){
     if(node.type.name==="ExpressionStatement"){
       let n=node.firstChild;
       if(n && n.type.name==="AssignmentExpression"){

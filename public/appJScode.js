@@ -13,7 +13,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 26,
+      version: 27,
       language: window.language? window.language:'js',
       setupData: null,
       debug: {
@@ -4047,10 +4047,10 @@ window.appJScode=function(){
               this.table.removeChild(this.table.firstChild);
             }
             b._rows=[];
-            if(!array || array.length===0) return;
+            if(!array || array.length===0 || array[0]===null || array[0]===undefined) return;
             let obj=array[0];
-            if($App.language==="java" && "data" in obj){
-              obj=obj.data;
+            if($App.language==="java" && "$data" in obj){
+              obj=obj.$data;
             }
             let captions=document.createElement("tr");
             let th=document.createElement("th");
@@ -4059,8 +4059,11 @@ window.appJScode=function(){
             this.table.appendChild(captions);
             for(let i=0;i<array.length;i++){
               let obj=array[i];
-              if($App.language==="java" && "data" in obj){
-                obj=obj.data;
+              if(obj===null || obj===undefined){
+                break;
+              }
+              if($App.language==="java" && "$data" in obj){
+                obj=obj.$data;
               }
               let tr=document.createElement("tr");
               b._rows.push(tr);

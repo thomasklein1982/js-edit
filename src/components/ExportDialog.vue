@@ -11,6 +11,8 @@
 </template>
 
 <script>
+  import { download } from '../lib/helper';
+
 export default {
   data(){
     return {
