@@ -13,9 +13,40 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 27,
+      version: 29,
       language: window.language? window.language:'js',
       setupData: null,
+      dialog: {
+        root: null,
+        backdrop: null,
+        body: null,
+        header: null,
+        content: null,
+        startSession: function(asServer, debugMode){
+          var sessionID=document.getElementById('appjs-in-session-id').value.trim();
+          var clientID=document.getElementById('appjs-in-client-id').value.trim();
+          if(sessionID.length===0 || clientID.length===0) return;
+          localStorage.setItem("appjs-session-data",JSON.stringify({sessionID,clientID}));
+          session.start(sessionID, clientID, asServer, debugMode);
+          this.root.style.display="none";
+        },
+        showStartSession: function(){
+          this.content.innerHTML="<div style='text-align: center;padding: 0.3rem; font-weight: bold'>Netzwerk-Session</div><div><div style='padding: 0.3rem'><input id='appjs-in-session-id' style='width: 100%; min-height: 1cm;' type='text' placeholder='Session-ID'></div><div style='padding: 0.3rem'><input id='appjs-in-client-id' style='width: 100%;min-height: 1cm;' type='text' placeholder='Deine ID'></div></div><div><button style='min-height: 1cm' onclick='$App.dialog.startSession(true)'>Starte als Server</button><button style='min-height: 1cm' onclick='$App.dialog.startSession(false)'>Verbinde als Client</button></div>";
+          this.root.style.display="";
+          var data=localStorage.getItem("appjs-session-data");
+          if(data){
+            try{
+              data=JSON.parse(data);
+              if(data.sessionID && data.clientID){
+                document.getElementById('appjs-in-session-id').value=data.sessionID;
+                document.getElementById('appjs-in-client-id').value=data.clientID;
+              }
+            }catch(e){
+
+            }
+          }
+        }
+      },
       debug: {
         lastLine: -1,
         lastName: true,
@@ -454,6 +485,7 @@ window.appJScode=function(){
         style.insertRule(".datatable tr:nth-child(even){background-color: lightgray}",0);
         style.insertRule(".datatable.show-index td:nth-child(1),.datatable.show-index th:nth-child(1){display: table-cell}",0);
         style.insertRule(".datatable td:nth-child(1),.datatable th:nth-child(1){display: none}",0);
+        style.insertRule("button{border-radius: 0}",0);
         $App.headLoaded=true;
       }
       if(!dontStart && document.body){
@@ -483,12 +515,31 @@ window.appJScode=function(){
         this.toast=new $App.Toast(right);
         root.appendChild(this.help.element);
         left.appendChild(this.help.helpButton);
-        var audioEnabler=document.createElement("audio");
-        audioEnabler.src="data:audio/mpeg;base64,//uQRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAjAAASZAAGBgwMDBISEhgYGB8fHyUlJSsrMTExNzc3Pj4+RERESkpKUFBQVlZdXV1jY2NpaWlvb291dXV8fHyCgoiIiJiYmKSkpK+vr7q6usXFxcvL1NTU3Nzc5eXl7e3t8/Pz+fn5//8AAAA8TEFNRTMuMTAwBK8AAAAAAAAAADUgJAKlTQABzAAAEmSp58jHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAf4AAAAgAAA/wAAABAAAB/gAAACAAAD/AAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBkIg/wAAB/gAAACAAAD/AAAAEAAAH+AAAAIAAAP8AAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGRED/AAAH+AAAAIAAAP8AAAAQAAAf4AAAAgAAA/wAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZGYP8AAAf4AAAAgAAA/wAAABAAAB/gAAACAAAD/AAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBkiA/wAAB/gAAACAAAD/AAAAEAAAH+AAAAIAAAP8AAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGSqD/AAAH+AAAAIAAAP8AAAAQAAAf4AAAAgAAA/wAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZMwP8AAAf4AAAAgAAA/wAAABAAAB/gAAACAAAD/AAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBk3Y/wAAB/gAAACAAAD/AAAAEAAAH+AAAAIAAAP8AAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGTdj/AAAH+AAAAIAAAP8AAAAQAAAf4AAAAgAAA/wAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZN2P8AAAf4AAAAgAAA/wAAABAAAB/gAAACAAAD/AAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBE3Y/wAAB/gAAACAAAD/AAAAEAAAH+AAAAIAAAP8AAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EGTdj/AAAH+AAAAIAAAP8AAAAQAAAf4AAAAgAAA/wAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZN2P8AAAf4AAAAgAAA/wAAABAAAB/gAAACAAAD/AAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xBk3Y/wAAB/gAAACAAAD/AAAAEAAAH+AAAAIAAA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";
-        audioEnabler.style="position: fixed; right: 0; top: 0; z-index: 100";
-        audioEnabler.controls=true;
-        $App.audioEnabler=audioEnabler;
-        //root.appendChild(audioEnabler);
+        
+        this.dialog.root=document.createElement("div");
+        this.dialog.root.style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: #aaaa;";
+        this.dialog.backdrop=document.createElement("div");
+        this.dialog.backdrop.style="width: 100%; height: 100%;display: grid; grid-template-rows: 1fr; grid-template-columns: 1fr; justify-items: center; align-items: center";
+        this.dialog.body=document.createElement("div");
+        this.dialog.body.style="padding: 0.3rem;border: 1pt solid black; background-color: white; max-width: 100%; max-height: 100%";
+        this.dialog.header=document.createElement("div");
+        this.dialog.header.style="width: 100%;text-align: right";
+        var closeButton=document.createElement("button");
+        closeButton.textContent="x";
+        closeButton.onclick=()=>{
+          this.dialog.root.style.display="none";
+        };
+        this.dialog.header.appendChild(closeButton);
+        this.dialog.content=document.createElement("div");
+        this.dialog.content.style="width: 100%";
+        this.dialog.root.appendChild(this.dialog.backdrop);
+        this.dialog.backdrop.appendChild(this.dialog.body);
+        this.dialog.body.appendChild(this.dialog.header);
+        this.dialog.body.appendChild(this.dialog.content);
+
+        this.dialog.root.style.display="none";
+        right.appendChild(this.dialog.root);
+
         if(this.setupData){
           this.setupApp(this.setupData);
         }
@@ -2447,7 +2498,7 @@ window.appJScode=function(){
       },
       checkBounds: function(index){
         if(index>=this.length || index<0){
-          var m="Index "+index+" liegt auÃŸerhalb der Array-Grenzen von 0 bis "+(this.length-1);
+          var m="Index "+index+" liegt ausserhalb der Array-Grenzen von 0 bis "+(this.length-1);
           console.error(m);
           throw m;
         }
@@ -2579,7 +2630,7 @@ window.appJScode=function(){
         this.input.currentPosition=-1;
       };
       this.input.onkeydown=(ev)=>{
-        ev.preventDefault();
+        
         if(ev.keyCode===40 || ev.keyCode===38 || ev.keyCode===13){
           if(ev.keyCode===13){
             this.input.onchange();
@@ -2861,10 +2912,10 @@ window.appJScode=function(){
       this.element.style="overflow-x: hidden; overflow-y: auto;tab-size: 2; padding: 0.5em;background-color: white;position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 100";
       this.element.innerHTML="<h1>Willkommen bei AppJS</h1>"
       +"\n<p>Version "+$App.version+"</p>"
-      +"\n<p>Mit AppJS kannst du deine eigenen Apps in der Sprache JavaScript programmieren. AppJS stellt dir einige zusÃ¤tzliche Befehle zur VerfÃ¼gung, die dir das Leben etwas einfacher machen.</p>"
+      +"\n<p>Mit AppJS kannst du deine eigenen Apps in der Sprache JavaScript programmieren. AppJS stellt dir einige zusaetzliche Befehle zur Verfuegung, die dir das Leben etwas einfacher machen.</p>"
       +"\n<p><a href=\"https://thomaskl.uber.space/Webapps/AppJS/help.html\" target=\"_blank\">Link zu dieser Hilfe</a></p>"
       +"\n<h2>Grundaufbau einer App</h2>"
-      +"\n<details><summary>Eine App mit AppJS sollte folgendermaÃŸen aussehen:</summary>"
+      +"\n<details><summary>Eine App mit AppJS sollte folgendermassen aussehen:</summary>"
       +"\n<p><code><pre>&lt;script src=\"https://thomaskl.uber.space/Webapps/AppJS/app.js\"&gt;&lt;/script&gt;"
     +"\n&lt;script&gt;"
     +"\n"
@@ -2948,7 +2999,7 @@ window.appJScode=function(){
         let el;
     
         el=document.createElement('div');
-        el.innerHTML='<h2 style="border-bottom: 1pt solid black">Ereignis-Routinen</h2><p>Eine Ereignis-Routine ist eine Funktion, die aufgerufen wird, wenn ein bestimmtes Ereignis eintritt. FÃ¼ge deinem Programm diese Funktionen hinzu, um auf verschiedenste Ereignisse (Programmstart, Druck auf einen Button des Gamepad, Mausklick usw.) zu reagieren.</p>';
+        el.innerHTML='<h2 style="border-bottom: 1pt solid black">Ereignis-Routinen</h2><p>Eine Ereignis-Routine ist eine Funktion, die aufgerufen wird, wenn ein bestimmtes Ereignis eintritt. Fuege deinem Programm diese Funktionen hinzu, um auf verschiedenste Ereignisse (Programmstart, Druck auf einen Button des Gamepad, Mausklick usw.) zu reagieren.</p>';
         this.element.appendChild(el);
         for(let i=0;i<this.eventHandlers.length;i++){
           let e=this.eventHandlers[i];
@@ -3070,7 +3121,162 @@ window.appJScode=function(){
     };
     
     
+    Session=function(sessionID, clientID, isHost, debug){
+      this.sessionID=sessionID;
+      this.handler=window;
+      this.startDialog=document.createElement("div");
+      this.startDialog.style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;background-color: #aaaa";
+
+      this.clientID=clientID;
+      this.isHost=isHost;
+      this.debug=debug;
+      this.peerID=this.getPeerID();
+      if(this.isHost){
+        this.log("starte session als host",sessionID,clientID,this.peerID);
+        this.connectionsToClients={};
+        this.newConnectionsToClients={};
+        this.peer=new Peer(this.peerID,{debug:0});
+      }else{
+        this.log("starte session als client",sessionID,clientID,this.peerID);
+        this.peer=new Peer(undefined,{debug:0});
+      }
     
+      this.peer.on('open',()=>{
+        this.log("peer ist open");
+        if(this.isHost){
+          if(this.handler.onSessionStart){
+            this.handler.onSessionStart(true);
+          }
+        }else{
+          this.log("Baue Verbindung zum Server auf...");
+          this.connectionToServer=this.peer.connect(this.peerID);
+          this.connectionToServer.on('open',()=>{
+            this.log("client hat verbindung zum server");
+            this.log("sende gruss an host",this.clientID,this.peer.id);
+            this.connectionToServer.send({type: "new-connection", clientID: this.clientID, peerID: this.peer.id});
+            if(this.handler.onSessionStart){
+              this.handler.onSessionStart(false);
+            }
+          });
+          this.connectionToServer.on('data',(data)=>{
+            /**client empfaengt nachricht */
+            this.log("client empfaengt nachricht",data);
+            if(data.type==="client-id-of-server"){
+              this.log("client empfaengt id des servers",data.clientID);
+              if(this.handler.onNewConnection){
+                this.handler.onNewConnection(data.clientID);
+                for(var id of data.allRealClientIDs){
+                  if(id!==this.clientID){
+                    this.handler.onNewConnection(id);
+                  }
+                }
+              }
+            }else if(data.type==="message"){
+              if(this.handler.onMessage){
+                this.handler.onMessage(data.sender,data.message);
+              }
+            }else if(data.type==="new-connection"){
+              this.log("client empfaengt neue Verbindung",data.clientID)
+              if(this.handler.onNewConnection){
+                this.handler.onNewConnection(data.clientID);
+              }
+            }
+          })
+        }
+      });
+    
+      this.peer.on('error',(error)=>{
+        this.log("error",error);
+        if(this.handler.onSessionError){
+          this.handler.onSessionError(error);
+        }
+      });
+    
+      this.peer.on('connection',(dataConnection)=>{
+        this.log("neue Connection");
+        if(this.isHost){
+          this.log("neuer Client",dataConnection);
+          this.newConnectionsToClients[dataConnection.peer]=dataConnection;
+        }
+    
+        dataConnection.on('open',()=>{
+          this.log("data connection ist offen");
+          if(!this.isHost){
+            
+          }
+        });
+    
+        dataConnection.on('data',(data)=>{
+          if(this.isHost){
+            /**Server empfaengt nachricht */
+            this.log("server empfaengt nachricht",data);
+            if(data.type==="new-connection"){
+              var con=this.newConnectionsToClients[data.peerID];
+              if(con){
+                this.connectionsToClients[data.clientID]=con;
+                this.connectionsToClients[data.clientID].send({type: "client-id-of-server", clientID: this.clientID, allRealClientIDs: this.getAllClientIDs()});
+                if(this.handler.onNewConnection){
+                  this.handler.onNewConnection(data.clientID);
+                }
+                this.forward(data.clientID,{type: "new-connection", clientID: data.clientID});
+              }
+              delete this.newConnectionsToClients[data.peerID];
+            }else if(data.type==="message"){
+              this.forward(data.sender,data);
+              if(this.handler.onMessage){
+                this.handler.onMessage(data.sender,data.message);
+              }
+            }
+          }
+        });
+        // if(this.handler.onNewConnection){
+        //   this.handler.onNewConnection(error);
+        // }
+      });
+    
+      
+    };
+    
+    Session.prototype={
+      log: function(){
+        if(this.debug){
+          console.log.apply(console,arguments);
+        }
+      },
+      getAllClientIDs: function(){
+        var ids=[];
+        for(var a in this.connectionsToClients){
+          ids.push(a);
+        }
+        return ids;
+      },
+      forward: function(sender,data){
+        for(var a in this.connectionsToClients){
+          if(a!==sender){
+            this.log("forwarding to",a);
+            var c=this.connectionsToClients[a];
+            c.send(data);
+          }
+        }
+      },
+      destroy: function(){
+        if(this.peer){
+          this.peer.destroy();
+        }
+      },
+      getPeerID: function(){
+        var loc=location.toString();
+        loc=loc.replace(/\W/g,"");
+        return loc+"-"+this.sessionID;
+      },
+      sendMessage: function(message,recipients){
+        if(this.isHost){
+          this.forward(this.clientID,{sender: this.clientID, type: "message", message});
+        }else{
+          this.connectionToServer.send({sender: this.clientID, type: "message", recipients, message});
+        }
+      }
+    };
     
     
     
@@ -3088,31 +3294,35 @@ window.appJScode=function(){
     
     /**API */
     
-    $App.addEventHandler("onStart",[],'Wird einmalig ausgefÃ¼hrt, wenn das Programm startet.','');
-    $App.addEventHandler("onResize",[],'Wird ausgefÃ¼hrt, wenn sich die Abmessungen des Bildschirms verÃ¤ndern, z. B. wenn das Fenster kleiner oder grÃ¶ÃŸer gemacht wird.','');
+    $App.addEventHandler("onStart",[],'Wird einmalig ausgefuehrt, wenn das Programm startet.','');
+    $App.addEventHandler("onResize",[],'Wird ausgefuehrt, wenn sich die Abmessungen des Bildschirms veraendern, z. B. wenn das Fenster kleiner oder groesser gemacht wird.','');
     $App.addEventHandler("onTileDraw",[
       {name: 'x', type: 'double', info: 'x-Koordinate des Mittelpunkts des Feldes.'},
       {name: 'y', type: 'double', info: 'y-Koordinate des Mittelpunkts des Feldes.'},
       {name: 'type', type: 'String', info: 'Typ des Feldes (das Zeichen).'},
       {name: 'info', type: 'String', info: 'Information des Feldes.'},
-    ],'Wird fÃ¼r jedes Feld der Spielwelt ausgefÃ¼hrt, wenn diese gezeichnet wird.','');
-    $App.addEventHandler("onNextFrame",[],'Wird ca. 60 mal pro Sekunde ausgefÃ¼hrt.','');
-    $App.addEventHandler("onKeyDown",[{name: 'keycode', type: 'int', info: 'Der Code der gedrÃ¼ckten Taste, z. B. 65 fÃ¼r "A" oder 32 fÃ¼r die Leertaste.'}],'Wird ausgefÃ¼hrt, wenn eine Taste auf der Tastatur gedrÃ¼ckt wird. ACHTUNG: Funktioniert nicht bei GerÃ¤ten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
-    $App.addEventHandler("onKeyUp",[{name: 'keycode', type: 'int', info: 'Der Code der losgelassenen Taste, z. B. 65 fÃ¼r "A" oder 32 fÃ¼r die Leertaste.'}],'Wird ausgefÃ¼hrt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei GerÃ¤ten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
-    $App.addEventHandler("onMouseDown",[],'Wird ausgefÃ¼hrt, wenn der Benutzer eine Maustaste drÃ¼ckt oder mit dem Finger den Touchscreen berÃ¼hrt.','');
-    $App.addEventHandler("onMouseMove",[],'Wird ausgefÃ¼hrt, wenn der Benutzer die Maus bewegt oder mit dem Finger Ã¼ber den Touchscreen streicht.','');
-    $App.addEventHandler("onMouseUp",[],'Wird ausgefÃ¼hrt, wenn der Benutzer die Maustaste loslÃ¤sst oder die BerÃ¼hrung des Touchscreens mit dem Finger beendet.','');
-    $App.addEventHandler("onGamepadDown",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der gedrÃ¼ckt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgefÃ¼hrt, wenn der Benutzer einen Teil des Gamepads berÃ¼hrt oder die zugeordnete Taste auf der Tastatur drÃ¼ckt.','');
-    $App.addEventHandler("onGamepadUp",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgefÃ¼hrt, wenn der Benutzer die BerÃ¼hrung des Gamepads beendet oder aufhÃ¶rt, die zugeordnete Taste auf der Tastatur zu drÃ¼cken.','');
-    $App.addEventHandler("onTimeout",[{name: 'name',type: 'String', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgefÃ¼hrt, wenn ein Timer ablÃ¤uft. Du kannst mit time.start einen Timer starten.','');
-    $App.addEventHandler("onAction",[{name: 'trigger', type: 'JComponent', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgefÃ¼hrt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
-    
+    ],'Wird fuer jedes Feld der Spielwelt ausgefuehrt, wenn diese gezeichnet wird.','');
+    $App.addEventHandler("onNextFrame",[],'Wird ca. 60 mal pro Sekunde ausgefuehrt.','');
+    $App.addEventHandler("onKeyDown",[{name: 'keycode', type: 'int', info: 'Der Code der gedrueckten Taste, z. B. 65 fuer "A" oder 32 fuer die Leertaste.'}],'Wird ausgefuehrt, wenn eine Taste auf der Tastatur gedrueckt wird. ACHTUNG: Funktioniert nicht bei Geraeten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
+    $App.addEventHandler("onKeyUp",[{name: 'keycode', type: 'int', info: 'Der Code der losgelassenen Taste, z. B. 65 fuer "A" oder 32 fuer die Leertaste.'}],'Wird ausgefuehrt, wenn eine Taste auf der Tastatur losgelassen wird. ACHTUNG: Funktioniert nicht bei Geraeten ohne Tastatur! Verwende lieber das <a href="#help-gamepad">Gamepad</a>.','');
+    $App.addEventHandler("onMouseDown",[],'Wird ausgefuehrt, wenn der Benutzer eine Maustaste drueckt oder mit dem Finger den Touchscreen beruehrt.','');
+    $App.addEventHandler("onMouseMove",[],'Wird ausgefuehrt, wenn der Benutzer die Maus bewegt oder mit dem Finger ueber den Touchscreen streicht.','');
+    $App.addEventHandler("onMouseUp",[],'Wird ausgefuehrt, wenn der Benutzer die Maustaste loslaesst oder die Beruehrung des Touchscreens mit dem Finger beendet.','');
+    $App.addEventHandler("onGamepadDown",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der gedrueckt wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgefuehrt, wenn der Benutzer einen Teil des Gamepads beruehrt oder die zugeordnete Taste auf der Tastatur drueckt.','');
+    $App.addEventHandler("onGamepadUp",[{name: 'button', type: 'String', info: 'Der Name des Buttons, der losgelassen wurde, also z. B. "A" oder "Y" oder "left".'}],'Wird ausgefuehrt, wenn der Benutzer die Beruehrung des Gamepads beendet oder aufhoert, die zugeordnete Taste auf der Tastatur zu druecken.','');
+    $App.addEventHandler("onTimeout",[{name: 'name',type: 'String', info: 'Der Name des Timers, der abgelaufen ist.'}],'Wird ausgefuehrt, wenn ein Timer ablaeuft. Du kannst mit time.start einen Timer starten.','');
+    $App.addEventHandler("onAction",[{name: 'trigger', type: 'JComponent', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgefuehrt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
+    $App.addEventHandler("onSessionStart",[{name: 'isServer', type: 'boolean', info: 'true, wenn die Session als Server gestartet wurde, ansonsten false.'}],'Wird ausgefuehrt, wenn eine Netzwerk-Session gestartet wird - egal ob als Server oder als Client.','');
+    $App.addEventHandler("onNewConnection",[{name: 'id', type: 'String', info: 'Die ID der neuen Verbindung.'}],'Wird ausgefuehrt, wenn eine neue Verbindung über das Netzwerk hergestellt wird.','');
+    $App.addEventHandler("onMessage",[{name: 'senderID', type: "String", info: 'ID des Senders'}, {name: 'message', type: "JSON", info: 'Nachricht, die empfangen wird'}],'Wird ausgefuehrt, wenn die App eine Nachricht von einem anderen Client oder dem Server erhaelt.','');
+    $App.addEventHandler("onSessionError",[{name: 'error', type: "JSON", info: 'Informationen zum Fehler, der aufgetreten ist'}],'Wird ausgefuehrt, wenn ein Netzwerk-Fehler auftritt, also wenn z. B. die Verbindung unterbrochen wird.','');
+
     $App.addFunction(function setupApp(title,favicon,width,height,backgroundColor){
       $App.setupApp(title,favicon,width,height,backgroundColor);
     },
     null,
-    "Legt die Grundeigenschaften der App fest: Den Titel, das Icon, die Breite und die HÃ¶he sowie die Hintergrundfarbe.",
-    [{name: 'title', type: 'String', info: 'Der Name der App, der im Browser-Tab angezeigt wird.'}, {name: 'favicon', type: 'String', info: 'Ein beliebiges Unicode-Symbol, das als Icon fÃ¼r die App verwendet wird. Du findest viele Unicode-Symbole, wenn du direkt nach z. B. "unicode drache" googelst oder unter <a href="https://www.compart.com/de/unicode/" target="_blank">compart.com/de/unicode</a>.'}, {name: 'width', type: 'int', info: 'Die Breite der App.'}, {name: 'height', type: 'int', info: 'Die HÃ¶he der App.'}, {name: 'backgroundColor', type: 'String', info: 'Die Hintergrundfarbe der App.'}],
+    "Legt die Grundeigenschaften der App fest: Den Titel, das Icon, die Breite und die Hoehe sowie die Hintergrundfarbe.",
+    [{name: 'title', type: 'String', info: 'Der Name der App, der im Browser-Tab angezeigt wird.'}, {name: 'favicon', type: 'String', info: 'Ein beliebiges Unicode-Symbol, das als Icon fuer die App verwendet wird. Du findest viele Unicode-Symbole, wenn du direkt nach z. B. "unicode drache" googelst oder unter <a href="https://www.compart.com/de/unicode/" target="_blank">compart.com/de/unicode</a>.'}, {name: 'width', type: 'int', info: 'Die Breite der App.'}, {name: 'height', type: 'int', info: 'Die Hoehe der App.'}, {name: 'backgroundColor', type: 'String', info: 'Die Hintergrundfarbe der App.'}],
     'Verwende diesen Befehl zu Beginn der <code>onStart</code>-Funktion.<code><pre>onStart(){\n\tsetupApp("Meine App","ðŸš€",100,100,"black");\n\t//weitere Befehle\n}</pre></code><p></p>',
     true);
     
@@ -3122,24 +3332,24 @@ window.appJScode=function(){
     
     $App.addFunction(function clear(){
       $App.canvas.clear();
-    },null,'LÃ¶scht den Inhalt der ZeichenflÃ¤che.',[],'Verwende diesen Befehl zu Beginn der Funktion <a href="#help-onNextFrame"><code>onNextFrame</code></a>, damit du danach alles neu zeichnen kannst.');
+    },null,'Loescht den Inhalt der Zeichenflaeche.',[],'Verwende diesen Befehl zu Beginn der Funktion <a href="#help-onNextFrame"><code>onNextFrame</code></a>, damit du danach alles neu zeichnen kannst.');
   
     $App.addFunction(function fillOutside(){
       $App.canvas.fillOutside();
-    },null,'FÃ¼llt alle Bereiche, die auÃŸerhalb des Koordinatensystems liegen, mit der aktuellen Farbe.',[],'');
+    },null,'Fuellt alle Bereiche, die auerhalb des Koordinatensystems liegen, mit der aktuellen Farbe.',[],'');
   
     $App.addFunction(function getMinX(){
       return $App.canvas.getCanvasMinX();
     },'double','Liefert den kleinsten x-Wert, der aktuell noch sichtbar ist.',[],'');
     $App.addFunction(function getMaxX(){
       return $App.canvas.getCanvasMaxX();
-    },'double','Liefert den grÃ¶ÃŸten x-Wert, der aktuell noch sichtbar ist.',[],'');
+    },'double','Liefert den groessten x-Wert, der aktuell noch sichtbar ist.',[],'');
     $App.addFunction(function getMinY(){
       return $App.canvas.getCanvasMinY();
     },'double','Liefert den kleinsten y-Wert, der aktuell noch sichtbar ist.',[],'');
     $App.addFunction(function getMaxY(){
       return $App.canvas.getCanvasMaxY();
-    },'double','Liefert den grÃ¶ÃŸten y-Wert, der aktuell noch sichtbar ist.',[],'');
+    },'double','Liefert den groessten y-Wert, der aktuell noch sichtbar ist.',[],'');
   
     $App.addFunction(async function sleep(millis){
       var p=new Promise((resolve,reject)=>{
@@ -3148,7 +3358,7 @@ window.appJScode=function(){
         },millis);
       });
       return await p;
-    },null,'Unterbricht den Programmablauf fÃ¼r eine gewisse Zeit.',[
+    },null,'Unterbricht den Programmablauf fuer eine gewisse Zeit.',[
       {name: "millis", type: 'int', info: 'Anzahl Millisekunden, die das Programm abwarten soll.'}
     ],'Dieser Befehl funktioniert nur zusammen mit async/await.');
     
@@ -3169,7 +3379,7 @@ window.appJScode=function(){
     $App.addFunction(function prompt(text){
       $App.handleModalDialog();
       return $App.prompt.call(window,text);
-    },'String','Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurÃ¼ck.',[{name: 'text', type: 'String',info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+    },'String','Zeigt eine Messagebox mit einer Nachricht und  einem Eingabefeld. Liefert den eingegebenen Text zurueck.',[{name: 'text', type: 'String',info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
     
     $App.addFunction(function promptNumber(text){
       $App.handleModalDialog();
@@ -3180,16 +3390,16 @@ window.appJScode=function(){
         zusatz="\n\nBitte eine Zahl eingeben.";
       }while(isNaN(a));
       return a;
-    },'double','Zeigt eine Messagebox mit einer Nachricht und einem Eingabefeld. Liefert die eingegebene Zahl zurÃ¼ck.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+    },'double','Zeigt eine Messagebox mit einer Nachricht und einem Eingabefeld. Liefert die eingegebene Zahl zurueck.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
     
     $App.addFunction(function confirm(text){
       $App.handleModalDialog();
       return $App.confirm.call(window,text);
-    },'boolean','Zeigt eine Messagebox mit einer Nachricht. Der Benutzer muss zwischen OK und Abbrechen wÃ¤hlen. Die Auswahl wird als <code>true</code> oder <code>false</code> zurÃ¼ckgegeben.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
+    },'boolean','Zeigt eine Messagebox mit einer Nachricht. Der Benutzer muss zwischen OK und Abbrechen waehlen. Die Auswahl wird als <code>true</code> oder <code>false</code> zurueckgegeben.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}],'',"everywhere");
     
     $App.addFunction(function toast(text,position,duration){
       $App.toast.show(text,position,duration);
-    },null,'Zeigt eine Nachricht fÃ¼r einen gewissen Zeitraum an.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', type: 'String', info: 'Optional: Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wo der Text erscheinen soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', type: 'int', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
+    },null,'Zeigt eine Nachricht fuer einen gewissen Zeitraum an.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', type: 'String', info: 'Optional: Eine Angabe aus bis zu 2 Woertern, die bestimmen, wo der Text erscheinen soll. Moegliche Woerter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', type: 'int', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
     
     $App.addFunction(function sound(asset){
       $App.audio.play(asset);
@@ -3203,26 +3413,26 @@ window.appJScode=function(){
     
     $App.addFunction(function drawCircle(cx,cy,r){
       return $App.canvas.paintCircle(cx,cy,r,false);
-    },'Path','Zeichnet einen Kreis und gibt diesen zurÃ¼ck',
+    },'Path','Zeichnet einen Kreis und gibt diesen zurueck',
     [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
     '');
     
     $App.addFunction(function fillCircle(cx,cy,r){
       return $App.canvas.paintCircle(cx,cy,r,true);
-    },'Path','Zeichnet einen ausgefÃ¼llten Kreis und gibt diesen zurÃ¼ck.',
+    },'Path','Zeichnet einen ausgefuellten Kreis und gibt diesen zurueck.',
     [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
     '');
     
     $App.addFunction(function drawRect(cx,cy,width,height){
       return $App.canvas.paintRect(cx,cy,width,height,false);
-    },'Path','Zeichnet ein Rechteck und gibt dieses zurÃ¼ck.',
-    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
+    },'Path','Zeichnet ein Rechteck und gibt dieses zurueck.',
+    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}],
     '');
     
     $App.addFunction(function fillRect(cx,cy,width,height){
       return $App.canvas.paintRect(cx,cy,width,height,true);
-    },'Path','Zeichnet ein ausgefÃ¼lltes Rechteck und gibt dieses zurÃ¼ck.',
-    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
+    },'Path','Zeichnet ein ausgefuelltes Rechteck und gibt dieses zurueck.',
+    [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}],
     '');
     
     $App.addFunction(function rotate(angle,cx,cy){
@@ -3257,25 +3467,31 @@ window.appJScode=function(){
   
     $App.addFunction(async function loadAsset(url, name){
       $App.registerAsset.call($App,url, name);
-    },null,'LÃ¤dt ein sog. "Asset" (ein Bild oder ein Sound) und speichert es unter dem angegebenen Namen im Objekt "assets". Muss vor onStart aufgerufen werden.',
+    },null,'Laedt ein sog. "Asset" (ein Bild oder ein Sound) und speichert es unter dem angegebenen Namen im Objekt "assets". Muss vor onStart aufgerufen werden.',
     [{name: 'url', type: 'String', info: 'URL der Datei'}, {name: 'name', type: 'String', info: 'Name, unter dem das Asset gespeichert wird.'}],
     '',"topLevel");
   
     $App.addFunction(async function loadScript(url){
       $App.registerScript.call($App,url);
-    },null,'LÃ¤dt ein JavaScript. Muss vor onStart aufgerufen werden.',
+    },null,'Laedt ein JavaScript. Muss vor onStart aufgerufen werden.',
     [{name: 'url', type: 'String', info: 'URL des Scripts'}],
+    '',"topLevel");
+
+    $App.addFunction(async function loadPeerJS(){
+      loadScript("https://thomaskl.uber.space/Webapps/lib/peerjs.min.js");
+    },null,'Laedt PeerJS, was du zur Verbindungsherstellung über das Internet brauchst. Muss vor onStart aufgerufen werden.',
+    [],
     '',"topLevel");
   
     $App.addFunction(function drawImage(image,cx,cy,width,height,rotation,mirrored){
       $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored);
     },null,'Zeichnet ein Bild. Dieses musst du vorher mittels loadAsset laden.',
-    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
     '');
     $App.addFunction(function drawImagePart(image,cx,cy,width,height,scx,scy,swidth,sheight,rotation,mirrored){
       $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored,{cx: scx, cy: scy, w: swidth, h: sheight});
     },null,'Zeichnet einen rechteckigen Ausschnitt eines Bildes. Dieses musst du vorher mittels "loadAsset" laden.',
-    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'HÃ¶he des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+    [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Hoehe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
     '');
     
     $App.addFunction(function setCoordinatesystem(width,height,originX,originY){
@@ -3283,7 +3499,7 @@ window.appJScode=function(){
         $App.canvas.setOrigin(originX,originY);
       }
       $App.canvas.setSize(width,height,$App.body.width,$App.body.height);
-    },null,'Legt das Koordiantensystem der App fest.',[{name: 'width', type: 'double', info: 'Breite des Koordinatensystems'}, {name: 'height', type: 'double', info: 'HÃ¶he des Koordinatensystems'}, {name: 'originX', type: 'double', info: 'x-Koordinate des Koordinatenursprungs', optional: true}, {name: 'originY', type: 'double', info: 'y-Koordinate des Koordinatenursprungs'}],'');
+    },null,'Legt das Koordiantensystem der App fest.',[{name: 'width', type: 'double', info: 'Breite des Koordinatensystems'}, {name: 'height', type: 'double', info: 'Hoehe des Koordinatensystems'}, {name: 'originX', type: 'double', info: 'x-Koordinate des Koordinatenursprungs', optional: true}, {name: 'originY', type: 'double', info: 'y-Koordinate des Koordinatenursprungs'}],'');
   
     $App.addFunction(function getWidth(){
       return $App.body.width;
@@ -3291,19 +3507,19 @@ window.appJScode=function(){
   
     $App.addFunction(function getHeight(){
       return $App.body.height;
-    },'double','Liefert die aktuelle HÃ¶he des Bildschirms in Pixeln.',[],'');
+    },'double','Liefert die aktuelle Hoehe des Bildschirms in Pixeln.',[],'');
   
     $App.addFunction(function setMirrored(m){
       $App.canvas.setMirrored(m);
-    },null,'Legt fÃ¼r alle nachfolgenden write-Befehle fest, ob der Text gespiegelt werden soll.',[{name: 'm', type: 'boolean', info: 'Wenn true, dann wird der Text aller nachfolgenden write-Befehle vertikal gespiegelt. Wenn false, wird der Text wieder normal geschrieben.'}],'');
+    },null,'Legt fuer alle nachfolgenden write-Befehle fest, ob der Text gespiegelt werden soll.',[{name: 'm', type: 'boolean', info: 'Wenn true, dann wird der Text aller nachfolgenden write-Befehle vertikal gespiegelt. Wenn false, wird der Text wieder normal geschrieben.'}],'');
   
     $App.addFunction(function setRotation(angle){
       $App.canvas.setRotation(angle);
-    },null,'Legt die Drehung fÃ¼r alle nachfolgenden write-Befehle fest.',[{name: 'angle', type: 'double', info: 'Der Winkel um den gedreht werden soll. 0 entspricht keiner Drehung. Es wird gegen den Uhrzeigersinn gedreht.'}],'');
+    },null,'Legt die Drehung fuer alle nachfolgenden write-Befehle fest.',[{name: 'angle', type: 'double', info: 'Der Winkel um den gedreht werden soll. 0 entspricht keiner Drehung. Es wird gegen den Uhrzeigersinn gedreht.'}],'');
   
     $App.addFunction(function setColor(color){
       $App.canvas.setColor(color);
-    },null,'Legt die Farbe fÃ¼r alle nachfolgenden Zeichnungen fest.',[{name: 'color', type: 'String', info: 'Farbe, die ab sofort zum Zeichnen und FÃ¼llen verwendet werden soll. Kann eine beliebige Bezeichnung fÃ¼r eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
+    },null,'Legt die Farbe fuer alle nachfolgenden Zeichnungen fest.',[{name: 'color', type: 'String', info: 'Farbe, die ab sofort zum Zeichnen und Fuellen verwendet werden soll. Kann eine beliebige Bezeichnung fuer eine HTML-Farbe sein, z. B. <code>"red"</code>, <code>"blue"</code> oder <code>"#e307A6"</code>. Diese Bezeichnungen findest du bspw. unter <a href="https://htmlcolorcodes.com/" target="_blank">htmlcolorcodes</a>.'}],'');
     
     $App.addFunction(function setOpacity(value){
       $App.canvas.setOpacity(value);
@@ -3311,40 +3527,40 @@ window.appJScode=function(){
     
     $App.addFunction(function setFontsize(size){
       $App.canvas.setFontsize(size);
-    },null,'Legt die SchriftgrÃ¶ÃŸe fÃ¼r alle nachfolgenden write-Befehle fest.',[{name: 'size', type: 'double', info: 'SchriftgrÃ¶ÃŸe, die ab sofort zum Schreiben verwendet werden soll.'}],'');
+    },null,'Legt die Schriftgroesse fuer alle nachfolgenden write-Befehle fest.',[{name: 'size', type: 'double', info: 'Schriftgroesse, die ab sofort zum Schreiben verwendet werden soll.'}],'');
   
     $App.addFunction(function setFont(name){
       $App.canvas.setFont(name);
-    },null,'Legt die Schriftart fÃ¼r alle nachfolgenden write-Befehle fest.',[{name: 'name', type: 'String', info: 'Schriftart, z. B. Arial.'}],'');
+    },null,'Legt die Schriftart fuer alle nachfolgenden write-Befehle fest.',[{name: 'name', type: 'String', info: 'Schriftart, z. B. Arial.'}],'');
     
     $App.addFunction(function setLinewidth(size){
       $App.canvas.setLinewidth(size);
-    },null,'Legt die Breite der Linien fÃ¼r alle nachfolgenden Zeichnungen fest.',[{name: 'size', type: 'double', info: 'Die Dicke der Linien, die ab sofort verwendet werden soll.'}],'');
+    },null,'Legt die Breite der Linien fuer alle nachfolgenden Zeichnungen fest.',[{name: 'size', type: 'double', info: 'Die Dicke der Linien, die ab sofort verwendet werden soll.'}],'');
     
     $App.addFunction(function write(text,x,y,align){
       $App.canvas.write(text,x,y,align);
     },null,'Schreibt Text auf den Bildschirm.',
-    [{name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> fÃ¼r ZeilenumbrÃ¼che.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}],
+    [{name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> fuer Zeilenumbrueche.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 Woertern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Moegliche Woerter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}],
     '');
     
     /*$App.addFunction(async function read(placeholdertext,x,y,width,align){
       return await $App.canvas.read(placeholdertext,x,y,width,align,"text");
-    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die HÃ¶he entspricht automatisch der aktuellen SchriftgrÃ¶ÃŸe.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');
+    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die Hoehe entspricht automatisch der aktuellen Schriftgroesse.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 Woertern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Moegliche Woerter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');
     
     $App.addFunction(async function readNumber(placeholdertext,x,y,width,alignment){
       return await $App.canvas.read(placeholdertext,x,y,width,alignment,"number");
-    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die HÃ¶he entspricht automatisch der aktuellen SchriftgrÃ¶ÃŸe.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');*/
+    },'',[{name: 'placeholdertext', info: 'Text, der als Platzhalter in dem Textfeld angezeigt wird.'}, {name: 'x', info: 'x-Koordinate des Textfelds.'}, {name: 'y', info: 'y-Koordinate des Textfelds.'}, {name: 'width', info: 'Breite des Textfelds. Die Hoehe entspricht automatisch der aktuellen Schriftgroesse.'}, {name: "align", info: 'Eine Angabe aus bis zu 2 Woertern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Moegliche Woerter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}],'');*/
     
     $App.addFunction(function random(min,max){
       return Math.floor(Math.random()*(max-min+1)+min);
-    },'int','Liefert eine ganze Zufallszahl zwischen <code>min</code> und <code>max</code> (jeweils einschlieÃŸlich).',[{name: 'min', type: 'int', info: 'Mindestwert fÃ¼r die Zufallszahl.'}, {name: 'max', type: 'int', info: 'Maximalwert fÃ¼r die Zufallszahl.'}],'',"everywhere");
+    },'int','Liefert eine ganze Zufallszahl zwischen <code>min</code> und <code>max</code> (jeweils einschliesslich).',[{name: 'min', type: 'int', info: 'Mindestwert fuer die Zufallszahl.'}, {name: 'max', type: 'int', info: 'Maximalwert fuer die Zufallszahl.'}],'',"everywhere");
     
     $App.addFunction(function isKeyDown(key){
       if(typeof key==="string"){
         key=key.toLowerCase().codePointAt(0);
       }
       return $App.keyboard.down[key]===true;
-    },'boolean','PrÃ¼ft, ob eine bestimmte Taste auf der Tastatur gedrÃ¼ckt wird.',[{name: 'key', type: 'String', info: 'Das Zeichen, von dem geprÃ¼ft werden soll, ob die zugehÃ¶rige Taste gedrÃ¼ckt wird; bspw. "W", " " oder "4".'}],'');
+    },'boolean','Prueft, ob eine bestimmte Taste auf der Tastatur gedrueckt wird.',[{name: 'key', type: 'String', info: 'Das Zeichen, von dem geprueft werden soll, ob die zugehoerige Taste gedrueckt wird; bspw. "W", " " oder "4".'}],'');
     
     $App.addFunction(function hideHelp(){
       $App.help.setButtonVisible(false);
@@ -3376,7 +3592,7 @@ window.appJScode=function(){
       }
       if(step>0){
         if(start>stop){
-          console.log(text+"Der Startwert darf nicht grÃ¶ÃŸer als der Endwert sein.");
+          console.log(text+"Der Startwert darf nicht groesser als der Endwert sein.");
           return [];
         }
       }else if(step<0){
@@ -3415,6 +3631,39 @@ window.appJScode=function(){
       $App.help.setButtonVisible(true);
     },null,'Zeigt den Hilfe-Button oben rechts wieder an.',[],'',"everywhere");
     
+    $App.addObject("session",false,{
+      session: null,
+      start: function(sessionID, clientID, isHost, debug){
+        this.session=new Session(sessionID,clientID,isHost,debug);
+      },
+      showStartDialog: function(){
+        $App.dialog.showStartSession();
+      },
+      sendMessage: function(message){
+        this.session.sendMessage(message);
+      }
+    },'Hiermit kannst du eine Netzwerksession aufsetzen, in der sich mehrere Instanzen deiner App miteinander verbinden können.',
+    [
+      {
+        name: 'showStartDialog',
+        returnType: null,
+        args: [],
+        info: 'Zeigt einen Dialog, mit dem man bequem eine Netzwerksession starten kann.'
+      },
+      {
+        name: 'start',
+        returnType: null,
+        args: [{name: 'sessionID', type: 'String', info: 'ID deiner Netzwerksession'}, {name: 'clientID', type: 'String', info: 'Dein Name im Netzwerk.'}, {name: 'isHost', type: 'boolean', info: 'Legt fest, ob du der Host (Server) bist oder ein Client, der dem Serer beitritt.'}],
+        info: 'Startet eine neue Netzwerksession entweder als Host oder als Client.'
+      }, 
+      {
+        name: 'sendMessage',
+        returnType: null,
+        args: [{name: 'message', type: 'SessionMessage', info: 'Nachricht, die versendet wird.'}],
+        info: 'Sendet eine Nachricht an alle Teilnehmer der Netzwerksession.'
+      }
+    ]);
+
     $App.addObject("mouse",false,{
       get x(){
         return $App.canvas? $App.canvas.getCanvasX($App.mouse.x):null;
@@ -3435,22 +3684,22 @@ window.appJScode=function(){
         let y=this.y;
         return ((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r*r);
       }
-    },'Liefert dir Informationen Ã¼ber den Mauszeiger / den Finger (bei Touchscreens).',
+    },'Liefert dir Informationen ueber den Mauszeiger / den Finger (bei Touchscreens).',
     [
       {name: 'x', type: 'double', info: 'Die aktuelle x-Koordinate der Maus.'},
       {name: 'y', type: 'double', info: 'Die aktuelle y-Koordinate der Maus.'},
-      {name: 'down', type: 'boolean', info: 'Ist gerade die Maustaste gedrÃ¼ckt / berÃ¼hrt der Finger gerade den Bildschirm?'}, 
+      {name: 'down', type: 'boolean', info: 'Ist gerade die Maustaste gedrueckt / beruehrt der Finger gerade den Bildschirm?'}, 
       {
         name: 'inRect', 
         returnType: 'boolean',
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'cx', type: 'double', info: 'HÃ¶he des Rechtecks'}],
-        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und HÃ¶he height befindet.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'cx', type: 'double', info: 'Hoehe des Rechtecks'}],
+        info: 'Prueft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und Hoehe height befindet.'
       }, 
       {
         name: 'inCircle',
         returnType: 'boolean',
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Kreises'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Kreises'}, {name: 'r', type: 'double', info: 'Radius des Kreises'}],
-        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'
+        info: 'Prueft, ob sich die Maus aktuell innerhalb des Kreises mit Mittelpunkt (cx|cy) und Radius r befindet.'
       }
     ]);
     
@@ -3526,7 +3775,7 @@ window.appJScode=function(){
               return;
             }
           }
-          console.log("Es gibt keinen Timer mit dem Namen '"+name+"', den du stoppen kÃ¶nntest.");
+          console.log("Es gibt keinen Timer mit dem Namen '"+name+"', den du stoppen koenntest.");
         }else{
           /**Stoppe alle Timer */
           for(var i=0; i<$App.timer.length;i++){
@@ -3536,7 +3785,7 @@ window.appJScode=function(){
           $App.timer=[];
         }
       }
-    },'Liefert dir Informationen Ã¼ber die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',
+    },'Liefert dir Informationen ueber die Zeit und erlaubt es dir, Timer zu stellen und zu stoppen.',
     [
       {name: 'now', info: 'Die aktuelle Zeit in Millisekunden seit dem 1.1.1970.', type: 'int'},
       {name: 'sec', info: 'Die Sekundenzahl der aktuellen Uhrzeit.', type: 'int'},
@@ -3547,8 +3796,8 @@ window.appJScode=function(){
       {
         name: 'start', 
         returnType: null, 
-        args: [{name: 'millis', type: 'int', info: 'Anzahl Millisekunden bis der Timer auslÃ¶st.'}, {name: 'name', type: 'String', info: "Name des Timers, mit dem onTimeout aufgerufen wird."}], 
-        info: 'Startet einen Timer, der millis Millisekunden lang lÃ¤uft. Wenn er ablÃ¤uft, lÃ¶st er die Funktion <code>onTimeout</code> aus.'
+        args: [{name: 'millis', type: 'int', info: 'Anzahl Millisekunden bis der Timer ausloest.'}, {name: 'name', type: 'String', info: "Name des Timers, mit dem onTimeout aufgerufen wird."}], 
+        info: 'Startet einen Timer, der millis Millisekunden lang laeuft. Wenn er ablaeuft, loest er die Funktion <code>onTimeout</code> aus.'
       }, 
       {
         name: 'stop', 
@@ -3695,7 +3944,7 @@ window.appJScode=function(){
       {
         name: 'A',
         type: 'boolean',
-        info: 'Wird gerade die Taste "A" gedrÃ¼ckt?'
+        info: 'Wird gerade die Taste "A" gedrueckt?'
       }, 
       {
         name: 'setA',
@@ -3707,7 +3956,7 @@ window.appJScode=function(){
       {
         name: 'B',
         type: 'boolean',
-        info: 'Wird gerade die Taste "B" gedrÃ¼ckt?'
+        info: 'Wird gerade die Taste "B" gedrueckt?'
       },
       {
         name: 'setB',
@@ -3719,7 +3968,7 @@ window.appJScode=function(){
       {
         name: 'X',
         type: 'boolean',
-        info: 'Wird gerade die Taste "X" gedrÃ¼ckt?'
+        info: 'Wird gerade die Taste "X" gedrueckt?'
       }, 
       {
         name: 'setX',
@@ -3731,7 +3980,7 @@ window.appJScode=function(){
       {
         name: 'Y',
         type: 'boolean',
-        info: 'Wird gerade die Taste "Y" gedrÃ¼ckt?'
+        info: 'Wird gerade die Taste "Y" gedrueckt?'
       }, 
       {
         name: 'setY',
@@ -3743,7 +3992,7 @@ window.appJScode=function(){
       {
         name: 'E',
         type: 'boolean',
-        info: 'Wird gerade die Taste "E" gedrÃ¼ckt?'
+        info: 'Wird gerade die Taste "E" gedrueckt?'
       }, 
       {
         name: 'setE',
@@ -3755,7 +4004,7 @@ window.appJScode=function(){
       {
         name: 'F',
         type: 'boolean',
-        info: 'Wird gerade die Taste "F" gedrÃ¼ckt?'
+        info: 'Wird gerade die Taste "F" gedrueckt?'
       },
       {
         name: 'setF',
@@ -3845,7 +4094,7 @@ window.appJScode=function(){
       {
         name: 'close',
         returnType: 'Path', 
-        info: 'Zeichnet eine gerade Linie vom aktuellen Punkt zurÃ¼ck zum Startpunkt des Pfades.'
+        info: 'Zeichnet eine gerade Linie vom aktuellen Punkt zurueck zum Startpunkt des Pfades.'
       }, 
       {
         name: 'draw',
@@ -3855,19 +4104,19 @@ window.appJScode=function(){
       {
         name: 'fill', 
         returnType: 'Path',
-        info: 'FÃ¼llt den Pfad.'
+        info: 'Fuellt den Pfad.'
       }, 
       {
         name: 'contains',
         returnType: 'boolean',
         args: [{name: 'x', type: 'double', info: 'x-Koordinate'}, {name: 'y', type: 'double', info: 'y-Koordinate'}], 
-        info: 'PrÃ¼ft, ob sich der Punkt (<code>x</code>|<code>y</code>) innerhalb des aktuellen Pfades befindet.'
+        info: 'Prueft, ob sich der Punkt (<code>x</code>|<code>y</code>) innerhalb des aktuellen Pfades befindet.'
       }, 
       {
         name: 'rect', 
         returnType: 'Path',
-        args: [{name: 'w', type: 'double', info: 'Breite'}, {name: 'h', type: 'double', info: 'HÃ¶he'}],
-        info: 'Zeichnet ein Rechteck mit dem aktuellen Punkt als Mittelpunkt und Breite w und HÃ¶he h.'
+        args: [{name: 'w', type: 'double', info: 'Breite'}, {name: 'h', type: 'double', info: 'Hoehe'}],
+        info: 'Zeichnet ein Rechteck mit dem aktuellen Punkt als Mittelpunkt und Breite w und Hoehe h.'
       }, 
       {
         name: 'circle(r,[start,stop])',
@@ -4156,24 +4405,24 @@ window.appJScode=function(){
         b.value=text;
         return b;
       }
-    },'Erlaubt das HinzufÃ¼gen und Manipulieren der grafischen BenutzeroberflÃ¤che (UI).',[
+    },'Erlaubt das Hinzufuegen und Manipulieren der grafischen Benutzeroberflaeche (UI).',[
       {
         name: 'button', 
         returnType: 'JButton',
-        args: [{name: 'text', type: 'String', info: 'Aufschrift des Buttons'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}, {name: 'height', type: 'double', info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}],
-        info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert den Button zurÃ¼ck.'
+        args: [{name: 'text', type: 'String', info: 'Aufschrift des Buttons'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}, {name: 'height', type: 'double', info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}],
+        info: 'Erzeugt einen neuen Button mit der Aufschrift <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Hoehe <code>height</code>. Liefert den Button zurueck.'
       },
       {
         name: 'panel', 
         returnType: 'JPanel',
-        args: [{name: 'template', type: 'String', info: 'Definition der Zeilen und Spalten des Panels. "" oder null bedeutet, dass es keine Spalten und Zeilen gibt. "3" bedeutet "3 gleich breite Spalten", "2fr 1fr" bedeutet "2 Spalten, die erste doppelt so breit wie die zweite". Hier sind alle Werte mÃ¶glich, die auch fÃ¼r die CSS-Eigenschaften "grid-template" oder "grid-template-columns" verwendet werden kÃ¶nnen.'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}, {name: 'height', type: 'double', info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}],
-        info: 'Erzeugt ein neues Panel, ein Container fÃ¼r andere Elemente.'
+        args: [{name: 'template', type: 'String', info: 'Definition der Zeilen und Spalten des Panels. "" oder null bedeutet, dass es keine Spalten und Zeilen gibt. "3" bedeutet "3 gleich breite Spalten", "2fr 1fr" bedeutet "2 Spalten, die erste doppelt so breit wie die zweite". Hier sind alle Werte moeglich, die auch fuer die CSS-Eigenschaften "grid-template" oder "grid-template-columns" verwendet werden koennen.'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}, {name: 'height', type: 'double', info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}],
+        info: 'Erzeugt ein neues Panel, ein Container fuer andere Elemente.'
       },
       {
         name: 'image', 
         returnType: 'JImage',
-        args: [{name: 'url', type: 'String', info: 'URL zum Bild'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}, {name: 'height', type: 'double', info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'}],
-        info: 'Erzeugt ein neues Bild von der URL <code>url</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert das Bild zurÃ¼ck.'
+        args: [{name: 'url', type: 'String', info: 'URL zum Bild'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}, {name: 'height', type: 'double', info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}],
+        info: 'Erzeugt ein neues Bild von der URL <code>url</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Hoehe <code>height</code>. Liefert das Bild zurueck.'
       },
       {
         name: 'input',
@@ -4203,15 +4452,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }
         ],
-        info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst auÃŸerdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die HÃ¶he <code>height</code> festlegen. Liefert das Eingabefeld zurÃ¼ck.'
+        info: 'Erzeugt ein neues Eingabefeld, in das der User etwas eingeben kann. Mit <code>type</code> legst du fest, was der User eingeben soll (normalerweise <code>"text"</code> oder <code>"number"</code>, es gibt aber <a href="https://www.w3schools.com/html/html_form_input_types.asp" target="_blank">noch viel mehr</a>). Du kannst ausserdem den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Hoehe <code>height</code> festlegen. Liefert das Eingabefeld zurueck.'
       },
       {
         name: 'datatable',
@@ -4239,12 +4488,12 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }
         ],
         info: 'Erzeugt eine neue Datatable, mit der du die Elemente eines Arrays anzeigen kannst.'
@@ -4272,15 +4521,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }
         ],
-        info: 'Erzeugt ein neues Eingabefeld, in das der User Text eingeben kann. Du kannst den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die HÃ¶he <code>height</code> festlegen. Liefert das Element zurÃ¼ck.'
+        info: 'Erzeugt ein neues Eingabefeld, in das der User Text eingeben kann. Du kannst den Platzhaltertext <code>placeholdertext</code>, den Mittelpunkt (<code>cx</code>|<code>cy</code>), die Breite <code>width</code> und die Hoehe <code>height</code> festlegen. Liefert das Element zurueck.'
       },
       {
         name: 'textarea', 
@@ -4304,15 +4553,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }
         ],
-        info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert die TextArea zurÃ¼ck.'
+        info: 'Erzeugt eine neue TextArea mit dem Platzhaltertext <code>placeholdertext</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Hoehe <code>height</code>. Liefert die TextArea zurueck.'
       },
       {
         name: 'select',
@@ -4336,15 +4585,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }
         ],
-        info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert das Select-Element zurÃ¼ck.'
+        info: 'Erzeugt ein neues Select-Element mit den Auswahl-Optionen <code>options</code> (ein  Array), dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Hoehe <code>height</code>. Liefert das Select-Element zurueck.'
       },
       {
         name: 'label',
@@ -4368,15 +4617,15 @@ window.appJScode=function(){
           {
             name: 'width', 
             type: 'double', 
-            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }, 
           {
             name: 'height', 
             type: 'double', 
-            info: 'HÃ¶he. Bei einem negativen Wert wird das Element in seiner natÃ¼rlichen GrÃ¶ÃŸe gezeichnet.'
+            info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'
           }
         ], 
-        info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der HÃ¶he <code>height</code>. Liefert das Label zurÃ¼ck.'
+        info: 'Erzeugt ein neues Label mit dem Inhalt <code>text</code>, dem Mittelpunkt (<code>cx</code>|<code>cy</code>), der Breite <code>width</code> und der Hoehe <code>height</code>. Liefert das Label zurueck.'
       }
     ],'');
     
@@ -4497,12 +4746,12 @@ window.appJScode=function(){
           {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'}
         ],
-        info: 'Gibt den Typ (das Zeichen) an der angegebenen Position zurÃ¼ck. Falls es an der Position kein eindeutiges Zeichen gibt, wird null zurÃ¼ckgegeben.'
+        info: 'Gibt den Typ (das Zeichen) an der angegebenen Position zurueck. Falls es an der Position kein eindeutiges Zeichen gibt, wird null zurueckgegeben.'
       },
       {
         name: 'delete',
         returnType: null, 
-        info: 'LÃ¶scht die aktuelle Spielwelt, damit z. B. eine neue erschaffen werden kann.'
+        info: 'Loescht die aktuelle Spielwelt, damit z. B. eine neue erschaffen werden kann.'
       }, 
       {
         name: 'setType', 
@@ -4521,7 +4770,7 @@ window.appJScode=function(){
           {name: 'x', type: 'double', info: 'x-Koordinate in der Welt'},
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'}
         ],
-        info: 'Gibt die Information an der angegebenen Position zurÃ¼ck.'
+        info: 'Gibt die Information an der angegebenen Position zurueck.'
       }, 
       {
         name: 'setInfo', 
@@ -4540,13 +4789,13 @@ window.appJScode=function(){
           {name: 'width', type: 'int', info: 'Anzahl Felder nebeneinander'},
           {name: 'height', type: 'int', info: 'Anzahl Felder untereinander'}
         ],
-        info: 'Erschafft eine neue Spielwelt der angegebenen GrÃ¶ÃŸe. Alle Typen werden auf " " gesetzt.'
+        info: 'Erschafft eine neue Spielwelt der angegebenen Groesse. Alle Typen werden auf " " gesetzt.'
       },
       {
         name: 'addRow',
         returnType: null,
         args: [{name: 'description', type: 'String', info: 'Dieser Text definiert die Felder der neuen Zeile.'}],
-        info: 'FÃ¼gt der Spielwelt eine neue Zeile hinzu.'
+        info: 'Fuegt der Spielwelt eine neue Zeile hinzu.'
       },
       {
         name: 'replaceTypes',
@@ -4585,7 +4834,7 @@ window.appJScode=function(){
         name: 'zoom',
         returnType: null, 
         args: [
-          {name: 'factor', type: 'double', info: 'Die StÃ¤rke des Zoomens: 1 fÃ¼r Einpassung der Welt in den Bildschirm.'}
+          {name: 'factor', type: 'double', info: 'Die Staerke des Zoomens: 1 fuer Einpassung der Welt in den Bildschirm.'}
         ],
         info: 'Legt fest, wie weit in die Welt hinein- bzw. herausgezoomt wird.'
       },
@@ -4593,44 +4842,44 @@ window.appJScode=function(){
         name: 'write',
         returnType: null, 
         args: [
-          {name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> fÃ¼r ZeilenumbrÃ¼che.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 WÃ¶rtern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. MÃ¶gliche WÃ¶rter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}
+          {name: 'text', type: 'String', info: 'Der Text, der geschrieben werden soll. Verwende <code>&bsol;n</code> fuer Zeilenumbrueche.'}, {name: 'x', type: 'double', info: 'Die x-Koordinate des Texts.'}, {name: 'y', type: 'double', info: 'Die y-Koordinate des Texts.'}, {name: 'align', type: 'String', info: 'Eine Angabe aus bis zu 2 Woertern, die bestimmen, wie der Text am Punkt (<code>x</code>|<code>y</code>) ausgerichtet sein soll. Moegliche Woerter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.', hide: true}
         ],
         info: 'Schreibt Text in die Spielwelt.'
       },
       {
         name: 'drawRect',
         returnType: 'Path', 
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
-        info: 'Zeichnet ein Rechteck in die Spielwelt und gibt dieses zurÃ¼ck.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}],
+        info: 'Zeichnet ein Rechteck in die Spielwelt und gibt dieses zurueck.'
       },
       {
         name: 'fillRect',
         returnType: 'Path', 
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
-        info: 'Zeichnet ein ausgefÃ¼lltes Rechteck in die Spielwelt und gibt dieses zurÃ¼ck.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}],
+        info: 'Zeichnet ein ausgefuelltes Rechteck in die Spielwelt und gibt dieses zurueck.'
       },
       {
         name: 'drawCircle',
         returnType: 'Path', 
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
-        info: 'Zeichnet einen Kreis in die Spielwelt und gibt dieses zurÃ¼ck.'
+        info: 'Zeichnet einen Kreis in die Spielwelt und gibt dieses zurueck.'
       },
       {
         name: 'fillCircle',
         returnType: 'Path', 
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
-        info: 'Zeichnet einen ausgefÃ¼llten Kreis in die Spielwelt und gibt dieses zurÃ¼ck.'
+        info: 'Zeichnet einen ausgefuellten Kreis in die Spielwelt und gibt dieses zurueck.'
       },
       {
         name: 'drawImage',
         returnType: null, 
-        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
         info: 'Zeichnet ein Bild in die Spielwelt. Dieses musst du vorher mittels "loadAsset" laden.'
       },
       {
         name: 'drawImagePart',
         returnType: null, 
-        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'HÃ¶he des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
+        args: [{name: 'image', type: 'String', info: 'Bild-Asset. Muss vorher mittels <a href="#help-loadAsset"><code>loadAsset</code></a> geladen werden.'},{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'},{name: 'scx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'scy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Ausschnittes.'}, {name: 'width', type: 'double', info: 'Breite des Ausschnittes.'}, {name: 'height', type: 'double', info: 'Hoehe des Ausschnittes.'}, {name: 'rotation', type: 'double', info: 'Winkel, um den das Bild gedreht werden soll.', hide: true}, {name: 'mirrored', type: 'boolean', info: 'true, wenn das Bild vertikal gespiegelt werden soll.', hide: true}],
         info: 'Zeichnet einen rechteckigen Ausschnitt eines Bild in die Spielwelt. Dieses musst du vorher mittels "loadAsset" laden.'
       },
       {
@@ -4646,19 +4895,19 @@ window.appJScode=function(){
       {
         name: 'mouseDown',
         type: 'boolean',
-        info: 'Ist die Maus aktuell gedrÃ¼ckt oder nicht (entspricht mouse.down).'
+        info: 'Ist die Maus aktuell gedrueckt oder nicht (entspricht mouse.down).'
       },
       {
         name: 'mouseInRect',
         returnType: 'boolean', 
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'HÃ¶he.'}],
-        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb eines Rechtecks in der Spielwelt befindet.'
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'width', type: 'double', info: 'Breite.'}, {name: 'height', type: 'double', info: 'Hoehe.'}],
+        info: 'Prueft, ob sich die Maus aktuell innerhalb eines Rechtecks in der Spielwelt befindet.'
       },
       {
         name: 'mouseInCircle',
         returnType: 'boolean', 
         args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts.'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts.'}, {name: 'r', type: 'double', info: 'Radius.'}],
-        info: 'PrÃ¼ft, ob sich die Maus aktuell innerhalb eines Kreises in der Spielwelt befindet.'
+        info: 'Prueft, ob sich die Maus aktuell innerhalb eines Kreises in der Spielwelt befindet.'
       }
     ],'');
   
