@@ -3632,6 +3632,12 @@ window.appJScode=function(){
     },null,'Zeigt den Hilfe-Button oben rechts wieder an.',[],'',"everywhere");
     
     $App.addObject("session",false,{
+      get clientID(){
+        return this.session.clientID;
+      },
+      get sessionID(){
+        return this.session.sessionID;
+      },
       session: null,
       start: function(sessionID, clientID, isHost, debug){
         this.session=new Session(sessionID,clientID,isHost,debug);
@@ -3644,6 +3650,8 @@ window.appJScode=function(){
       }
     },'Hiermit kannst du eine Netzwerksession aufsetzen, in der sich mehrere Instanzen deiner App miteinander verbinden können.',
     [
+      {name: 'clientID', type: 'String', info: 'Die ID, mit der diese App aktuell im Netzwerk angemeldet ist.'},
+      {name: 'sessionID', type: 'String', info: 'Die ID der Session, mit der diese App verbunden ist.'},
       {
         name: 'showStartDialog',
         returnType: null,
