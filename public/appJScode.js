@@ -13,7 +13,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 29,
+      version: 31,
       language: window.language? window.language:'js',
       setupData: null,
       dialog: {
@@ -3632,11 +3632,26 @@ window.appJScode=function(){
     },null,'Zeigt den Hilfe-Button oben rechts wieder an.',[],'',"everywhere");
     
     $App.addObject("session",false,{
-      get clientID(){
-        return this.session.clientID;
+      get isServer(){
+		if(this.session){
+		  return this.session.isHost;
+		}else{
+		  return false;
+		}
+      },
+      get myID(){
+		if(this.session){
+          return this.session.clientID;
+		}else{
+		  return null;
+		}
       },
       get sessionID(){
-        return this.session.sessionID;
+        if(this.session){
+          return this.session.sessionID;
+		}else{
+		  return null;
+		}
       },
       session: null,
       start: function(sessionID, clientID, isHost, debug){
@@ -3650,7 +3665,8 @@ window.appJScode=function(){
       }
     },'Hiermit kannst du eine Netzwerksession aufsetzen, in der sich mehrere Instanzen deiner App miteinander verbinden können.',
     [
-      {name: 'clientID', type: 'String', info: 'Die ID, mit der diese App aktuell im Netzwerk angemeldet ist.'},
+      {name: 'myID', type: 'String', info: 'Die ID, mit der du aktuell im Netzwerk angemeldet ist.'},
+	  {name: 'isServer', type: 'boolean', info: 'true, wenn du selbst der Server bist, ansonsten false.'},
       {name: 'sessionID', type: 'String', info: 'Die ID der Session, mit der diese App verbunden ist.'},
       {
         name: 'showStartDialog',
@@ -4184,7 +4200,7 @@ window.appJScode=function(){
       },
       button: function (text,cx,cy,width,height){
         var b=$App.createElement("button");
-        b.innerHTML=text;
+        b.value=text;
         $App.canvas.addElement(b,cx,cy,width,height);
         return b;
       },
@@ -4201,7 +4217,7 @@ window.appJScode=function(){
           return this.input("text",type,placeholdertext,cx,cy,width,height);
         }
         var b=$App.createElement("input");
-        b.type=type;
+        if(type) b.type=type.toLowerCase();
         if(b.type==="checkbox"){
           var id=Math.floor(Math.random()*100000000);
           b.id="checkbox-"+id;
@@ -4243,6 +4259,8 @@ window.appJScode=function(){
             this.currentLine=0;
             this.nextLine=f.nextLine;
           };
+        }else if(b.type==="number"){
+          b.step=0.00000000000000000001;
         }
         Object.defineProperty(b,"value",{
           get: function(){
