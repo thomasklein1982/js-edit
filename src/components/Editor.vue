@@ -19,6 +19,7 @@
   />
   <div style="width: 100%; height: 100%; overflow: hidden" :style="{display: 'flex', flexDirection: 'column'}">
     <editor-menubar 
+      :right-closed="rightClosed"
       @upload="uploadApp()" 
       @export="exportApp()"
       @prettify="prettifyCode()"
@@ -30,8 +31,9 @@
       @search="$refs.editor.openSearchPanel()"
       @unicode="$refs.linksDialog.setVisible(true)"
       @share="$refs.shareDialog.setVisible(true)"
+      @toggleright="toggleRight()"
     />
-    <Splitter :style="{flex: 1}" style="overflow: hidden;width: 100%;">
+    <Splitter ref="splitter" @resizeend="handleResize" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
         <code-mirror 
           ref="editor"
@@ -85,10 +87,46 @@ export default {
     return {
       fontSize: 20,
       autocompleteVariables: true,
-      running: false
+      running: false,
+      sizeCode: 60,
+      rightClosed: false,
+      sizeCodeSaved: 60,
+      closeRightAfterStopping: false,
     };
   },
+  watch: {
+    sizeCode(nv,ov){
+      if(nv!==ov){
+        this.setSplitterSizes(nv);
+      }
+    },
+  },
   methods: {
+    toggleRight(){
+      if(!this.rightClosed){
+        this.sizeCodeSaved=this.sizeCode;
+        this.sizeCode=100;
+      }else{
+        this.sizeCode=Math.max(10,this.sizeCodeSaved);
+      }
+      this.rightClosed=!this.rightClosed;
+    },
+    setSplitterSizes(left){
+      let s=this.$refs.splitter;
+      s.panelSizes=[left,100-left];
+      let children = [...s.$el.children];
+      let j=0;
+      children.forEach((child, i) => {
+        if(child.className.indexOf("p-splitter-panel")>=0){
+          child.style.flexBasis = 'calc(' + s.panelSizes[j] + '% - ' + ((s.panels.length - 1) * s.gutterSize) + 'px)';
+          j++;
+        }
+      });
+      this.sizeCode=left;
+    },
+    handleResize(ev){
+      this.sizeCode=ev.sizes[0];
+    },
     async uploadApp(){
       let img=await upload({dataURL: true});
       if(img){
