@@ -13,7 +13,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 31,
+      version: 32,
       language: window.language? window.language:'js',
       setupData: null,
       dialog: {
@@ -148,6 +148,54 @@ window.appJScode=function(){
           audio.currentTime=0;
           audio.play()
         }
+      },
+      $uploadCallback: function(callback,options){
+        var fi=document.createElement("input");
+        fi.type="file";
+        if(options && options.accept) fi.accept=options.accept;
+        if(options && options.that) fi.that=options.that; else fi.that=null;
+        fi.name="files[]";
+        fi.style.display="none";
+        fi.options=options;
+        fi.callback=callback;
+        document.body.appendChild(fi);
+        if(options && options.multi){fi.multiple=true;}
+        if(options && options.dataURL){fi.dataURL=options.dataURL;}
+
+        fi.handleCallback=function(filesLeft){
+          var fileReader=new FileReader();
+          fileReader.fileInput=fi;
+          if(this.options && this.options.object) fileReader.object=this.options.object;
+            fileReader.callback=this.callback;
+            var file=this.files[this.files.length-filesLeft];
+            fileReader.fileName=file.name;
+            fileReader.mime=file.type;
+            fileReader.that=this.that;
+            fileReader.filesLeft=filesLeft;
+            fileReader.onload = function(e){
+            var code=e.target.result;
+            if(this.that){
+              this.callback.call(this.that,code,this.fileName,this.mime,this.filesLeft-1);
+            }else{
+              this.callback(code,this.fileName,this.mime,this.filesLeft-1);
+            }
+            if(this.filesLeft>1){
+              this.fileInput.handleCallback(this.filesLeft-1);
+            }
+          };
+          if(this.dataURL){
+            fileReader.readAsDataURL(file);
+          }else{
+            fileReader.readAsText(file);
+          }
+        };
+
+        fi.onchange=function(e){
+          var filesLeft=this.files.length;
+          fi.handleCallback(filesLeft);
+        };
+        fi.click();
+        document.body.removeChild(fi);
       },
       mouse: {
         down: false,
@@ -3727,6 +3775,128 @@ window.appJScode=function(){
       }
     ]);
     
+    $App.addObject("storage",false,{
+      get keys(){
+        var keys=[];
+        for (var i = 0; i < localStorage.length; i++) {
+          keys.push(localStorage.key(i));
+        }
+        return keys;
+      },
+      save(key, value){
+        try{
+          var s=JSON.stringify(value);
+        }catch(e){
+          var m="Der Wert kann nicht in einen String umgewandelt werden.";
+          console.log(m);
+          throw m;
+        }
+        try{
+          localStorage.setItem(key,s);
+          return true;
+        }catch(e){
+          return false;
+        }
+      },
+      removeItem: function(key){
+        localStorage.removeItem(key);
+      },
+      removeAllItems: function(){
+        localStorage.clear();
+      },
+      load(key){
+        var v=localStorage.getItem(key);
+        if(v!==null){
+          try{
+            v=JSON.parse(v);
+          }catch(e){
+            v=null;
+          }
+        }
+        return v;
+      },
+      download: function(data,filename){
+        window.URL =  window.URL || window.webkitURL;
+        if(!filename) filename="Download.txt";
+        var split=filename.split(".");
+        var mime;
+        if(split.length>0){
+          var extension=split[split.length-1];
+          mime="text/"+extension;
+        }else{
+          var extension="txt";
+          mime="text";
+          filename+=extension;
+        }
+        var blob = new Blob([data], {type: mime});
+        var downloadAnchor=document.createElement("a");
+        downloadAnchor.style.display="none";
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.download = filename;
+        let objectURL=window.URL.createObjectURL(blob);
+        downloadAnchor.href=objectURL;
+        downloadAnchor.dataset.downloadurl = [mime, downloadAnchor.download, downloadAnchor.href].join(':');
+        downloadAnchor.click();
+        setTimeout(()=>{
+          window.URL.revokeObjectURL(objectURL);
+        },200);
+        document.body.removeChild(downloadAnchor);
+      },
+      upload: async function(){
+        var p=new Promise(function(resolve,reject){
+          $App.$uploadCallback(function(data,fileName,mime){
+            data=data.replace(/\r\n/g,"\n");
+            resolve({
+              data: data,
+              fileName: fileName,
+              mime: mime
+            });
+          });
+        });
+        var q=await p;
+        return q;
+      }
+    },'Erlaubt das Speichern und Laden von Daten.',
+    [
+      {name: 'keys', type: { baseType: 'double', dimension: 1}, info: 'Ein String-Array mit allen Keys, die von der App verwendet werden.'},
+      {
+        name: 'save', 
+        returnType: 'boolean',
+        args: [{name: 'key', type: 'String', info: 'Key, unter dem der Wert gespeichert werden soll.'}, {name: 'value', type: 'String', info: 'Wert, der gespeichert werden soll'}],
+        info: 'Speichert den Wert value unter einem Key key im lokalen Speicher des Browsers. Liefert true zurück, wenn der Vorgang erfolgreich war, ansonsten false (z.B. weil kein Speicherplatz mehr verfügbar ist).'
+      }, 
+      {
+        name: 'load',
+        returnType: 'String',
+        args: [{name: 'key', type: 'String', info: 'Key, dessen Wert geladen werden soll.'}],
+        info: 'Lädt den Wert, der im lokalen Speicher des Browsers unter dem Key key gespeichert ist. Ist kein Wert vorhanden, wird null zurückgegeben.'
+      },
+      {
+        name: 'removeItem',
+        returnType: null,
+        args: [{name: 'key', type: 'String', info: 'Key, dessen Wert entfernt werden soll.'}],
+        info: 'Entfernt den Wert, der im lokalen Speicher des Browsers unter dem Key key gespeichert ist. Ist kein Wert vorhanden, bewirkt diese Methode nichts.'
+      },
+      {
+        name: 'removeAllItems',
+        returnType: null,
+        args: [],
+        info: 'Löscht den kompletten Inhalt des lokalen Speichers des Browsers.'
+      },
+      {
+        name: 'download',
+        returnType: null,
+        args: [{name: 'filename', type: 'String', info: 'Name der Datei, die heruntergeladen werden soll.'},{name: 'text', type: 'String', info: 'Inhalt der Datei, die heruntergeladen werden soll.'}],
+        info: 'Erzeugt eine Datei, die der User auf seinem:ihrem Gerät speichern kann.'
+      },
+      {
+        name: 'upload',
+        returnType: "File",
+        args: [],
+        info: 'Erlaubt es dem User eine Datei von seinem:ihrem Gerät hochzuladen und liefert die Datei zurück.'
+      }
+    ]);
+
     $App.addObject("time",false,{
       get now(){
         return (new Date()).getTime();
@@ -4237,6 +4407,7 @@ window.appJScode=function(){
           b.fr=new FileReader();
           b.fr.onload=(ev)=>{
             b.text=ev.target.result;
+            b.text=b.text.replace(/\r\n/g,"\n");
             b.lines=b.text.split("\n");
             b.files[0].lineCount=b.lines.length;
             b.files[0].lines=b.lines;
