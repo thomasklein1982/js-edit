@@ -33,7 +33,7 @@
       @share="$refs.shareDialog.setVisible(true)"
       @toggleright="toggleRight()"
     />
-    <Splitter ref="splitter" @resizeend="handleResize" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
+    <Splitter :gutter-size="splitterSize" ref="splitter" @resizeend="handleResize" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden; height: 100%" :style="{display: 'flex', flexDirection: 'column'}">
         <code-mirror 
           ref="editor"
@@ -47,6 +47,7 @@
           @outlineclick="outlineClick"
           :paused="paused"
           :breakpoints="breakpoints" 
+          :splitter-size="splitterSize"
           ref="controlArea"
         />
       </SplitterPanel>
@@ -92,6 +93,7 @@ export default {
       rightClosed: false,
       sizeCodeSaved: 60,
       closeRightAfterStopping: false,
+      splitterSize: 8
     };
   },
   watch: {

@@ -25,13 +25,14 @@ window.appJScode=function(){
         startSession: function(asServer, debugMode){
           var sessionID=document.getElementById('appjs-in-session-id').value.trim();
           var clientID=document.getElementById('appjs-in-client-id').value.trim();
-          if(sessionID.length===0 || clientID.length===0) return;
+          if(sessionID.length===0 || clientID.length===0) return false;
           localStorage.setItem("appjs-session-data",JSON.stringify({sessionID,clientID}));
           session.start(sessionID, clientID, asServer, debugMode);
           this.root.style.display="none";
+          return true;
         },
-        showStartSession: function(){
-          this.content.innerHTML="<div style='text-align: center;padding: 0.3rem; font-weight: bold'>Netzwerk-Session</div><div><div style='padding: 0.3rem'><input id='appjs-in-session-id' style='width: 100%; min-height: 1cm;' type='text' placeholder='Session-ID'></div><div style='padding: 0.3rem'><input id='appjs-in-client-id' style='width: 100%;min-height: 1cm;' type='text' placeholder='Deine ID'></div></div><div><button style='min-height: 1cm' onclick='$App.dialog.startSession(true)'>Starte als Server</button><button style='min-height: 1cm' onclick='$App.dialog.startSession(false)'>Verbinde als Client</button></div>";
+        showStartSession: async function(){
+          this.content.innerHTML="<div style='text-align: center;padding: 0.3rem; font-weight: bold'>Netzwerk-Session</div><div><div style='padding: 0.3rem'><input id='appjs-in-session-id' style='width: 100%; min-height: 1cm;' type='text' placeholder='Session-ID'></div><div style='padding: 0.3rem'><input id='appjs-in-client-id' style='width: 100%;min-height: 1cm;' type='text' placeholder='Deine ID'></div></div><div><button style='min-height: 1cm' onclick='$App.dialog._startSession(true)'>Starte als Server</button><button style='min-height: 1cm' onclick='$App.dialog._startSession(false)'>Verbinde als Client</button></div>";
           this.root.style.display="";
           var data=localStorage.getItem("appjs-session-data");
           if(data){
@@ -45,6 +46,16 @@ window.appJScode=function(){
 
             }
           }
+          let p=new Promise((resolve,reject)=>{
+            this._startSession=(asServer)=>{
+              let a=this.startSession(asServer);
+              if(a){
+                resolve();
+              }
+            };
+          });
+          let q=await p;
+          return q;
         }
       },
       debug: {
@@ -884,58 +895,18 @@ window.appJScode=function(){
     $App.loadAssets=async function(){
       for(let a in this.assets){
         let asset=this.assets[a];
-        let fullurl=(new URL(asset.url,document.baseURI)).href;
-        let url=asset.url.toLowerCase();
+        let url=new URL(asset.url,document.baseURI);
+        let pathname=url.pathname.toLowerCase();
+        let fullurl=url.href;
         let p;
         let type=null;
-        if(url.endsWith("mp3")||url.endsWith("wav")||url.endsWith("ogg")){
-          continue;
-          if(!this.audio.context){
-            this.audio.context=new AudioContext();
+        if(pathname.endsWith("mp3")||pathname.endsWith("wav")||pathname.endsWith("ogg")){
+          if(window.Howl){
+            asset.sound=new Howl({src: fullurl});
+          }else{
+            continue;
           }
-          let audio=document.createElement("audio");
-          audio.style="position: fixed; left: 0; top: 0;z-index:100";
-          audio.controls=true;
-          document.body.appendChild(audio);
-          audio.oncanplaythrough=()=>{
-            type="audio";
-            if(!location.protocol.startsWith("file")){
-              let source=this.audio.context.createMediaElementSource(audio);
-              let gainNode = this.audio.context.createGain();
-              gainNode.value=1;
-              //source.connect(gainNode);
-              //gainNode.connect(this.audio.context.destination);
-            }
-            asset={
-              audio: audio,
-              //source: source,
-              stop: function(){
-                this.audio.pause();
-                this.audio.currentTime=0;
-              },
-              pause: function(){
-                this.audio.pause();
-              },
-              play: function(){
-                this.audio.play();
-              }
-            }
-            
-          };
-    
-          // p=new Promise((resolve,reject)=>{
-          //   audio.oncanplaythrough=()=>{
-          //     type="sound";
-          //     resolve(audio);
-          //   };
-          //   audio.onerror=()=>{
-          //     resolve(null);
-          //   };
-          // });
-          audio.src=fullurl;
-    
-          asset=audio;
-        }else if(url.endsWith("txt")){
+        }else if(pathname.endsWith("txt")){
           try{
             var r=await fetch(fullurl);
             var text=await r.text();
@@ -965,7 +936,7 @@ window.appJScode=function(){
             asset.object=image;
             asset.type="image";
           }else{
-            var m="Das Asset '"+url+"' konnte nicht geladen werden.";
+            var m="Das Asset '"+asset.url+"' konnte nicht geladen werden.";
           }
         }
       }
@@ -2591,8 +2562,7 @@ window.appJScode=function(){
     $App.Toast.prototype={
       show: function(text,pos,duration){
         let element=document.createElement("span");
-        element.style="color: white; background-color: #121212; transition: opacity 1s; padding: 0.5rem; border-radius: 10px";
-        element.style.opacity="0";
+        element.style="color: white; background-color: #121212; transition: opacity 1s; padding: 0.5rem; border-radius: 10px; opacity: 0; text-align: center; z-index: 1000;";
         if(!duration){
           duration=Math.min(Math.max(1500,text.length*200),15000);
         }
@@ -3318,6 +3288,11 @@ window.appJScode=function(){
         return loc+"-"+this.sessionID;
       },
       sendMessage: function(message,recipients){
+        if(!window.Peer){
+          var m="Du musst zuerst PeerJS laden (mittels loadPeerJS()), bevor du Nachrichten über das Netzwerk versenden kannst.";
+          console.log(m);
+          throw m;
+        }
         if(this.isHost){
           this.forward(this.clientID,{sender: this.clientID, type: "message", message});
         }else{
@@ -3362,7 +3337,7 @@ window.appJScode=function(){
     $App.addEventHandler("onAction",[{name: 'trigger', type: 'JComponent', info: 'Das Element, das das Ereignis ausgeloest hat.'}],'Wird ausgefuehrt, wenn der User mit einem UI-Element interagiert (z. B. auf einen Button klickt).','');
     $App.addEventHandler("onSessionStart",[{name: 'isServer', type: 'boolean', info: 'true, wenn die Session als Server gestartet wurde, ansonsten false.'}],'Wird ausgefuehrt, wenn eine Netzwerk-Session gestartet wird - egal ob als Server oder als Client.','');
     $App.addEventHandler("onNewConnection",[{name: 'id', type: 'String', info: 'Die ID der neuen Verbindung.'}],'Wird ausgefuehrt, wenn eine neue Verbindung über das Netzwerk hergestellt wird.','');
-    $App.addEventHandler("onMessage",[{name: 'senderID', type: "String", info: 'ID des Senders'}, {name: 'message', type: "JSON", info: 'Nachricht, die empfangen wird'}],'Wird ausgefuehrt, wenn die App eine Nachricht von einem anderen Client oder dem Server erhaelt.','');
+    $App.addEventHandler("onMessage",[{name: 'senderID', type: "String", info: 'ID des Senders'}, {name: 'message', type: "String", info: 'Nachricht, die empfangen wird'}],'Wird ausgefuehrt, wenn die App eine Nachricht von einem anderen Client oder dem Server erhaelt.','');
     $App.addEventHandler("onSessionError",[{name: 'error', type: "JSON", info: 'Informationen zum Fehler, der aufgetreten ist'}],'Wird ausgefuehrt, wenn ein Netzwerk-Fehler auftritt, also wenn z. B. die Verbindung unterbrochen wird.','');
 
     $App.addFunction(function setupApp(title,favicon,width,height,backgroundColor){
@@ -3449,10 +3424,6 @@ window.appJScode=function(){
       $App.toast.show(text,position,duration);
     },null,'Zeigt eine Nachricht fuer einen gewissen Zeitraum an.',[{name: 'text', type: 'String', info: 'Der Text, der angezeigt werden soll.'}, {name: 'position', type: 'String', info: 'Optional: Eine Angabe aus bis zu 2 Woertern, die bestimmen, wo der Text erscheinen soll. Moegliche Woerter: <code>"left"</code>, <code>"center"</code>, <code>"right"</code> und <code>"top"</code>, <code>"middle"</code>, <code>"bottom"</code>.'}, {name: 'duration', type: 'int', info: 'Optional: Die Dauer der Anzeige in Millisekunden.'}],'');
     
-    $App.addFunction(function sound(asset){
-      $App.audio.play(asset);
-    },null,'Spielt einen Sound ab. Dieser muss vorher mit loadAssets geladen werden.',[{name: 'asset', type: 'String', info: 'URL des Sounds, der abgespielt werden soll.'}],'');
-    
     $App.addFunction(function drawLine(x1,y1,x2,y2){
       return $App.canvas.drawLine(x1,y1,x2,y2);
     },'Path','Zeichnet eine gerade Linie von (x1|y1) bis (x2|y2)',
@@ -3530,7 +3501,57 @@ window.appJScode=function(){
     },null,'Laedt PeerJS, was du zur Verbindungsherstellung über das Internet brauchst. Muss vor onStart aufgerufen werden.',
     [],
     '',"topLevel");
+
+    $App.addFunction(async function loadHowlerJS(){
+      loadScript("https://thomaskl.uber.space/Webapps/lib/howler.min.js");
+    },null,'Laedt HowlerJS, was du zum Abspielen von Sounds brauchst. Muss vor onStart aufgerufen werden.',
+    [],
+    '',"topLevel");
   
+    $App.addFunction(function playSound(name, loop){
+      if(!window.Howler){
+        var m="Du musst zuerst HowlerJS laden (mittels loadHowlerJS()), bevor du Sounds abspielen kannst.";
+        console.log(m);
+        throw m;
+      }
+      var asset=$App.assets[name];
+      if(!asset){
+        var m="Es gibt keinen Sound namens '"+name+"'. Du musst ihn vorher mittels loadAsset laden.";
+        console.log(m);
+        throw m;
+      }
+      if(loop!==true){
+        loop=false;
+      }
+      asset.sound.loop(loop);
+      asset.sound.play();  
+    },null,'Spielt den Sound mit dem angegebenen Namen ab.',
+    [{name: 'soundName', type: 'String', info: 'Name des Sounds, der abgespielt werden soll.'}, {name: 'loop', type: 'boolean', info: 'true, wenn der Sound in Dauerschleife gespielt werden soll.'}],
+    '');
+
+    $App.addFunction(function stopSound(name){
+      if(!window.Howler){
+        var m="Du musst zuerst HowlerJS laden (mittels loadHowlerJS()), bevor du Sounds abspielen kannst.";
+        console.log(m);
+        throw m;
+      }
+      if(!name){
+        Howler.stop();
+        return;
+      }
+      var asset=$App.assets[name];
+      if(!asset){
+        var m="Es gibt keinen Sound namens '"+name+"'. Du musst ihn vorher mittels loadAsset laden.";
+        console.log(m);
+        throw m;
+      }
+      asset.sound.stop();  
+    },null,'Spielt den Sound mit dem angegebenen Namen ab.',
+    [{name: 'soundName', type: 'String', info: 'Name des Sounds, der gestoppt werden soll. null, wenn alle Sound gestoppt werden sollen.'}],
+    '');
+
+    
+
     $App.addFunction(function drawImage(image,cx,cy,width,height,rotation,mirrored){
       $App.canvas.drawImage(image,cx,cy,width,height,rotation,mirrored);
     },null,'Zeichnet ein Bild. Dieses musst du vorher mittels loadAsset laden.',
@@ -3705,8 +3726,8 @@ window.appJScode=function(){
       start: function(sessionID, clientID, isHost, debug){
         this.session=new Session(sessionID,clientID,isHost,debug);
       },
-      showStartDialog: function(){
-        $App.dialog.showStartSession();
+      showStartDialog: async function(){
+        await $App.dialog.showStartSession();
       },
       sendMessage: function(message){
         this.session.sendMessage(message);
@@ -3731,7 +3752,7 @@ window.appJScode=function(){
       {
         name: 'sendMessage',
         returnType: null,
-        args: [{name: 'message', type: 'SessionMessage', info: 'Nachricht, die versendet wird.'}],
+        args: [{name: 'message', type: 'String', info: 'Nachricht, die versendet wird.'}],
         info: 'Sendet eine Nachricht an alle Teilnehmer der Netzwerksession.'
       }
     ]);
@@ -3886,7 +3907,7 @@ window.appJScode=function(){
       {
         name: 'download',
         returnType: null,
-        args: [{name: 'filename', type: 'String', info: 'Name der Datei, die heruntergeladen werden soll.'},{name: 'text', type: 'String', info: 'Inhalt der Datei, die heruntergeladen werden soll.'}],
+        args: [{name: 'text', type: 'String', info: 'Inhalt der Datei, die heruntergeladen werden soll.'}, {name: 'filename', type: 'String', info: 'Name der Datei, die heruntergeladen werden soll.'}],
         info: 'Erzeugt eine Datei, die der User auf seinem:ihrem Gerät speichern kann.'
       },
       {
@@ -4386,23 +4407,24 @@ window.appJScode=function(){
         }else{
           return this.input("text",type,placeholdertext,cx,cy,width,height);
         }
-        var b=$App.createElement("input");
-        if(type) b.type=type.toLowerCase();
-        if(b.type==="checkbox"){
+        if(type) type=type.toLowerCase();
+        if(type==="checkbox"){
+          var b=$App.createElement("div");
+          var cb=document.createElement("input");
+          cb.type=type;
           var id=Math.floor(Math.random()*100000000);
-          b.id="checkbox-"+id;
-          var wrapper=document.createElement("span");
-          wrapper.style="display: inline-block; text-align: center";
-          wrapper.appendChild(b);
-          wrapper.box=b;
+          cb.id="checkbox-"+id;
+          b.style="display: flex; text-align: center;align-items: center;justify-content: center;";
+          b.appendChild(cb);
+          b.box=cb;
           var label=document.createElement("label");
-          label.htmlFor=b.id;
+          label.htmlFor=cb.id;
           label.innerHTML=placeholdertext;
-          wrapper.appendChild(label);
-          b=wrapper;
+          b.appendChild(label);
           b.type="checkbox";
-          b.appJSData=b.box.appJSData;
-        }else if(b.type==="file"){
+        }else if(type==="file"){
+          var b=$App.createElement("input");
+          b.type=type;
           //b.name="files[]";
           b.fr=new FileReader();
           b.fr.onload=(ev)=>{
@@ -4430,8 +4452,13 @@ window.appJScode=function(){
             this.currentLine=0;
             this.nextLine=f.nextLine;
           };
-        }else if(b.type==="number"){
+        }else if(type==="number"){
+          var b=$App.createElement("input");
+          b.type=type;
           b.step=0.00000000000000000001;
+        }else{
+          var b=$App.createElement("input");
+          b.type=type;
         }
         Object.defineProperty(b,"value",{
           get: function(){

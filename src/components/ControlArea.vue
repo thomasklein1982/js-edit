@@ -1,6 +1,6 @@
 <template>
   <div style="overflow: hidden" :style="{flex: width, display: 'flex', flexDirection: 'column'}">
-    <Splitter layout="vertical" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
+    <Splitter :gutter-size="splitterSize" layout="vertical" :style="{flex: 1}" style="overflow: hidden;width: 100%;">
       <SplitterPanel style="overflow: hidden;">
         <app-preview :paused="paused" :breakpoints="breakpoints" ref="preview"/>
       </SplitterPanel>
@@ -30,6 +30,9 @@ import Outline from './Outline.vue'
       width: {
         type: Number,
         default: 5
+      },
+      splitterSize: {
+        type: Number
       }
     },
     methods: {
