@@ -54,10 +54,10 @@
     </Splitter>
   </div>
   <span style="position: fixed; bottom: 0.5rem; right: 0.5rem" class="p-buttonset">
-      <Button :disabled="running && !paused" @click="resume()" icon="pi pi-play" />
-      <Button v-if="!running" @click="debug()" icon="editor-extra debug" />
-      <Button v-if="paused" @click="step()" icon="pi pi-arrow-right" />
-      <Button v-if="running" @click="stop()" icon="pi pi-times" />
+      <Button class="p-button-lg" :disabled="running && !paused" @click="resume()" icon="pi pi-fast-forward" />
+      <Button class="p-button-lg" v-if="!running" @click="debug()" icon="pi pi-play" />
+      <Button class="p-button-lg" v-if="paused" @click="step()" icon="pi pi-arrow-right" />
+      <Button class="p-button-lg" v-if="running" @click="stop()" icon="pi pi-times" />
   </span>
 </template>
 

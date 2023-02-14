@@ -1,7 +1,7 @@
 window.appJScode=function(){
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  
+
     window.onmessage=function(message){
       $App.debug.onMessage(message);
     };
@@ -13,7 +13,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 32,
+      version: 34,
       language: window.language? window.language:'js',
       setupData: null,
       dialog: {
@@ -151,7 +151,11 @@ window.appJScode=function(){
       toast: null,
       keyboard: {
         down: [],
-        lastKeycodeDown: null
+        lastKeycodeDown: null,
+        reset: function(){
+          this.lastKeycodeDown=null;
+          this.down=[];
+        }
       },
       audio: {
         context: null,
@@ -276,13 +280,16 @@ window.appJScode=function(){
       var message=event.reason.message? event.reason.message: event.reason;
       $App.handleError({
         message: message,
-        line: $App.debug.lastLine,
+        line: event.reason.line? event.reason.line: $App.debug.lastLine,
         name: $App.debug.lastName
       });
     });
   
     $App.handleError=function(errorData){
       if(window.parent!==window){
+        if(errorData.line<=0){
+          errorData.line=$App.debug.lastLine;
+        }
         window.parent.postMessage({type: "error", data: errorData});
       }else{
         console.log(errorData.completeMessage);
@@ -297,6 +304,9 @@ window.appJScode=function(){
         m=e;
       }else{
         m=e.message;
+        if(e.line){
+          line=e.line;
+        }
       }
       if(e.stack){
         m=e.stack;
@@ -538,13 +548,16 @@ window.appJScode=function(){
         var style=document.createElement("style");
         document.head.appendChild(style);
         style=style.sheet;
+        style.insertRule("*{overscroll-behavior: none;}",0);
         style.insertRule(".datatable{background-color: white; text-align: center; border-collapse: collapse}",0);
         style.insertRule(".datatable td,th{border: 1pt solid black}",0);
         style.insertRule(".datatable tr.selected{background-color: yellow}",0);
         style.insertRule(".datatable tr:nth-child(even){background-color: lightgray}",0);
         style.insertRule(".datatable.show-index td:nth-child(1),.datatable.show-index th:nth-child(1){display: table-cell}",0);
         style.insertRule(".datatable td:nth-child(1),.datatable th:nth-child(1){display: none}",0);
-        style.insertRule("button{border-radius: 0}",0);
+        style.insertRule("button:active{border-radius: 0;background-color:#e0e0e0}",0);
+        style.insertRule("button{border-radius: 0;background-color:#d0d0d0}",0);
+        style.insertRule("button:hover{border-radius: 0;background-color:#dadada}",0);
         $App.headLoaded=true;
       }
       if(!dontStart && document.body){
@@ -606,15 +619,28 @@ window.appJScode=function(){
           this.console.setVisible(true);
         }
         this.onResize();
+        this.animationFrame=async ()=>{
+          this.gamepad.updatePhysicalGamepad();
+          if(window.onNextFrame && !$App.debug.paused){
+            try{
+              await window.onNextFrame();
+            }catch(e){
+              $App.handleException(e);
+              return;
+            }
+          }
+          requestAnimationFrame(this.animationFrame);
+        }
         if(window.onStart){
           var startFunc=async ()=>{
             if(!$App.debug.paused){  
               try{
                 await window.onStart();
-                $App.executedOnStart=true;
               }catch(e){
                 $App.handleException(e);
+
               }
+              requestAnimationFrame(this.animationFrame);
             }else{
               setTimeout(startFunc,100);
             }
@@ -624,20 +650,12 @@ window.appJScode=function(){
           }else{
             setTimeout(startFunc,10);
           }
-        }
-        this.addMouseStateHandler(this.canvas.el);
-        this.animationFrame=async ()=>{
-          this.gamepad.updatePhysicalGamepad();
-          if($App.executedOnStart && window.onNextFrame && !$App.debug.paused){
-            try{
-              await window.onNextFrame();
-            }catch(e){
-              $App.handleException(e);
-            }
-          }
+        }else{
           requestAnimationFrame(this.animationFrame);
         }
-        requestAnimationFrame(this.animationFrame);
+        this.addMouseStateHandler(this.canvas.el);
+        
+        
       }else{
         setTimeout(()=>{
           this.setup();
@@ -1471,7 +1489,13 @@ window.appJScode=function(){
             console.log(m);
             throw m;
           }
+          if(!asset.object){
+            var m="Das Asset '"+image+"' ist keine gültige Bilddatei. Prüfe die URL.";
+            console.log(m);
+            throw m;
+          }
           image=asset.object;
+          
         }
         if(sourceRect){
           this.ctx.drawImage(image,image.width/2+sourceRect.cx-sourceRect.w/2,image.height/2+sourceRect.cy-sourceRect.h/2,sourceRect.w,sourceRect.h,-w/2,-h/2,w,h);
@@ -2496,7 +2520,11 @@ window.appJScode=function(){
     
     /*****Array */
     $App.Array=function(type, dim, values){
-      this.type=type.name;
+      if(typeof type==="string"){
+        this.type=type;
+      }else{
+        this.type=type.name;
+      }
       if(Array.isArray(dim)){
         this.dim=dim;
         this.values=$App.Array.createArrayValues(type,dim,0);
@@ -2512,6 +2540,10 @@ window.appJScode=function(){
     };
   
     $App.Array.prototype={
+      toString: function(){
+        //return this.type+"-Array["+this.dim.join("][")+"]: "+this.values.join(", ");
+        return "{"+this.values.join(", ")+"}";
+      },
       get length(){
         return this.dim[0];
       },
@@ -2611,7 +2643,7 @@ window.appJScode=function(){
     /**Console */
     $App.Console=function(){
       this.element=document.createElement("div");
-      this.element.style="width: 100%; height: 100%; background-color: #222222; color: white";
+      this.element.style="overscroll-behavior: none; width: 100%; height: 100%; background-color: #222222; color: white";
       this.element.className="console";
       this.items={};
       this.localItems={};
@@ -2624,9 +2656,10 @@ window.appJScode=function(){
       this.outputDiv.style="height: calc(30% - 0.4cm); overflow: auto";
       this.element.appendChild(this.outputDiv);
       this.input=document.createElement("input");
-      this.input.style="width: 100%; height: 0.8cm; background-color: #222222; outline: none;border: none; color: white";
+      this.input.style="width: 100%; height: 0.8cm; background-color: #222222; outline: none;border: none; color: white; box-sizing: border-box;";
       this.input.currentPosition=-1;
-      this.input.placeholder="gib einen Befehl ein..."
+      this.input.spellcheck=false;
+      this.input.placeholder="gib einen Befehl ein...";
       this.input.onchange=()=>{
         var v=this.input.value;
         if(v.trim().length===0) return;
@@ -2648,7 +2681,8 @@ window.appJScode=function(){
         this.input.currentPosition=-1;
       };
       this.input.onkeydown=(ev)=>{
-        
+        ev.test="Hallo";
+        ev.stopPropagation();
         if(ev.keyCode===40 || ev.keyCode===38 || ev.keyCode===13){
           if(ev.keyCode===13){
             this.input.onchange();
@@ -3392,6 +3426,7 @@ window.appJScode=function(){
     $App.handleModalDialog=function(){
       $App.gamepad.resetAllButtons();
       $App.mouse.down=false;
+      $App.keyboard.reset();
     };
   
     $App.addFunction(function alert(text){
@@ -3785,7 +3820,7 @@ window.appJScode=function(){
       {
         name: 'inRect', 
         returnType: 'boolean',
-        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'cx', type: 'double', info: 'Hoehe des Rechtecks'}],
+        args: [{name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts des Rechtecks'}, {name: 'width', type: 'double', info: 'Breite des Rechtecks'}, {name: 'height', type: 'double', info: 'Hoehe des Rechtecks'}],
         info: 'Prueft, ob sich die Maus aktuell innerhalb des Rechtecks mit Mittelpunkt (cx|cy) und Breite width und Hoehe height befindet.'
       }, 
       {
@@ -4357,6 +4392,7 @@ window.appJScode=function(){
             var t=teile[i].trim();
             if(/^\d+$/.test(t)){
               teile[i]="repeat("+t+",minmax(0,1fr))";
+              
             }
           }
           if(teile.length===2){
@@ -4369,6 +4405,11 @@ window.appJScode=function(){
           b.style.display="grid"; 
           b.style.alignItems="stretch";
           b.style.justifyContent="stretch";
+          b.style.gridColumnGap=0;
+          b.style.gridRowGap=0;
+          b.style.columnGap=0;
+          b.style.rowGap=0;
+          b.style.overflow="auto";
         }
         b.add=function(c){
           if(!this.noAbsolutePosition){
@@ -4392,6 +4433,8 @@ window.appJScode=function(){
       button: function (text,cx,cy,width,height){
         var b=$App.createElement("button");
         b.value=text;
+        b.style.padding=0;
+        b.style.margin=0;
         $App.canvas.addElement(b,cx,cy,width,height);
         return b;
       },
@@ -4479,8 +4522,13 @@ window.appJScode=function(){
             }
           },
           set: function(v){
-            var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
-            var v=valueProp.set.call(b,v);
+            if(b.type==="checkbox"){
+              var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"checked");
+              valueProp.set.call(b.box,v);
+            }else{
+              var valueProp=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
+              valueProp.set.call(b,v);
+            }
           }
         });
         b.placeholder=placeholdertext;
@@ -4614,12 +4662,16 @@ window.appJScode=function(){
       },
       label: function(text,cx,cy,width,height){
         var b=$App.createElement("div");
+        b.style.overflow="auto";
+        var innerDiv=document.createElement("div");
+        b.innerDiv=innerDiv;
+        b.appendChild(innerDiv);
         b.style.textAlign="center";
         $App.canvas.addElement(b,cx,cy,width,height);
         Object.defineProperty(b,'value', {
           set: function(v){
             this.appJSData.value=v;
-            this.innerHTML=v;
+            this.innerDiv.innerHTML=v;
             //this.updatePosition(this.appJSData.cx,this.appJSData.cy, this.appJSData.width, this.appJSData.height);
           },
           get: function(){
@@ -5191,4 +5243,5 @@ window.appJScode=function(){
     }else{
       $main=null;
     }
+    
 }

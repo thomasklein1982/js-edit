@@ -1,7 +1,7 @@
 <template>
   <div id="root">
     <div id="editor" ref="editor" :style="{fontSize: (0.55*fontSize+5)+'px'}"></div>
-    <Message v-for="(e,i) in runtimeError" severity="error" :key="'re'+errorID">Z{{e.line}}: {{e.message}}</Message>
+    <Message v-for="(e,i) in runtimeError" severity="error" :key="'re'+errorID">{{e.line>0? 'Zeile '+e.line : 'Unbekannte Zeile'}}: {{e.message}}</Message>
   </div>
   
 </template>
