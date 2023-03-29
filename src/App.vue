@@ -12,7 +12,7 @@ export default{
     return {
       sourceCode: '',
       sourceCodeDebugging: '',
-      version: "75",
+      version: "82",
       breakpoints: [],
       paused: false,
       currentLine: -1

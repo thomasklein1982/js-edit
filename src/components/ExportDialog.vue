@@ -5,7 +5,7 @@
       </p>
       <textarea id="exportarea" style="width: 100%; min-height: 50vh" :value="code"></textarea>
       <template #footer>
-        <Button class="copy" label="Kopieren!" data-clipboard-target="#exportarea" icon="pi pi-copy" @click="copy()"/>
+        <Button label="Herunterladen" icon="pi pi-download" @click="download()"/> <Button class="copy" label="Kopieren!" data-clipboard-target="#exportarea" icon="pi pi-copy" @click="copy()"/>
       </template>
   </Dialog>
 </template>
@@ -27,6 +27,13 @@ export default {
     }
   },
   methods: {
+    download(){
+      console.log(app);
+      let js=this.$root.sourceCode;
+      js="\<script\>"+window.appJScode+"\nconsole.hide();\n/*JS-EDIT-START*/"+js+"/*JS-EDIT-END*/\</script\>";
+      let code='\<!doctype html\>\<html\>\<head\>\<meta charset="utf-8"\>'+js+'\</head\>\</html\>';
+      download(code,"App"+".htm","text/html");
+    },
     setVisible(v){
       this.show=v;
     },

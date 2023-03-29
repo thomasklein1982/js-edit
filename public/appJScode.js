@@ -3,6 +3,20 @@ window.appJScode=function(){
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
     window.onmessage=function(message){
+      if(message && message.data && message.data.type==="update-shared-variables"){
+        /**gehe alle iframes durch und aktualisiere die Variablen: */
+        for(var i=0;i<$App.$iframes.length;i++){
+          var frame=$App.$iframes[i];
+          if(frame.iframe.contentWindow===message.source){
+            var variables=message.data.sharedVariables;
+            for(var a in variables){
+              frame[a]=variables[a];
+            }
+            return;
+          }
+        }
+        return;
+      }
       $App.debug.onMessage(message);
     };
     
@@ -13,9 +27,12 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 34,
+      version: 36,
       language: window.language? window.language:'js',
       setupData: null,
+      lazyLoading: false,
+      $sharedVariables: null,
+      $iframes: [],
       dialog: {
         root: null,
         backdrop: null,
@@ -326,6 +343,15 @@ window.appJScode=function(){
       });
     }
     
+    $App.shareVariables=function(){
+      if(!this.$sharedVariables){
+        this.$sharedVariables={};
+      }
+      for(var i=0;i<arguments.length;i++){
+        this.$sharedVariables[arguments[i]]=null;
+      }
+    }
+
     $App.createElement=function(tagname){
       let el=document.createElement(tagname);
       el.style.boxSizing="border-box";
@@ -536,7 +562,12 @@ window.appJScode=function(){
     
     $App.setup=async function(dontStart){
       await this.loadScripts();
-      await this.loadAssets();
+      if(this.lazyLoading){
+        this.loadAssets();
+      }else{
+        await this.loadAssets();
+      }
+      
       if(!$App.headLoaded && document.head){
         var meta=document.createElement("meta");
         meta.setAttribute("charset","utf-8");
@@ -626,7 +657,6 @@ window.appJScode=function(){
               await window.onNextFrame();
             }catch(e){
               $App.handleException(e);
-              return;
             }
           }
           requestAnimationFrame(this.animationFrame);
@@ -910,6 +940,8 @@ window.appJScode=function(){
       }
     }
   
+
+
     $App.loadAssets=async function(){
       for(let a in this.assets){
         let asset=this.assets[a];
@@ -2100,6 +2132,9 @@ window.appJScode=function(){
         this.cy=cy;
         this.calcLayout();
       },
+      moveCenter(dx,dy){
+        this.setCenter(this.cx+dx,this.cy+dy);
+      },
       setZoom(factor){
         this.zoom=factor;
         this.calcLayout;
@@ -2750,11 +2785,17 @@ window.appJScode=function(){
         this.outputDiv.style="height: calc(30% - 0.4cm); overflow: auto";
         this.element.insertBefore(this.outputDiv,this.input);
       },
-      update: function(){
+      update: function(sharedVariables){
         if($App.language==="js"){
-          this.updateFromObject(window);
+          this.updateFromObject(window,sharedVariables);
         }else if($App.language==="java"){
-          this.updateFromObject($App.debug.object? $App.debug.object : $main);
+          this.updateFromObject($App.debug.object? $App.debug.object : $main,sharedVariables);
+        }
+        if(window.parent!==window && sharedVariables){
+          window.parent.postMessage({
+            type: "update-shared-variables",
+            sharedVariables: sharedVariables
+          },"*");
         }
       },
       updateLocalVariables: function(variables){
@@ -2866,32 +2907,40 @@ window.appJScode=function(){
         }
         return item;
       },
-      updateFromObject: function(source){
+      updateFromObject: function(source,sharedVariables){
         if(!source) return;
         let newItems={};
         for(let a in source){
           if(source===window && !(this.watchedVariables.indexOf(a)>=0) && (a in $App.systemVariables)){
             continue;
           }
-          let obj=source[a];
-          if(obj && obj.$hideFromConsole){
-            continue;
-          }
-          if(obj===window){
-            continue;
-          }
-          if(typeof obj==="function"){
-            continue;
-          }
-          let item;
-          if(a in this.items){
-            item=this.items[a];
-          }else{
-            item=this.createConsoleItem(a)
-            this.variablesDiv.appendChild(item.element);
-          }
-          item.update(obj);
-          newItems[a]=item;
+          try{
+            let obj=source[a];
+            if(obj && obj.$hideFromConsole){
+              continue;
+            }
+            if(obj===window){
+              continue;
+            }
+            if(typeof obj==="function"){
+              continue;
+            }
+            if(sharedVariables){
+              if(a in sharedVariables){
+                sharedVariables[a]=obj;
+                break;
+              }
+            } 
+            let item;
+            if(a in this.items){
+              item=this.items[a];
+            }else{
+              item=this.createConsoleItem(a)
+              this.variablesDiv.appendChild(item.element);
+            }
+            item.update(obj);
+            newItems[a]=item;
+          }catch(e){}
         }
         for(let a in this.items){
           if(!(a in newItems)){
@@ -2952,7 +3001,7 @@ window.appJScode=function(){
     
     $App.console=new $App.Console();
     setInterval(function(){
-      this.$App.console.update();
+      this.$App.console.update($App.$sharedVariables);
     },200);
     
     /**Help */
@@ -4438,6 +4487,38 @@ window.appJScode=function(){
         $App.canvas.addElement(b,cx,cy,width,height);
         return b;
       },
+      iframe: function(url,cx,cy,width,height){
+        var div=$App.createElement("div");
+        var frame=document.createElement("iframe");
+        frame.style="width: 100%; height: 100%; left: 0; top: 0; position: absolute;background-color: white";
+        Object.defineProperty(div,'value', {
+          set: function(v){
+            this.appJSData.value=v;
+            this.iframe.src=v;
+          },
+          get: function(){
+            return this.iframe.src;
+          }
+        });
+        div.appendChild(frame);
+        var button=document.createElement("button");
+        button.div=div;
+        button.onclick=function(){
+          this.div.visible=false;
+          if(window.onAction){
+            window.onAction(this.div);
+          }
+        };
+        button.style="position: absolute; right: 0; top: 0";
+        button.innerHTML="x";
+        div.appendChild(button);
+        div.iframe=frame;
+        div.closeButton=button;
+        div.value=url;
+        $App.canvas.addElement(div,cx,cy,width,height);
+        $App.$iframes.push(div);
+        return div;
+      },
       image: function (url,cx,cy,width,height){
         var b=$App.createElement("img");
         b.src=url;
@@ -4682,6 +4763,12 @@ window.appJScode=function(){
         return b;
       }
     },'Erlaubt das Hinzufuegen und Manipulieren der grafischen Benutzeroberflaeche (UI).',[
+      {
+        name: 'iframe', 
+        returnType: 'IFrame',
+        args: [{name: 'url', type: 'String', info: 'Webadresse der eingebetteten Webseite'}, {name: 'cx', type: 'double', info: 'x-Koordinate des Mittelpunkts'}, {name: 'cy', type: 'double', info: 'y-Koordinate des Mittelpunkts'}, {name: 'width', type: 'double', info: 'Breite. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}, {name: 'height', type: 'double', info: 'Hoehe. Bei einem negativen Wert wird das Element in seiner natuerlichen Groesse gezeichnet.'}],
+        info: 'Erzeugt ein neues iFrame, mit dem man eine Website in die eigene App einbetten kann.'
+      },
       {
         name: 'button', 
         returnType: 'JButton',
