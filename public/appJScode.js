@@ -27,7 +27,7 @@ window.appJScode=function(){
     })
   
     window.$App={
-      version: 36,
+      version: 38,
       language: window.language? window.language:'js',
       setupData: null,
       lazyLoading: false,
@@ -239,9 +239,11 @@ window.appJScode=function(){
           up: -1
         },
         update: function(clientX,clientY,target,eventName,time,isTouch){
-          var r=target.getBoundingClientRect();
-          this.x=clientX-r.left;
-          this.y=(clientY-r.top);
+          if(clientX>=0 && clientY>=0){
+            var r=target.getBoundingClientRect();
+            this.x=clientX-r.left;
+            this.y=(clientY-r.top);
+          }
           if(isTouch){
             this.lastTouch[eventName]=time;
           }else{
@@ -352,10 +354,30 @@ window.appJScode=function(){
       }
     }
 
+    $App.alignSelf=function(el,align){
+      if(align.h==="center"){
+        el.style.marginLeft="auto";
+        el.style.marginRight="auto";
+      }else if(align.h==="left"){
+        el.style.marginRight="auto";
+      }else{
+        el.style.marginLeft="auto";
+      }
+      if(align.v==="middle"){
+        el.style.marginTop="auto";
+        el.style.marginBottom="auto";
+      }else if(align.v==="top"){
+        el.style.marginBottom="auto";
+      }else{
+        el.style.marginTop="auto";
+      }
+    };
+
     $App.createElement=function(tagname){
       let el=document.createElement(tagname);
       el.style.boxSizing="border-box";
-      el.style.display="flex";
+      //el.style.display="flex";
+      
       //el.style.position="absolute";
       this.implementStyleGetterAndSetter(el);
       el.appJSData={
@@ -380,25 +402,25 @@ window.appJScode=function(){
       el.updateAlignContent=function(v){
         var a=$App.Canvas.$getAlignment(v);
         this.appJSData.alignContent=a;
+        //TODO: Wenn der Inhalt zu groß ist, wird er abgeschnitten!
+        for(var i=0;i<this.childNodes.length;i++){
+          var c=this.childNodes[i];
+          $App.alignSelf(c,a);
+        }
         if(a.h==="center"){
-          //this.style.transform
-          // this.style.marginLeft="auto";
-          // this.style.marginRight="auto";
-          this.style.justifyContent="center";
+          this.style.textAlign="center";
         }else if(a.h==="left"){
-          // this.style.marginRight="auto";
-          this.style.justifyContent="flex-end";
+          this.style.textAlign="left";
         }else{
-          // this.style.marginLeft="auto";
-          this.style.justifyContent="flex-start";
+          this.style.textAlign="right";
         }
-        if(a.v==="middle"){
-          this.style.alignItems="center";
-        }else if(a.v==="top"){
-          this.style.alignItems="flex-end";
-        }else{
-          this.style.alignItems="flex-start";
-        }
+        // if(a.v==="middle"){
+        //   this.style.alignItems="center";
+        // }else if(a.v==="top"){
+        //   this.style.alignItems="flex-end";
+        // }else{
+        //   this.style.alignItems="flex-start";
+        // }
       };
       el.updateAlignContent();
       Object.defineProperty(el,'align', {
@@ -497,10 +519,19 @@ window.appJScode=function(){
         Object.defineProperty(el,'value', {
           set: function(v){
             this.appJSData.value=v;
-            this.src=v;
+            var asset=$App.assets[v];
+            if(asset){
+              var url=asset.url;
+              if(!url.startsWith("data:")){
+                url=(new URL(asset.url,document.baseURI)).href;
+              }
+            }else{
+              var url=v;
+            }
+            this.src=url;
           },
           get: function(){
-            return this.src;
+            return this.appJSData.value;
           }
         });
       }else if(tagname==="div"){
@@ -593,7 +624,7 @@ window.appJScode=function(){
       }
       if(!dontStart && document.body){
         this.body.element=document.body;
-        this.body.element.style="padding: 0; margin: 0; width: 100%; height: 100%; overflow: hidden";
+        this.body.element.style="padding: 0; margin: 0; width: 100%; height: 100%; overflow: hidden; user-select: none; -webkit-user-select: none";
         this.body.element.parentElement.style=this.body.style;
         
         var root=document.createElement("div");
@@ -601,7 +632,7 @@ window.appJScode=function(){
         root.style="font-family: sans-serif;position: fixed;width:100%;height:100%";
         root.className="app-root";
         this.body.element.appendChild(root);
-        this.canvas=new $App.Canvas(root,100,100);
+        this.canvas=new $App.Canvas(root,100,100,true);
         this.world=new $App.World(this.canvas);
         let left=document.createElement("div");
         left.style="font-family: monospace; position: absolute; width: 30%; height: 100%; left: 0; top: 0; display: none; z-index: 100;";
@@ -851,11 +882,19 @@ window.appJScode=function(){
         $App.mouse.down=true;
       });
       e.addEventListener("touchend",function(ev){
+        var x=-1; 
+        var y=-1;
         var t=ev.touches;
-        if(!t) return;
-        t=t[0];
-        if(!t) return;
-        $App.mouse.update(t.clientX,t.clientY,e,'up',ev.timeStamp,true);
+        if(t && t[0]){
+          t=t[0];
+        }else if(ev.changedTouches && ev.changedTouches[0]){
+          t=ev.changedTouches[0]
+        }
+        if(t){
+          x=t.clientX;
+          y=t.clientY;
+        }
+        $App.mouse.update(x,y,e,'up',ev.timeStamp,true);
         $App.mouse.down=false;
       });
       e.onmouseup=function(ev){
@@ -993,8 +1032,12 @@ window.appJScode=function(){
     };
     
     /**Canvas: */
-    $App.Canvas=function Canvas(parent,width,height){
-      this.container=document.createElement("div");
+    $App.Canvas=function Canvas(parent,width,height,isRoot){
+      if(isRoot){
+        this.container=document.createElement("div");
+      }else{
+        this.container=$App.createElement("div");
+      }
       this.el=document.createElement("canvas");
       this.el.jel=this;
       this.el.isCanvas=true;
@@ -1177,17 +1220,33 @@ window.appJScode=function(){
         el.appJSData.align=align;
         if(!width){
           width=el.offsetWidth;
+          if(!width && el.childNodes.length>0){
+            width=el.childNodes[0].offsetWidth;
+          }
           width=this.getCanvasWidth(width);
         }
         if(!height){
           height=el.offsetHeight;
+          if(!height && el.childNodes.length>0){
+            height=el.childNodes[0].offsetHeight;
+          }
           height=this.getCanvasHeight(height);
         }
-        if(el.noAbsolutePosition){
-          el.style.position="";
-        }else{
-          el.style.position="absolute";
-        }
+        // if(el.noAbsolutePosition){
+        //   if(el.$standardPositionValue){
+        //     el.style.position=el.$standardPositionValue;
+        //   }else{
+        //     el.style.position="";
+        //   }
+        //   //el.style.width="";
+        //   //el.style.height="";
+        //   el.style.left="0px";
+        //   el.style.top="0px";
+        //   return;
+        // }else{
+        //   el.style.position="absolute";
+        // }
+        el.style.position="absolute";
         var x,y;
         if(align.h==="center"){
           x=cx-width/2;
@@ -1551,6 +1610,18 @@ window.appJScode=function(){
           this.ctx.fillRect(0,(this.pixelHeight+this.pixelTop)*this.dpr,this.pixelWidth*this.dpr,this.pixelTop*this.dpr);
         }
       },
+      drawRect: function(x,y,w,h,dontAdd){
+        if(!dontAdd){
+          this.addCommand("drawRect",[x,y,w,h]);
+        }
+        return this.paintRect(x,y,w,h,false);
+      },
+      fillRect: function(x,y,w,h,dontAdd){
+        if(!dontAdd){
+          this.addCommand("fillRect",[x,y,w,h]);
+        }
+        return this.paintRect(x,y,w,h,true);
+      },
       paintRect: function(x,y,w,h,fill,dontAdd){
         if(!dontAdd){
           this.addCommand("paintRect",[x,y,w,h,fill]);
@@ -1580,6 +1651,18 @@ window.appJScode=function(){
           this.ctx.strokeRect(x-w/2,y-h/2,w,h);
         }
         return obj;
+      },
+      drawCircle: function(x,y,r,dontAdd){
+        if(!dontAdd){
+          this.addCommand("drawCircle",[x,y,r]);
+        }
+        return this.paintCircle(x,y,r,false);
+      },
+      fillCircle: function(x,y,r,dontAdd){
+        if(!dontAdd){
+          this.addCommand("fillCircle",[x,y,r]);
+        }
+        return this.paintCircle(x,y,r,true);
       },
       paintCircle: function(cx,cy,r,fill,dontAdd){
         if(!dontAdd){
@@ -2694,6 +2777,8 @@ window.appJScode=function(){
       this.input.style="width: 100%; height: 0.8cm; background-color: #222222; outline: none;border: none; color: white; box-sizing: border-box;";
       this.input.currentPosition=-1;
       this.input.spellcheck=false;
+      this.input.autocapitalize="none";
+      this.input.autocorrect="off";
       this.input.placeholder="gib einen Befehl ein...";
       this.input.onchange=()=>{
         var v=this.input.value;
@@ -2773,9 +2858,19 @@ window.appJScode=function(){
         div.style.whiteSpace="pre";
         let args=[]
         for(let i=0;i<arguments.length;i++){
-          args.push(arguments[i]);
+          let obj=arguments[i];
+          let item;
+          if(typeof obj==="object"){
+            item=$App.console.createConsoleItem(null,false,true);
+            item.update(obj);
+            item=item.element;
+          }else{
+            item=document.createElement("span");
+            item.style.marginRight="1em";
+            item.innerHTML=obj;
+          }
+          div.appendChild(item);
         }
-        div.innerHTML=args.join(" ");
         this.outputDiv.appendChild(div);
         this.outputDiv.scrollTop=this.outputDiv.scrollHeight;
       },
@@ -2802,9 +2897,10 @@ window.appJScode=function(){
         this.localVariables=variables;
         //console.log(variables);
       },
-      createConsoleItem: function(name,local){
+      createConsoleItem: function(name,local,valueOnly){
         let item={
           local: local===true,
+          valueOnly,
           expanded: false,
           element: document.createElement("div"),
           value: document.createElement("span"),
@@ -2824,12 +2920,17 @@ window.appJScode=function(){
         item.line.appendChild(item.button);
         var el=document.createElement("span");
         el.style.whiteSpace="pre";
-        el.textContent=name+": ";
+        if(!valueOnly){
+          el.textContent=name+": ";
+        }
         item.line.appendChild(el);
         item.line.appendChild(item.value);
         item.line.onclick=()=>{
           if(item.expandable){
             item.expanded=!item.expanded;
+            if(item.valueOnly){
+              item.update(item.object);
+            }
           }
         };
         item.element.appendChild(item.sublist);
@@ -2848,7 +2949,9 @@ window.appJScode=function(){
               if(this.hasSubItems && (a in this.subItems)){
                 item=this.subItems[a];
               }else{
-                item=$App.console.createConsoleItem(a)
+                item=$App.console.createConsoleItem(a);
+                item.valueOnly=this.valueOnly;
+                item.object=obj;
                 this.sublist.appendChild(item.element);
               }
               item.update(obj);
@@ -3574,6 +3677,12 @@ window.appJScode=function(){
     [{name: 'url', type: 'String', info: 'URL der Datei'}, {name: 'name', type: 'String', info: 'Name, unter dem das Asset gespeichert wird.'}],
     '',"topLevel");
   
+    $App.addFunction(async function shareVariables(variablenames){
+      $App.shareVariables.apply(arguments);
+    },null,'Legt diese Variablen offen für andere Apps.',
+    [{name: 'variablennamen', type: 'String', info: 'Name der Variablen'}],
+    '',"topLevel");
+
     $App.addFunction(async function loadScript(url){
       $App.registerScript.call($App,url);
     },null,'Laedt ein JavaScript. Muss vor onStart aufgerufen werden.',
@@ -3652,7 +3761,7 @@ window.appJScode=function(){
         $App.canvas.setOrigin(originX,originY);
       }
       $App.canvas.setSize(width,height,$App.body.width,$App.body.height);
-    },null,'Legt das Koordiantensystem der App fest.',[{name: 'width', type: 'double', info: 'Breite des Koordinatensystems'}, {name: 'height', type: 'double', info: 'Hoehe des Koordinatensystems'}, {name: 'originX', type: 'double', info: 'x-Koordinate des Koordinatenursprungs', optional: true}, {name: 'originY', type: 'double', info: 'y-Koordinate des Koordinatenursprungs'}],'');
+    },null,'Legt das Koordinatensystem der App fest.',[{name: 'width', type: 'double', info: 'Breite des Koordinatensystems'}, {name: 'height', type: 'double', info: 'Hoehe des Koordinatensystems'}, {name: 'originX', type: 'double', info: 'x-Koordinate des Koordinatenursprungs', optional: true}, {name: 'originY', type: 'double', info: 'y-Koordinate des Koordinatenursprungs'}],'');
   
     $App.addFunction(function getWidth(){
       return $App.body.width;
@@ -3676,7 +3785,7 @@ window.appJScode=function(){
     
     $App.addFunction(function setOpacity(value){
       $App.canvas.setOpacity(value);
-    },null,'Legt die Transparenz alle nachfolgenden Zeichnungen fest.',[{name: 'value', type: 'double', info: 'Wert zwischen 0 (komplett transparent) und 1 (komplett sichtbar).'}],'');
+    },null,'Legt die Transparenz aller nachfolgenden Zeichnungen fest.',[{name: 'value', type: 'double', info: 'Wert zwischen 0 (komplett transparent) und 1 (komplett sichtbar).'}],'');
     
     $App.addFunction(function setFontsize(size){
       $App.canvas.setFontsize(size);
@@ -4426,10 +4535,29 @@ window.appJScode=function(){
     ],'');
     
     $App.addObject('ui',false,{
+      canvas: function(internalWidth,internalHeight,cx,cy,width,height){
+        var canvas=new $App.Canvas(null,internalWidth,internalHeight);
+        var b=canvas.container;
+        b.noAbsolutePosition=true;
+        b.canvas=canvas;
+        var methods=["setSize","setMirrored","setRotation","setOpacity","setFontsize","setFont","setLinewidth","write","drawCircle","fillCircle","drawRect","fillRect","drawLine","beginPath","lineTo","closePath","setColor","drawImage","drawImagePart","rotate","translate","scale","addElement"];
+        for(var i=0;i<methods.length;i++){
+          let m=methods[i];
+          b[m]=function(){
+            return this.canvas[m].apply(this.canvas,arguments);
+          }
+        }
+        $App.canvas.addElement(b,cx,cy,width,height);
+        console.log($App.canvas.getRawWidth(width),$App.canvas.getRawHeight(height))
+        canvas.resize($App.canvas.getRawWidth(width),$App.canvas.getRawHeight(height));
+        return b;
+      },
       panel: function (template,cx,cy,width,height){
         var b=$App.createElement("div");
+        b.style.flexDirection="column";
         if(!template){
           b.noAbsolutePosition=true;
+          b.style.overflow="auto";
         }else{
           b.noAbsolutePosition=false;
           template+="";
@@ -4461,11 +4589,13 @@ window.appJScode=function(){
           b.style.overflow="auto";
         }
         b.add=function(c){
-          if(!this.noAbsolutePosition){
-            c.style.position="";
+          //if(!this.noAbsolutePosition){
+            c.style.position="relative";
             c.style.width="auto";
             c.style.height="auto";
-          }
+            c.style.left="0px";
+            c.style.top="0px";
+          //}
           if(c.parent){
             c.parent.removeChild(c);
           }
@@ -4482,8 +4612,8 @@ window.appJScode=function(){
       button: function (text,cx,cy,width,height){
         var b=$App.createElement("button");
         b.value=text;
-        b.style.padding=0;
-        b.style.margin=0;
+        //b.style.padding=0;
+        //b.style.margin=0;
         $App.canvas.addElement(b,cx,cy,width,height);
         return b;
       },
@@ -4521,7 +4651,16 @@ window.appJScode=function(){
       },
       image: function (url,cx,cy,width,height){
         var b=$App.createElement("img");
-        b.src=url;
+        var asset=$App.assets[url];
+        if(asset){
+          var url=asset.url;
+          if(!url.startsWith("data:")){
+            url=(new URL(asset.url,document.baseURI)).href;
+          }
+          b.src=url;
+        }else{
+          b.src=url;
+        }
         $App.canvas.addElement(b,cx,cy,width,height);
         return b;
       },
@@ -4533,7 +4672,7 @@ window.appJScode=function(){
         }
         if(type) type=type.toLowerCase();
         if(type==="checkbox"){
-          var b=$App.createElement("div");
+          var b=$App.createElement("span");
           var cb=document.createElement("input");
           cb.type=type;
           var id=Math.floor(Math.random()*100000000);
@@ -4613,6 +4752,7 @@ window.appJScode=function(){
           }
         });
         b.placeholder=placeholdertext;
+        b.style.textAlign="";
         $App.canvas.addElement(b,cx,cy,width,height);
         return b;
       },
@@ -4733,6 +4873,7 @@ window.appJScode=function(){
         b.placeholder=placeholdertext;
         b.style.resize="none";
         $App.canvas.addElement(b,cx,cy,width,height);
+        b.style.textAlign="";
         return b;
       },
       select: function (options,cx,cy,width,height){
@@ -4742,9 +4883,10 @@ window.appJScode=function(){
         return b;
       },
       label: function(text,cx,cy,width,height){
-        var b=$App.createElement("div");
+        var b=$App.createElement("span");
         b.style.overflow="auto";
-        var innerDiv=document.createElement("div");
+        b.$standardPositionValue="relative";
+        var innerDiv=document.createElement("span");
         b.innerDiv=innerDiv;
         b.appendChild(innerDiv);
         b.style.textAlign="center";
@@ -4760,6 +4902,8 @@ window.appJScode=function(){
           }
         });
         b.value=text;
+        b.updateAlignContent();
+        b.updatePosition();
         return b;
       }
     },'Erlaubt das Hinzufuegen und Manipulieren der grafischen Benutzeroberflaeche (UI).',[
@@ -5124,7 +5268,7 @@ window.appJScode=function(){
           {name: 'y', type: 'double', info: 'y-Koordinate in der Welt'},
           {name: 'newType', type: 'String', info: 'Neuer Typ'}
         ],
-        info: 'Ã„ndert den Typ (das Zeichen) an der angegebenen Position.'
+        info: 'Aendert den Typ (das Zeichen) an der angegebenen Position.'
       },
       {
         name: 'getInfo',
@@ -5330,5 +5474,4 @@ window.appJScode=function(){
     }else{
       $main=null;
     }
-    
 }
